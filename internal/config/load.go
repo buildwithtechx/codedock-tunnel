@@ -1,7 +1,10 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/caarlos0/env/v11"
 )
@@ -59,6 +62,21 @@ func LoadCLI() (CLIConfig, error) {
 		return CLIConfig{}, fmt.Errorf("tunnel api and relay urls are required")
 	}
 	return cfg, nil
+}
+
+func SaveCLI(cfg CLIConfig) error {
+	if cfg.ConfigPath == "" {
+		return fmt.Errorf("config path is required")
+	}
+	dir := filepath.Dir(cfg.ConfigPath)
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		return fmt.Errorf("create config directory: %w", err)
+	}
+	data, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshal config: %w", err)
+	}
+	return os.WriteFile(cfg.ConfigPath, data, 0600)
 }
 
 func parse[T any](cfg *T) error {

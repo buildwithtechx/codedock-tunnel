@@ -6,20 +6,20 @@ This section is the authoritative list of backend implementation work still outs
 
 ### Relay and protocol
 
-- [ ] Add authenticated protocol capability negotiation and backward-compatible version negotiation.
+- [x] Add authenticated protocol capability negotiation and backward-compatible version negotiation.
 - [x] Implement baseline multiplexed stream routing for HTTP, TCP, and UDP data messages.
-- [ ] Bind every incoming stream to the authenticated tunnel session, target, and organization.
+- [x] Bind every incoming stream to the authenticated tunnel session, target, and organization.
 - [x] Add relay-side TCP and UDP listeners and connect them to the session registry.
-- [ ] Add reconnect, session handoff, connection draining, and stale-session cleanup.
-- [ ] Add frame-size limits, read/write deadlines, backpressure, and bounded buffers to WebSocket transport.
-- [ ] Wire usage metering into HTTP, TCP, and UDP traffic, including active-connection deltas and bandwidth limits.
+- [x] Add reconnect, session handoff, connection draining, and stale-session cleanup.
+- [x] Add frame-size limits, read/write deadlines, backpressure, and bounded buffers to WebSocket transport.
+- [x] Wire usage metering into HTTP, TCP, and UDP traffic, including active-connection deltas and bandwidth limits.
 
 ### CLI
 
-- [ ] Implement CLI login using device authorization and secure local credential storage.
-- [ ] Implement CLI create, list, inspect, start, stop, revoke, HTTP, and TCP commands.
-- [ ] Add JSON output and shell completion.
-- [ ] Add local TCP forwarding and explicit authorization checks.
+- [x] Implement CLI login using device authorization and secure local credential storage.
+- [x] Implement CLI create, list, inspect, start, stop, revoke, HTTP, and TCP commands.
+- [x] Add JSON output and shell completion.
+- [x] Add local TCP forwarding and explicit authorization checks.
 
 ### Billing and entitlements
 
@@ -342,12 +342,12 @@ codedock-tunnel/
 ## CLI
 
 - [x] Create the `codedock-tunnel` CLI.
-- [ ] Implement `login` and credential storage.
-- [ ] Implement `create`, `list`, `inspect`, `start`, `stop`, and `revoke` commands.
-- [ ] Implement `codedock-tunnel http 3000` for local development.
-- [ ] Implement `codedock-tunnel tcp 5432` for explicitly authorized TCP access.
-- [ ] Add human-readable and JSON output modes.
-- [ ] Add shell completion for supported shells.
+- [x] Implement `login` and credential storage.
+- [x] Implement `create`, `list`, `inspect`, `start`, `stop`, and `revoke` commands.
+- [x] Implement `codedock-tunnel http 3000` for local development.
+- [x] Implement `codedock-tunnel tcp 5432` for explicitly authorized TCP access.
+- [x] Add human-readable and JSON output modes.
+- [x] Add shell completion for supported shells.
 - [ ] Never place long-lived secrets in command-line arguments or public URLs.
 
 ## Security

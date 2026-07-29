@@ -27,20 +27,30 @@ func main() {
 		printUsage()
 		return
 	}
-	if os.Args[1] == "version" {
+
+	command := os.Args[1]
+	switch command {
+	case "version":
 		fmt.Println(version)
-		return
+	case "login":
+		runLogin(cfg)
+	case "open", "http", "tcp":
+		openTunnel(cfg, command, os.Args[2:])
+	case "create", "list", "inspect", "start", "stop", "revoke":
+		runTunnelsCommand(cfg, os.Args[1:])
+	case "completion":
+		runCompletion(os.Args[2:])
+	case "health":
+		runHealth(cfg, os.Args[2:])
+	default:
+		log.Fatalf("unknown command %q", command)
 	}
-	if os.Args[1] != "health" {
-		if os.Args[1] != "open" {
-			log.Fatalf("unknown command %q", os.Args[1])
-		}
-		openTunnel(cfg)
-		return
-	}
+}
+
+func runHealth(cfg config.CLIConfig, args []string) {
 	flags := flag.NewFlagSet("health", flag.ExitOnError)
 	apiURL := flags.String("api-url", cfg.APIURL, "tunnel API URL")
-	_ = flags.Parse(os.Args[2:])
+	_ = flags.Parse(args)
 	apiClient, err := client.New(client.Config{BaseURL: *apiURL, APIKey: cfg.APIKey})
 	if err != nil {
 		log.Fatal(err)
@@ -51,12 +61,17 @@ func main() {
 	fmt.Println("ready")
 }
 
-func openTunnel(cfg config.CLIConfig) {
-	flags := flag.NewFlagSet("open", flag.ExitOnError)
+func openTunnel(cfg config.CLIConfig, cmdName string, args []string) {
+	flags := flag.NewFlagSet(cmdName, flag.ExitOnError)
 	port := flags.Int("port", 3000, "local port")
-	protocolName := flags.String("protocol", "http", "tunnel protocol")
+	defaultProtocol := "http"
+	if cmdName == "tcp" {
+		defaultProtocol = "tcp"
+	}
+	protocolName := flags.String("protocol", defaultProtocol, "tunnel protocol (http, tcp, udp)")
 	subdomain := flags.String("subdomain", "", "requested subdomain")
-	_ = flags.Parse(os.Args[2:])
+	_ = flags.Parse(args)
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	target := "http://127.0.0.1:" + fmt.Sprint(*port)
@@ -114,5 +129,5 @@ func openTunnel(cfg config.CLIConfig) {
 
 func printUsage() {
 	fmt.Println("codedock-tunnel <command>")
-	fmt.Println("commands: health, open, version")
+	fmt.Println("commands: login, open, create, list, inspect, start, stop, revoke, http, tcp, health, completion, version")
 }

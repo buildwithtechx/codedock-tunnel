@@ -171,6 +171,43 @@ func (h *Handler) handleMessage(ctx context.Context, connection *websocket.Conn,
 		}
 	}
 	switch message.Type {
+	case protocol.MessageTypeVersionNegotiate:
+		var req protocol.VersionNegotiate
+		if err := protocol.DecodePayload(message, &req); err != nil {
+			return err
+		}
+		ack, err := protocol.NegotiateVersion(req)
+		if err != nil {
+			return err
+		}
+		payload, err := protocol.EncodePayload(protocol.MessageTypeVersionNegotiateAck, message.RequestID, ack)
+		if err != nil {
+			return err
+		}
+		return h.writeMessage(connection, websocket.TextMessage, payload)
+	case protocol.MessageTypeAuth:
+		var authReq protocol.AuthRequest
+		if err := protocol.DecodePayload(message, &authReq); err != nil {
+			return err
+		}
+		id, err := h.authenticator.Authenticate(ctx, authReq.Token)
+		if err != nil {
+			payload, _ := protocol.EncodePayload(protocol.MessageTypeAuthResponse, message.RequestID, protocol.AuthResponse{Authenticated: false, Error: err.Error()})
+			_ = h.writeMessage(connection, websocket.TextMessage, payload)
+			return err
+		}
+		payload, err := protocol.EncodePayload(protocol.MessageTypeAuthResponse, message.RequestID, protocol.AuthResponse{Authenticated: true, AgentID: id.AgentID, OrganizationID: id.OrganizationID, GrantedCapabilities: []string{"http", "https", "tcp", "udp"}})
+		if err != nil {
+			return err
+		}
+		return h.writeMessage(connection, websocket.TextMessage, payload)
+	case protocol.MessageTypeFlowControl:
+		var fc protocol.FlowControl
+		if err := protocol.DecodePayload(message, &fc); err != nil {
+			return err
+		}
+		h.logger.DebugContext(ctx, "flow control message received", slog.String("stream_id", fc.StreamID), slog.String("action", fc.Action))
+		return nil
 	case protocol.MessageTypeOpenTunnel:
 		var open protocol.OpenTunnel
 		if err := protocol.DecodePayload(message, &open); err != nil {
