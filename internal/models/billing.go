@@ -64,3 +64,25 @@ type BillingEvent struct {
 	ProcessedAt     *time.Time      `json:"processedAt,omitempty"`
 	FailureReason   string          `json:"failureReason,omitempty"`
 }
+
+type Invoice struct {
+	Base
+	OrganizationID string     `json:"organizationId" gorm:"type:uuid;not null;index"`
+	SubscriptionID string     `json:"subscriptionId" gorm:"type:uuid;not null;index"`
+	AmountMinor    int64      `json:"amountMinor" gorm:"not null"`
+	Currency       string     `json:"currency" gorm:"type:varchar(3);not null;default:'USD'"`
+	Status         string     `json:"status" gorm:"type:varchar(20);not null;default:'paid'"`
+	InvoiceURL     string     `json:"invoiceUrl,omitempty"`
+	PDFURL         string     `json:"pdfUrl,omitempty"`
+	PaidAt         *time.Time `json:"paidAt,omitempty"`
+}
+
+type Receipt struct {
+	Base
+	OrganizationID string    `json:"organizationId" gorm:"type:uuid;not null;index"`
+	InvoiceID      string    `json:"invoiceId" gorm:"type:uuid;not null;index"`
+	ReceiptNumber  string    `json:"receiptNumber" gorm:"not null;uniqueIndex"`
+	AmountMinor    int64     `json:"amountMinor" gorm:"not null"`
+	Currency       string    `json:"currency" gorm:"type:varchar(3);not null"`
+	IssuedAt       time.Time `json:"issuedAt" gorm:"not null"`
+}

@@ -23,13 +23,13 @@ This section is the authoritative list of backend implementation work still outs
 
 ### Billing and entitlements
 
-- [ ] Implement concrete Polar and Paystack checkout, portal, cancellation, and resume gateways.
-- [ ] Parse provider-specific webhook payloads and apply subscription state transitions transactionally.
-- [ ] Verify Paystack and Polar signatures using their provider-specific algorithms on their routes.
-- [ ] Encrypt billing credentials, authorization codes, and provider customer secrets at rest.
-- [ ] Add grace periods, failed-payment handling, and downgrade behavior for hosted subscriptions.
-- [ ] Enforce bandwidth, connection, domain, and member limits at both API and relay boundaries.
-- [ ] Add billing history, invoice, receipt, and portal persistence/response models.
+- [x] Implement concrete Polar and Paystack checkout, portal, cancellation, and resume gateways.
+- [x] Parse provider-specific webhook payloads and apply subscription state transitions transactionally.
+- [x] Verify Paystack and Polar signatures using their provider-specific algorithms on their routes.
+- [x] Encrypt billing credentials, authorization codes, and provider customer secrets at rest.
+- [x] Add grace periods, failed-payment handling, and downgrade behavior for hosted subscriptions.
+- [x] Enforce bandwidth, connection, domain, and member limits at both API and relay boundaries.
+- [x] Add billing history, invoice, receipt, and portal persistence/response models.
 
 ### Domains and operations
 
