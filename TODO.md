@@ -46,24 +46,21 @@ codedock-tunnel/
 │   ├── cron/
 │   └── check/
 ├── internal/
-│   ├── api/
-│   │   ├── handlers/
-│   │   ├── middleware/
-│   │   ├── routes/
-│   │   └── server.go
-│   ├── auth/
-│   ├── control/
+│   ├── models/
+│   ├── repositories/
+│   ├── services/
+│   ├── handlers/
+│   ├── http/
 │   ├── engine/
-│   │   ├── http_proxy/
-│   │   ├── tcp_proxy/
-│   │   ├── udp_proxy/
-│   │   └── websocket_proxy/
-│   ├── limits/
-│   ├── relay/
-│   ├── routing/
-│   ├── sessions/
-│   ├── storage/
-│   ├── telemetry/
+│   ├── auth/
+│   ├── config/
+│   ├── infra/
+│   │   ├── postgres/
+│   │   ├── redis/
+│   │   ├── billing/
+│   │   ├── telemetry/
+│   │   ├── storage/
+│   │   └── locks/
 │   └── workers/
 ├── pkg/
 │   ├── client/
@@ -130,7 +127,18 @@ codedock-tunnel/
 - [ ] Create `cmd/cli/` for the standalone CLI.
 - [ ] Create `cmd/cron/` for cleanup, expiry, analytics rollups, certificate jobs, and scheduled maintenance.
 - [ ] Create `cmd/check/` for custom-domain verification and edge readiness checks.
-- [ ] Organize server code under `internal/api/`, `internal/auth/`, `internal/control/`, `internal/engine/`, `internal/relay/`, `internal/routing/`, `internal/sessions/`, `internal/storage/`, and `internal/telemetry/`.
+- [ ] Organize domain models and DTOs under `internal/models/`.
+- [ ] Organize PostgreSQL persistence and repository interfaces under `internal/repositories/`.
+- [ ] Organize business logic and provider-neutral use cases under `internal/services/`.
+- [ ] Organize Fiber HTTP controllers under `internal/handlers/`.
+- [ ] Organize Fiber server setup, routes, middleware, and WebSocket wiring under `internal/http/`.
+- [ ] Organize relay, HTTP, TCP, UDP, and WebSocket engines under `internal/engine/`.
+- [ ] Organize authentication and authorization helpers under `internal/auth/`.
+- [ ] Organize environment and runtime configuration under `internal/config/`.
+- [ ] Organize PostgreSQL, Redis, billing providers, telemetry, storage, and distributed locks under `internal/infra/`.
+- [ ] Organize retryable cleanup, usage, billing, and reconciliation jobs under `internal/workers/`.
+- [ ] Keep repositories free of business policy and keep services independent from Fiber handlers.
+- [ ] Keep infrastructure adapters behind narrow interfaces consumed by services and workers.
 - [ ] Create `pkg/client/` for reusable Go client functionality.
 - [ ] Create `pkg/protocol/` for public Go protocol types and helpers.
 - [ ] Create `protocol/schema/` for language-neutral protocol definitions.
@@ -161,6 +169,74 @@ codedock-tunnel/
 - [ ] Define the public URL and subdomain allocation strategy.
 - [ ] Document the self-hosted and managed deployment models.
 - [ ] Choose the project license and contribution policy.
+
+## Go technology baseline
+
+- [ ] Use `github.com/gofiber/fiber/v2` for the HTTP API and server middleware.
+- [ ] Use `github.com/gofiber/contrib/websocket` for agent and dashboard WebSocket connections.
+- [ ] Use `gorm.io/gorm` with `gorm.io/driver/postgres` for PostgreSQL persistence.
+- [ ] Use PostgreSQL as the primary control-plane database for hosted and self-hosted installations.
+- [ ] Use PostgreSQL transactions, constraints, indexes, and explicit migrations for durable state.
+- [ ] Use `golang.org/x/crypto/argon2` with Argon2id for password hashing.
+- [ ] Define Argon2id parameters, version them, and support transparent rehashing when parameters change.
+- [ ] Use `github.com/redis/go-redis/v9` for ephemeral sessions, heartbeats, rate limits, presence, and relay coordination.
+- [ ] Keep tunnel payloads out of Redis and PostgreSQL unless explicitly required for analytics or audit purposes.
+- [ ] Use the standard library `log/slog` with structured, secret-redacting handlers.
+- [ ] Use `github.com/go-playground/validator/v10` or equivalent request validation at API boundaries.
+- [ ] Use `github.com/google/uuid` or a documented ID strategy consistently across database and protocol entities.
+- [ ] Use `github.com/joho/godotenv` only for local development and never as production secret storage.
+- [ ] Define dependency versions in `go.mod` and review them through automated vulnerability scanning.
+- [ ] Document why each dependency is required and avoid duplicate HTTP, ORM, crypto, or WebSocket stacks.
+
+## Identity, organizations, and access
+
+- [ ] Create standalone user, session, organization, organization-member, and role models.
+- [ ] Implement email/password authentication with Argon2id and transparent password rehashing.
+- [ ] Implement short-lived access tokens and revocable refresh sessions.
+- [ ] Add CLI login sessions with one-time device codes and explicit expiration.
+- [ ] Add organization membership roles and resource-level authorization.
+- [ ] Add optional OAuth providers without coupling identity to Codedock.
+- [ ] Store session and refresh-token state in PostgreSQL or Redis with revocation support.
+- [ ] Add account deletion, organization ownership transfer, and member removal flows.
+- [ ] Audit authentication, membership, credential, billing, and tunnel-management actions.
+
+## Plans, subscriptions, and billing
+
+- [ ] Create plan definitions with tunnel, domain, member, bandwidth, retention, and connection limits.
+- [ ] Store subscription status, provider, provider customer ID, provider subscription ID, product ID, billing interval, period end, cancellation state, trial state, and timestamps.
+- [ ] Create a provider-neutral billing interface for checkout, portal access, cancellation, resumption, and subscription lookup.
+- [ ] Add a Polar billing adapter for international cards and subscription management.
+- [ ] Add a Paystack billing adapter for local currency and recurring payments.
+- [ ] Keep billing-provider credentials and authorization codes encrypted at rest.
+- [ ] Verify every provider webhook signature before processing events.
+- [ ] Make webhook processing idempotent using provider event IDs and database constraints.
+- [ ] Handle subscription created, active, updated, canceled, paused, past-due, expired, and revoked events.
+- [ ] Implement plan entitlement checks in the API and relay before allocating tunnels or connections.
+- [ ] Prevent client-provided plan or limit values from overriding server-side entitlements.
+- [ ] Add grace periods, downgrade behavior, failed-payment handling, and free-plan fallback rules.
+- [ ] Add billing history, invoices, receipts, and customer self-service portal links.
+- [ ] Keep billing optional for self-hosted deployments while preserving local plan configuration.
+
+## Usage, analytics, and operations data
+
+- [ ] Track tunnel count, active connections, bandwidth, request count, error rate, and retention usage per organization.
+- [ ] Keep ephemeral presence, heartbeats, rate limits, and active tunnel indexes in Redis.
+- [ ] Use Redis TTLs and periodic reconciliation to remove stale tunnel and organization presence entries.
+- [ ] Store durable control-plane records and billing state in PostgreSQL through GORM.
+- [ ] Support optional TimescaleDB or PostgreSQL time-series tables for high-volume usage analytics.
+- [ ] Keep raw payloads and secrets out of analytics storage by default.
+- [ ] Add retention policies based on the organization plan.
+- [ ] Add usage snapshots and aggregation jobs in `cmd/cron`.
+- [ ] Add dashboards for current usage, historical usage, plan limits, and billing status.
+
+## Billing and operations jobs
+
+- [ ] Run stale-session cleanup, Redis index reconciliation, usage aggregation, and subscription maintenance in `cmd/cron`.
+- [ ] Run recurring billing checks and provider reconciliation as retryable idempotent jobs.
+- [ ] Use distributed locks so only one cron worker processes a billing or reconciliation batch.
+- [ ] Add exponential backoff, dead-letter handling, and operator-visible job status.
+- [ ] Run subscription maintenance immediately on startup only when protected by idempotency and locking.
+- [ ] Add alerts for failed webhooks, repeated payment failures, stale presence growth, and quota inconsistencies.
 
 ## Protocol
 
