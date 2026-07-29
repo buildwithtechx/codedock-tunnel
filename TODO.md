@@ -50,32 +50,32 @@ This section is the authoritative list of backend implementation work still outs
 
 ### Backend verification and release
 
-- [ ] Add integration tests with real local HTTP, TCP, and UDP targets.
-- [ ] Add reconnect, timeout, backpressure, migration, webhook, and graceful-shutdown tests.
-- [ ] Add container vulnerability scanning and signed/reproducible Go releases.
-- [ ] Add backup/restore verification and migration integrity checks in CI.
+- [x] Add integration tests with real local HTTP, TCP, and UDP targets.
+- [x] Add reconnect, timeout, backpressure, migration, webhook, and graceful-shutdown tests.
+- [x] Add container vulnerability scanning and signed/reproducible Go releases.
+- [x] Add backup/restore verification and migration integrity checks in CI.
 
 ## Standalone product principles
 
-- [ ] Make `codedock-tunnel` usable without Codedock, a Codedock account, or a Codedock server.
-- [ ] Treat Codedock as one optional integration among many, not as the tunnel system's control plane.
-- [ ] Support an independent hosted service with its own accounts, organizations, billing, API, dashboard, and CLI.
+- [x] Make `codedock-tunnel` usable without Codedock, a Codedock account, or a Codedock server.
+- [x] Treat Codedock as one optional integration among many, not as the tunnel system's control plane.
+- [x] Support an independent hosted service with its own accounts, organizations, billing, API, dashboard, and CLI.
 - [x] Keep the product hosted with billing enforced; open-source clients and relay components do not provide a self-hosted bypass.
-- [ ] Keep tunnel identity, credentials, sessions, routing, quotas, analytics, and audit history owned by `codedock-tunnel`.
-- [ ] Define an integration-neutral public API for dashboards, CLIs, SDKs, and external platforms.
-- [ ] Ensure the core tunnel server never imports or requires Codedock packages, models, routes, or authentication tokens.
-- [ ] Provide Codedock integration as an optional adapter, plugin, or external API client.
-- [ ] Allow users to run the tunnel CLI directly against any compatible tunnel server URL.
-- [ ] Document the hosted standalone product and optional Codedock integration.
+- [x] Keep tunnel identity, credentials, sessions, routing, quotas, analytics, and audit history owned by `codedock-tunnel`.
+- [x] Define an integration-neutral public API for dashboards, CLIs, SDKs, and external platforms.
+- [x] Ensure the core tunnel server never imports or requires Codedock packages, models, routes, or authentication tokens.
+- [x] Provide Codedock integration as an optional adapter, plugin, or external API client.
+- [x] Allow users to run the tunnel CLI directly against any compatible tunnel server URL.
+- [x] Document the hosted standalone product and optional Codedock integration.
 
 ## Product surfaces
 
-- [ ] Build a standalone tunnel dashboard with its own authentication and organization model.
-- [ ] Build a standalone CLI that can create and manage tunnels without Codedock.
-- [ ] Publish one reusable `sdk-ts` package for Node.js, TypeScript, browser, and framework integrations.
-- [ ] Keep the Tauri desktop application usable with standalone tunnel servers.
-- [ ] Support configuration of the hosted server URL for local development and enterprise environments.
-- [ ] Define stable public API and protocol versioning independent of any Codedock release.
+- [x] Build a standalone tunnel dashboard with its own authentication and organization model.
+- [x] Build a standalone CLI that can create and manage tunnels without Codedock.
+- [x] Publish one reusable `sdk-ts` package for Node.js, TypeScript, browser, and framework integrations.
+- [x] Keep the Tauri desktop application usable with standalone tunnel servers.
+- [x] Support configuration of the hosted server URL for local development and enterprise environments.
+- [x] Define stable public API and protocol versioning independent of any Codedock release.
 
 ## Repository structure
 
@@ -219,12 +219,12 @@ codedock-tunnel/
 
 ## Product foundation
 
-- [ ] Define the initial product boundary between `codedock-tunnel` and Codedock.
+- [x] Define the initial product boundary between `codedock-tunnel` and Codedock.
 - [x] Choose the first supported tunnel types: HTTP, HTTPS, and raw TCP.
 - [x] Define tunnel lifecycle states: creating, connecting, active, disconnected, expired, and revoked.
-- [ ] Define the public URL and subdomain allocation strategy.
-- [ ] Document the hosted deployment model and open-source integration boundary.
-- [ ] Choose the project license and contribution policy.
+- [x] Define the public URL and subdomain allocation strategy.
+- [x] Document the hosted deployment model and open-source integration boundary.
+- [x] Choose the project license and contribution policy.
 
 ## Go technology baseline
 
@@ -261,14 +261,14 @@ codedock-tunnel/
 - [x] Create a provider-neutral billing interface for checkout, portal access, cancellation, resumption, and subscription lookup.
 - [x] Add a Polar billing adapter for international cards and subscription management.
 - [x] Add a Paystack billing adapter for local currency and recurring payments.
-- [ ] Keep billing-provider credentials and authorization codes encrypted at rest.
-- [ ] Verify every provider webhook signature before processing events.
-- [ ] Make webhook processing idempotent using provider event IDs and database constraints.
-- [ ] Handle subscription created, active, updated, canceled, paused, past-due, expired, and revoked events.
-- [ ] Implement plan entitlement checks in the API and relay before allocating tunnels or connections.
-- [ ] Prevent client-provided plan or limit values from overriding server-side entitlements.
-- [ ] Add grace periods, downgrade behavior, and failed-payment handling for hosted subscriptions.
-- [ ] Add billing history, invoices, receipts, and customer self-service portal links.
+- [x] Keep billing-provider credentials and authorization codes encrypted at rest.
+- [x] Verify every provider webhook signature before processing events.
+- [x] Make webhook processing idempotent using provider event IDs and database constraints.
+- [x] Handle subscription created, active, updated, canceled, paused, past-due, expired, and revoked events.
+- [x] Implement plan entitlement checks in the API and relay before allocating tunnels or connections.
+- [x] Prevent client-provided plan or limit values from overriding server-side entitlements.
+- [x] Add grace periods, downgrade behavior, and failed-payment handling for hosted subscriptions.
+- [x] Add billing history, invoices, receipts, and customer self-service portal links.
 - [x] Make billing mandatory for the hosted product; open-source clients and relay components do not bypass entitlements.
 - [x] Use Zepto Mail as the only transactional email provider.
 
@@ -279,8 +279,8 @@ codedock-tunnel/
 - [x] Use Redis TTLs and periodic reconciliation to remove stale tunnel and organization presence entries.
 - [x] Define durable control-plane and billing models for PostgreSQL through GORM.
 - [x] Store durable control-plane records and billing state in PostgreSQL through GORM.
-- [ ] Support optional TimescaleDB or PostgreSQL time-series tables for high-volume usage analytics.
-- [ ] Keep raw payloads and secrets out of analytics storage by default.
+- [x] Support optional TimescaleDB or PostgreSQL time-series tables for high-volume usage analytics.
+- [x] Keep raw payloads and secrets out of analytics storage by default.
 - [x] Add retention policies based on the organization plan.
 - [x] Add usage snapshots and aggregation jobs in `cmd/cron`.
 - [x] Add Go reporting endpoints for usage snapshots, usage events, plan limits, and billing status.
@@ -330,14 +330,14 @@ codedock-tunnel/
 
 ## Background jobs and verification
 
-- [ ] Define jobs that can run inside the hosted server for low-volume environments.
-- [ ] Define jobs that can run in `cmd/cron` for independent horizontal scaling.
-- [ ] Expire inactive tunnels, sessions, credentials, reservations, and public hostnames.
-- [ ] Roll up traffic and connection analytics without storing request secrets or bodies by default.
-- [ ] Verify custom-domain ownership using DNS and HTTP challenges.
-- [ ] Verify certificate readiness and edge routing before activating custom domains.
-- [ ] Prevent verification jobs from being used to probe arbitrary private networks.
-- [ ] Make all jobs idempotent and safe to retry.
+- [x] Define jobs that can run inside the hosted server for low-volume environments.
+- [x] Define jobs that can run in `cmd/cron` for independent horizontal scaling.
+- [x] Expire inactive tunnels, sessions, credentials, reservations, and public hostnames.
+- [x] Roll up traffic and connection analytics without storing request secrets or bodies by default.
+- [x] Verify custom-domain ownership using DNS and HTTP challenges.
+- [x] Verify certificate readiness and edge routing before activating custom domains.
+- [x] Prevent verification jobs from being used to probe arbitrary private networks.
+- [x] Make all jobs idempotent and safe to retry.
 
 ## CLI
 
@@ -348,32 +348,32 @@ codedock-tunnel/
 - [x] Implement `codedock-tunnel tcp 5432` for explicitly authorized TCP access.
 - [x] Add human-readable and JSON output modes.
 - [x] Add shell completion for supported shells.
-- [ ] Never place long-lived secrets in command-line arguments or public URLs.
+- [x] Never place long-lived secrets in command-line arguments or public URLs.
 
 ## Security
 
-- [ ] Use TLS for all control and data-plane connections.
-- [ ] Use short-lived, scoped tunnel credentials.
-- [ ] Support immediate credential and tunnel revocation.
-- [ ] Separate user identity, client identity, and tunnel capability tokens.
-- [ ] Bind every stream to an authorized tunnel and target.
-- [ ] Validate hostnames and reject ambiguous or malformed routing input.
-- [ ] Add origin and host validation for HTTP tunnels.
-- [ ] Add rate limiting for tunnel creation, authentication, and connection attempts.
-- [ ] Add abuse controls for open proxies, port scanning, and excessive bandwidth.
-- [ ] Redact credentials, tokens, cookies, and request bodies from logs.
-- [ ] Threat-model the relay server, CLI client, public edge, and Codedock integration.
-- [ ] Add security tests for token replay, cross-tunnel access, stale sessions, and SSRF.
+- [x] Use TLS for all control and data-plane connections.
+- [x] Use short-lived, scoped tunnel credentials.
+- [x] Support immediate credential and tunnel revocation.
+- [x] Separate user identity, client identity, and tunnel capability tokens.
+- [x] Bind every stream to an authorized tunnel and target.
+- [x] Validate hostnames and reject ambiguous or malformed routing input.
+- [x] Add origin and host validation for HTTP tunnels.
+- [x] Add rate limiting for tunnel creation, authentication, and connection attempts.
+- [x] Add abuse controls for open proxies, port scanning, and excessive bandwidth.
+- [x] Redact credentials, tokens, cookies, and request bodies from logs.
+- [x] Threat-model the relay server, CLI client, public edge, and Codedock integration.
+- [x] Add security tests for token replay, cross-tunnel access, stale sessions, and SSRF.
 
 ## Public edge and routing
 
-- [ ] Define the TLS certificate strategy for wildcard tunnel domains.
-- [ ] Implement hostname-to-tunnel routing.
-- [ ] Support custom domains only after ownership verification.
-- [ ] Define HTTP header forwarding and stripping rules.
-- [ ] Preserve client IP information safely without trusting user-supplied headers.
-- [ ] Add connection draining during tunnel shutdown and certificate rotation.
-- [ ] Document reverse-proxy and firewall requirements.
+- [x] Define the TLS certificate strategy for wildcard tunnel domains.
+- [x] Implement hostname-to-tunnel routing.
+- [x] Support custom domains only after ownership verification.
+- [x] Define HTTP header forwarding and stripping rules.
+- [x] Preserve client IP information safely without trusting user-supplied headers.
+- [x] Add connection draining during tunnel shutdown and certificate rotation.
+- [x] Document reverse-proxy and firewall requirements.
 
 ## Dashboard
 
@@ -411,15 +411,15 @@ codedock-tunnel/
 ## Storage and operations
 
 - [x] Add a safe atomic local object storage adapter for tunnel artifacts and exports.
-- [ ] Store secret material encrypted at rest.
-- [ ] Define cleanup for expired tunnels, sessions, and unused subdomains.
-- [ ] Add database migrations and migration integrity checks.
-- [ ] Add backups and restore procedures for control-plane metadata.
-- [ ] Add Docker deployment examples.
-- [ ] Add horizontal scaling design for multiple relay servers.
-- [ ] Define CLI-to-relay affinity and session handoff behavior.
-- [ ] Add Prometheus-compatible metrics and operational dashboards.
-- [ ] Add resource budgets to preserve the lightweight runtime target.
+- [x] Store secret material encrypted at rest.
+- [x] Define cleanup for expired tunnels, sessions, and unused subdomains.
+- [x] Add database migrations and migration integrity checks.
+- [x] Add backups and restore procedures for control-plane metadata.
+- [x] Add Docker deployment examples.
+- [x] Add horizontal scaling design for multiple relay servers.
+- [x] Define CLI-to-relay affinity and session handoff behavior.
+- [x] Add Prometheus-compatible metrics and operational dashboards.
+- [x] Add resource budgets to preserve the lightweight runtime target.
 
 ## Testing and release
 
