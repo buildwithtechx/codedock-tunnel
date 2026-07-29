@@ -35,6 +35,7 @@ export type OpenTunnel = {
 export type OpenTunnelAck = {
   tunnel_id: string;
   public_url: string;
+  public_port?: number;
 };
 
 export type CloseTunnel = {

@@ -35,6 +35,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	tcpManager := relay.NewTCPManager()
+	udpManager := relay.NewUDPManager()
 	httpProxy, err := engine.NewHTTPProxy(cfg.Tunnel.Domain, requestRouter, cfg.Tunnel.MaxBytes)
 	if err != nil {
 		log.Fatal(err)
@@ -43,7 +45,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	relayHandler, err := relay.NewHandler(authenticator, sessions, cfg.Tunnel.MaxConnections)
+	relayHandler, err := relay.NewHandler(authenticator, sessions, requestRouter, tcpManager, udpManager, cfg.Tunnel.MaxConnections)
 	if err != nil {
 		log.Fatal(err)
 	}

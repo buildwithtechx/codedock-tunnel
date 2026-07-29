@@ -45,7 +45,8 @@
       "required": ["tunnel_id", "public_url"],
       "properties": {
         "tunnel_id": { "type": "string" },
-        "public_url": { "type": "string", "format": "uri" }
+        "public_url": { "type": "string", "format": "uri" },
+        "public_port": { "type": "integer", "minimum": 0, "maximum": 65535 }
       },
       "additionalProperties": false
     },

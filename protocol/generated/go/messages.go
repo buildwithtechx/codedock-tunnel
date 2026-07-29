@@ -37,8 +37,9 @@ type OpenTunnel struct {
 }
 
 type OpenTunnelAck struct {
-	TunnelID  string `json:"tunnel_id"`
-	PublicURL string `json:"public_url"`
+	TunnelID   string `json:"tunnel_id"`
+	PublicURL  string `json:"public_url"`
+	PublicPort int    `json:"public_port,omitempty"`
 }
 
 type CloseTunnel struct {

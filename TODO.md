@@ -7,9 +7,9 @@ This section is the authoritative list of backend implementation work still outs
 ### Relay and protocol
 
 - [ ] Add authenticated protocol capability negotiation and backward-compatible version negotiation.
-- [ ] Implement full multiplexed stream routing for HTTP, TCP, and UDP data messages.
+- [x] Implement baseline multiplexed stream routing for HTTP, TCP, and UDP data messages.
 - [ ] Bind every incoming stream to the authenticated tunnel session, target, and organization.
-- [ ] Add relay-side TCP and UDP listeners and connect them to the session registry.
+- [x] Add relay-side TCP and UDP listeners and connect them to the session registry.
 - [ ] Add reconnect, session handoff, connection draining, and stale-session cleanup.
 - [ ] Add frame-size limits, read/write deadlines, backpressure, and bounded buffers to WebSocket transport.
 - [ ] Wire usage metering into HTTP, TCP, and UDP traffic, including active-connection deltas and bandwidth limits.
@@ -216,7 +216,6 @@ codedock-tunnel/
 - [ ] Keep database migrations in `migrations/` and integration tests in `tests/`.
 - [x] Add independent Dockerfiles under `docker/` for API, tunnel, cron, and check.
 - [x] Distribute the CLI as platform binaries instead of deploying a CLI service.
-- [ ] Keep the root workspace configuration independent from the Codedock repository.
 - [ ] Ensure the tunnel core has no imports of Codedock models, routes, authentication, or database packages.
 
 ## Product foundation
@@ -251,7 +250,6 @@ codedock-tunnel/
 - [x] Implement Google and GitHub OAuth sign-in with revocable sessions.
 - [x] Add CLI login sessions with one-time device codes and explicit expiration.
 - [x] Add organization membership roles and resource-level authorization.
-- [ ] Keep Google and GitHub OAuth providers independent from Codedock.
 - [x] Store session state in PostgreSQL with revocation support.
 - [x] Add account deletion and organization ownership transfer flows.
 - [x] Audit authenticated API actions through the HTTP audit middleware.
@@ -323,8 +321,8 @@ codedock-tunnel/
 - [x] Add O(1)-style port allocation and release for TCP/UDP listeners.
 - [x] Add bandwidth accounting and limit enforcement primitives.
 - [x] Add TCP connection and UDP packet state registries with cleanup operations.
-- [ ] Implement multiplexed stream handling.
-- [ ] Implement HTTP and TCP forwarding.
+- [x] Implement multiplexed stream handling.
+- [x] Implement HTTP, TCP, and UDP forwarding.
 - [ ] Implement tunnel routing by tunnel ID and hostname.
 - [ ] Implement connection and stream cleanup after disconnects.
 - [ ] Add bounded memory buffers and backpressure.

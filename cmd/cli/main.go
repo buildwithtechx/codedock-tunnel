@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -65,7 +64,11 @@ func openTunnel(cfg config.CLIConfig) {
 		log.Fatal(err)
 	}
 	defer connection.Close()
-	fmt.Printf("tunnel %s %s\n", connection.TunnelID, connection.PublicURL)
+	if connection.PublicPort > 0 {
+		fmt.Printf("tunnel %s %s:%d\n", connection.TunnelID, connection.PublicURL, connection.PublicPort)
+	} else {
+		fmt.Printf("tunnel %s %s\n", connection.TunnelID, connection.PublicURL)
+	}
 	ticker := time.NewTicker(20 * time.Second)
 	defer ticker.Stop()
 	go func() {
@@ -75,7 +78,11 @@ func openTunnel(cfg config.CLIConfig) {
 			}
 		}
 	}()
-	if err := connection.ServeLocal(ctx, "http://"+net.JoinHostPort("127.0.0.1", fmt.Sprint(*port))); err != nil && ctx.Err() == nil {
+	target := "http://127.0.0.1:" + fmt.Sprint(*port)
+	if *protocolName == "tcp" {
+		target = "127.0.0.1:" + fmt.Sprint(*port)
+	}
+	if err := connection.ServeLocal(ctx, target); err != nil && ctx.Err() == nil {
 		log.Fatal(err)
 	}
 }
