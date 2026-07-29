@@ -13,6 +13,7 @@ import (
 	"codedock.run/codedock-tunnel/internal/infra/postgres"
 	"codedock.run/codedock-tunnel/internal/infra/redis"
 	"codedock.run/codedock-tunnel/internal/repositories"
+	"codedock.run/codedock-tunnel/internal/services"
 	"codedock.run/codedock-tunnel/internal/workers"
 )
 
@@ -34,7 +35,7 @@ func main() {
 		log.Fatal(err)
 	}
 	defer redisClient.Close()
-	lease, err := locks.Acquire(ctx, redisClient.Raw(), "codedock-tunnel:cron", time.Minute)
+	lease, err := locks.Acquire(ctx, redisClient.Raw(), "codedock-tunnel:cron", 10*time.Minute)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -51,11 +52,63 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	organizations, err := repositories.NewOrganizationRepository(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+	billing, err := repositories.NewBillingRepository(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+	usageRepository, err := repositories.NewUsageRepository(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+	audit, err := repositories.NewAuditRepository(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+	usageService, err := services.NewUsageService(usageRepository)
+	if err != nil {
+		log.Fatal(err)
+	}
+	aggregation, err := services.NewUsageAggregationService(organizations, usageService)
+	if err != nil {
+		log.Fatal(err)
+	}
+	retention, err := services.NewRetentionService(organizations, billing, usageRepository, audit)
+	if err != nil {
+		log.Fatal(err)
+	}
 	cleanup, err := workers.NewCleanupJob(sessions, keys, deviceLogins)
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err := cleanup.Run(ctx); err != nil {
+	usageJob, err := workers.NewUsageJob(aggregation)
+	if err != nil {
+		log.Fatal(err)
+	}
+	retentionJob, err := workers.NewRetentionJob(retention)
+	if err != nil {
+		log.Fatal(err)
+	}
+	operations, err := redis.NewOperations(redisClient)
+	if err != nil {
+		log.Fatal(err)
+	}
+	operationalService, err := services.NewOperationsService(organizations, operations)
+	if err != nil {
+		log.Fatal(err)
+	}
+	reconciliation, err := workers.NewReconciliationJob(operationalService)
+	if err != nil {
+		log.Fatal(err)
+	}
+	runner, err := workers.NewRunner([]workers.Job{cleanup, usageJob, retentionJob, reconciliation}, time.Hour, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if err := runner.RunOnce(ctx); err != nil {
 		log.Fatal(err)
 	}
 }

@@ -14,6 +14,7 @@ type BillingRepository interface {
 	FindPlan(context.Context, string) (models.Plan, error)
 	ListActivePlans(context.Context) ([]models.Plan, error)
 	FindSubscription(context.Context, string) (models.Subscription, error)
+	ListSubscriptions(context.Context) ([]models.Subscription, error)
 	SaveSubscription(context.Context, *models.Subscription) error
 	FindBillingEvent(context.Context, models.BillingProvider, string) (models.BillingEvent, error)
 	CreateBillingEvent(context.Context, *models.BillingEvent) error
@@ -58,6 +59,14 @@ func (r *GormBillingRepository) FindSubscription(ctx context.Context, organizati
 		return models.Subscription{}, mapError(err)
 	}
 	return subscription, nil
+}
+
+func (r *GormBillingRepository) ListSubscriptions(ctx context.Context) ([]models.Subscription, error) {
+	var subscriptions []models.Subscription
+	if err := r.db.WithContext(ctx).Find(&subscriptions).Error; err != nil {
+		return nil, fmt.Errorf("list subscriptions: %w", err)
+	}
+	return subscriptions, nil
 }
 
 func (r *GormBillingRepository) SaveSubscription(ctx context.Context, subscription *models.Subscription) error {

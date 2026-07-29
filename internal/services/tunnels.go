@@ -12,6 +12,7 @@ import (
 
 type TunnelService struct {
 	tunnels repositories.TunnelRepository
+	billing *BillingService
 	now     func() time.Time
 }
 
@@ -22,11 +23,28 @@ func NewTunnelService(tunnels repositories.TunnelRepository) (*TunnelService, er
 	return &TunnelService{tunnels: tunnels, now: time.Now}, nil
 }
 
+func (s *TunnelService) SetBilling(billing *BillingService) {
+	s.billing = billing
+}
+
 func (s *TunnelService) Create(ctx context.Context, organizationID, name string, protocol models.TunnelProtocol, targetHost string, targetPort int, publicHostname string) (models.Tunnel, error) {
 	if organizationID == "" || strings.TrimSpace(name) == "" || strings.TrimSpace(targetHost) == "" || strings.TrimSpace(publicHostname) == "" || !validTunnelProtocol(protocol) || targetPort < 1 || targetPort > 65535 {
 		return models.Tunnel{}, fmt.Errorf("invalid tunnel configuration")
 	}
 	tunnel := models.Tunnel{OrganizationID: organizationID, Name: strings.TrimSpace(name), Protocol: protocol, Status: models.TunnelStatusCreated, TargetHost: strings.TrimSpace(targetHost), TargetPort: targetPort, PublicHostname: strings.ToLower(strings.TrimSpace(publicHostname)), AccessPolicy: `{}`}
+	if s.billing != nil {
+		plan, _, err := s.billing.Entitlements(ctx, organizationID)
+		if err != nil {
+			return models.Tunnel{}, fmt.Errorf("check tunnel entitlement: %w", err)
+		}
+		count, err := s.tunnels.CountByOrganization(ctx, organizationID)
+		if err != nil {
+			return models.Tunnel{}, fmt.Errorf("count organization tunnels: %w", err)
+		}
+		if plan.MaxTunnels > 0 && count >= int64(plan.MaxTunnels) {
+			return models.Tunnel{}, fmt.Errorf("tunnel plan limit reached")
+		}
+	}
 	if err := s.tunnels.Create(ctx, &tunnel); err != nil {
 		return models.Tunnel{}, fmt.Errorf("create tunnel: %w", err)
 	}

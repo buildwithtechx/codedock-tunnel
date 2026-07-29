@@ -12,6 +12,7 @@ type OrganizationRepository interface {
 	Create(context.Context, *models.Organization) error
 	FindByID(context.Context, string) (models.Organization, error)
 	FindBySlug(context.Context, string) (models.Organization, error)
+	List(context.Context) ([]models.Organization, error)
 	Update(context.Context, *models.Organization) error
 	AddMember(context.Context, *models.OrganizationMember) error
 	FindMember(context.Context, string, string) (models.OrganizationMember, error)
@@ -51,6 +52,14 @@ func (r *GormOrganizationRepository) FindBySlug(ctx context.Context, slug string
 		return models.Organization{}, mapError(err)
 	}
 	return organization, nil
+}
+
+func (r *GormOrganizationRepository) List(ctx context.Context) ([]models.Organization, error) {
+	var organizations []models.Organization
+	if err := r.db.WithContext(ctx).Order("created_at ASC").Find(&organizations).Error; err != nil {
+		return nil, fmt.Errorf("list organizations: %w", err)
+	}
+	return organizations, nil
 }
 
 func (r *GormOrganizationRepository) Update(ctx context.Context, organization *models.Organization) error {

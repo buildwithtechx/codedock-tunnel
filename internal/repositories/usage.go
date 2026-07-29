@@ -15,6 +15,8 @@ type UsageRepository interface {
 	UpsertSnapshot(context.Context, *models.UsageSnapshot) error
 	FindSnapshot(context.Context, string, time.Time) (models.UsageSnapshot, error)
 	ListEvents(context.Context, string, time.Time, time.Time) ([]models.UsageEvent, error)
+	AggregatePeriod(context.Context, string, time.Time, time.Time) (models.UsageSnapshot, error)
+	DeleteBefore(context.Context, string, time.Time) (int64, error)
 }
 
 type GormUsageRepository struct{ db *gorm.DB }
@@ -55,4 +57,31 @@ func (r *GormUsageRepository) ListEvents(ctx context.Context, organizationID str
 		return nil, fmt.Errorf("list usage events: %w", err)
 	}
 	return events, nil
+}
+
+func (r *GormUsageRepository) AggregatePeriod(ctx context.Context, organizationID string, from, to time.Time) (models.UsageSnapshot, error) {
+	var aggregate struct {
+		TunnelCount       int
+		ActiveConnections int
+		BandwidthBytes    int64
+		RequestCount      int64
+		ErrorCount        int64
+	}
+	err := r.db.WithContext(ctx).Model(&models.UsageEvent{}).Select("COUNT(DISTINCT tunnel_id) AS tunnel_count, COALESCE(SUM(connections), 0) AS active_connections, COALESCE(SUM(bytes), 0) AS bandwidth_bytes, COALESCE(SUM(CASE WHEN event_type = 'request' THEN 1 ELSE 0 END), 0) AS request_count, COALESCE(SUM(CASE WHEN event_type = 'error' THEN 1 ELSE 0 END), 0) AS error_count").Where("organization_id = ? AND occurred_at >= ? AND occurred_at < ?", organizationID, from, to).Scan(&aggregate).Error
+	if err != nil {
+		return models.UsageSnapshot{}, fmt.Errorf("aggregate usage period: %w", err)
+	}
+	return models.UsageSnapshot{OrganizationID: organizationID, PeriodStart: from, PeriodEnd: to, TunnelCount: aggregate.TunnelCount, ActiveConnections: aggregate.ActiveConnections, BandwidthBytes: aggregate.BandwidthBytes, RequestCount: aggregate.RequestCount, ErrorCount: aggregate.ErrorCount}, nil
+}
+
+func (r *GormUsageRepository) DeleteBefore(ctx context.Context, organizationID string, before time.Time) (int64, error) {
+	events := r.db.WithContext(ctx).Where("organization_id = ? AND occurred_at < ?", organizationID, before).Delete(&models.UsageEvent{})
+	if events.Error != nil {
+		return 0, fmt.Errorf("delete usage events before retention cutoff: %w", events.Error)
+	}
+	snapshots := r.db.WithContext(ctx).Where("organization_id = ? AND period_end < ?", organizationID, before).Delete(&models.UsageSnapshot{})
+	if snapshots.Error != nil {
+		return events.RowsAffected, fmt.Errorf("delete usage snapshots before retention cutoff: %w", snapshots.Error)
+	}
+	return events.RowsAffected + snapshots.RowsAffected, nil
 }

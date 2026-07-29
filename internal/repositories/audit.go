@@ -12,6 +12,7 @@ import (
 type AuditRepository interface {
 	Create(context.Context, *models.AuditEvent) error
 	ListByOrganization(context.Context, string, time.Time, time.Time, int) ([]models.AuditEvent, error)
+	DeleteBefore(context.Context, string, time.Time) (int64, error)
 }
 
 type GormAuditRepository struct{ db *gorm.DB }
@@ -40,4 +41,9 @@ func (r *GormAuditRepository) ListByOrganization(ctx context.Context, organizati
 		return nil, fmt.Errorf("list audit events: %w", err)
 	}
 	return events, nil
+}
+
+func (r *GormAuditRepository) DeleteBefore(ctx context.Context, organizationID string, before time.Time) (int64, error) {
+	result := r.db.WithContext(ctx).Where("organization_id = ? AND occurred_at < ?", organizationID, before).Delete(&models.AuditEvent{})
+	return result.RowsAffected, wrap(result.Error, "delete audit events before retention cutoff")
 }

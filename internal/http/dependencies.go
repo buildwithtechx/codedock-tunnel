@@ -15,11 +15,13 @@ type Dependencies struct {
 	Tunnels       *services.TunnelService
 	Agents        *services.AgentService
 	Domains       *services.DomainService
+	Usage         *services.UsageService
+	Billing       *services.BillingService
 	Ready         func(context.Context) error
 }
 
 func (d Dependencies) Validate() error {
-	if d.Auth == nil || d.DeviceLogin == nil || d.Organizations == nil || d.Tunnels == nil || d.Agents == nil || d.Domains == nil {
+	if d.Auth == nil || d.DeviceLogin == nil || d.Organizations == nil || d.Tunnels == nil || d.Agents == nil || d.Domains == nil || d.Usage == nil || d.Billing == nil {
 		return fmt.Errorf("http service dependencies are incomplete")
 	}
 	return nil
@@ -32,6 +34,8 @@ type Handlers struct {
 	Tunnels             *handlers.TunnelHandler
 	Agents              *handlers.AgentHandler
 	Domains             *handlers.DomainHandler
+	Usage               *handlers.UsageHandler
+	Billing             *handlers.BillingHandler
 	authService         *services.AuthService
 	organizationService *services.OrganizationService
 }
@@ -60,5 +64,13 @@ func buildHandlers(deps Dependencies, cookieName string, cookieSecure bool) (Han
 	if err != nil {
 		return Handlers{}, err
 	}
-	return Handlers{Health: handlers.NewHealthHandler(deps.Ready), Auth: authHandler, Organizations: organizationHandler, Tunnels: tunnelHandler, Agents: agentHandler, Domains: domainHandler, authService: deps.Auth, organizationService: deps.Organizations}, nil
+	usageHandler, err := handlers.NewUsageHandler(deps.Usage)
+	if err != nil {
+		return Handlers{}, err
+	}
+	billingHandler, err := handlers.NewBillingHandler(deps.Billing)
+	if err != nil {
+		return Handlers{}, err
+	}
+	return Handlers{Health: handlers.NewHealthHandler(deps.Ready), Auth: authHandler, Organizations: organizationHandler, Tunnels: tunnelHandler, Agents: agentHandler, Domains: domainHandler, Usage: usageHandler, Billing: billingHandler, authService: deps.Auth, organizationService: deps.Organizations}, nil
 }

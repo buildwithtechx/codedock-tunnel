@@ -46,6 +46,10 @@ func NewDatabaseDependencies(db *gorm.DB, cfg config.AuthConfig) (Dependencies, 
 	if err != nil {
 		return Dependencies{}, err
 	}
+	billingRepository, err := repositories.NewBillingRepository(db)
+	if err != nil {
+		return Dependencies{}, err
+	}
 	authService, err := services.NewAuthService(users, identities, sessions, cfg.SessionTTL)
 	if err != nil {
 		return Dependencies{}, err
@@ -62,6 +66,11 @@ func NewDatabaseDependencies(db *gorm.DB, cfg config.AuthConfig) (Dependencies, 
 	if err != nil {
 		return Dependencies{}, err
 	}
+	billingService, err := services.NewBillingService(billingRepository)
+	if err != nil {
+		return Dependencies{}, err
+	}
+	tunnelService.SetBilling(billingService)
 	agentService, err := services.NewAgentService(agents)
 	if err != nil {
 		return Dependencies{}, err
@@ -70,7 +79,15 @@ func NewDatabaseDependencies(db *gorm.DB, cfg config.AuthConfig) (Dependencies, 
 	if err != nil {
 		return Dependencies{}, err
 	}
-	return Dependencies{Auth: authService, DeviceLogin: deviceService, Organizations: organizationService, Tunnels: tunnelService, Agents: agentService, Domains: domainService, Ready: func(ctx context.Context) error {
+	usageRepository, err := repositories.NewUsageRepository(db)
+	if err != nil {
+		return Dependencies{}, err
+	}
+	usageService, err := services.NewUsageService(usageRepository)
+	if err != nil {
+		return Dependencies{}, err
+	}
+	return Dependencies{Auth: authService, DeviceLogin: deviceService, Organizations: organizationService, Tunnels: tunnelService, Agents: agentService, Domains: domainService, Usage: usageService, Billing: billingService, Ready: func(ctx context.Context) error {
 		sqlDB, err := db.DB()
 		if err != nil {
 			return fmt.Errorf("get database connection: %w", err)

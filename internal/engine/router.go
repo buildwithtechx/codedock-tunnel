@@ -97,6 +97,14 @@ func (r *RequestRouter) RemoveTunnel(tunnelID string) {
 	r.mu.Unlock()
 }
 
+func (r *RequestRouter) OrganizationID(tunnelID string) (string, bool) {
+	session, ok := r.sessions.Get(tunnelID)
+	if !ok {
+		return "", false
+	}
+	return session.OrganizationID, true
+}
+
 func (r *RequestRouter) remove(requestID string) {
 	r.mu.Lock()
 	delete(r.pending, requestID)

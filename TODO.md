@@ -222,15 +222,16 @@ codedock-tunnel/
 
 ## Usage, analytics, and operations data
 
-- [ ] Track tunnel count, active connections, bandwidth, request count, error rate, and retention usage per organization.
-- [ ] Keep ephemeral presence, heartbeats, rate limits, and active tunnel indexes in Redis.
-- [ ] Use Redis TTLs and periodic reconciliation to remove stale tunnel and organization presence entries.
+- [x] Track tunnel count, active connections, bandwidth, request count, error rate, and retention usage per organization.
+- [x] Keep ephemeral presence, heartbeats, rate limits, and active tunnel indexes in Redis.
+- [x] Use Redis TTLs and periodic reconciliation to remove stale tunnel and organization presence entries.
 - [x] Define durable control-plane and billing models for PostgreSQL through GORM.
-- [ ] Store durable control-plane records and billing state in PostgreSQL through GORM.
+- [x] Store durable control-plane records and billing state in PostgreSQL through GORM.
 - [ ] Support optional TimescaleDB or PostgreSQL time-series tables for high-volume usage analytics.
 - [ ] Keep raw payloads and secrets out of analytics storage by default.
-- [ ] Add retention policies based on the organization plan.
-- [ ] Add usage snapshots and aggregation jobs in `cmd/cron`.
+- [x] Add retention policies based on the organization plan.
+- [x] Add usage snapshots and aggregation jobs in `cmd/cron`.
+- [x] Add Go reporting endpoints for usage snapshots, usage events, plan limits, and billing status.
 - [ ] Add dashboards for current usage, historical usage, plan limits, and billing status.
 
 ## Billing and operations jobs

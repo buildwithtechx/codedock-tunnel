@@ -14,6 +14,7 @@ type TunnelRepository interface {
 	FindByID(context.Context, string) (models.Tunnel, error)
 	FindByHostname(context.Context, string) (models.Tunnel, error)
 	FindByOrganization(context.Context, string) ([]models.Tunnel, error)
+	CountByOrganization(context.Context, string) (int64, error)
 	Update(context.Context, *models.Tunnel) error
 	UpdateStatus(context.Context, string, models.TunnelStatus) error
 	Touch(context.Context, string, time.Time) error
@@ -59,6 +60,14 @@ func (r *GormTunnelRepository) FindByOrganization(ctx context.Context, organizat
 		return nil, fmt.Errorf("list tunnels: %w", err)
 	}
 	return tunnels, nil
+}
+
+func (r *GormTunnelRepository) CountByOrganization(ctx context.Context, organizationID string) (int64, error) {
+	var count int64
+	if err := r.db.WithContext(ctx).Model(&models.Tunnel{}).Where("organization_id = ? AND revoked_at IS NULL", organizationID).Count(&count).Error; err != nil {
+		return 0, fmt.Errorf("count organization tunnels: %w", err)
+	}
+	return count, nil
 }
 
 func (r *GormTunnelRepository) Update(ctx context.Context, tunnel *models.Tunnel) error {

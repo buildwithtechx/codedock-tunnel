@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -15,6 +16,19 @@ type HTTPProxy struct {
 	baseDomain   string
 	router       *RequestRouter
 	maxBodyBytes int64
+	recorder     UsageRecorder
+}
+
+type UsageMeasurement struct {
+	OrganizationID string
+	TunnelID       string
+	EventType      string
+	Bytes          int64
+	Connections    int
+}
+
+type UsageRecorder interface {
+	Record(context.Context, UsageMeasurement) error
 }
 
 func NewHTTPProxy(baseDomain string, router *RequestRouter, maxBodyBytes int64) (*HTTPProxy, error) {
@@ -49,10 +63,12 @@ func (p *HTTPProxy) ServeHTTP(response http.ResponseWriter, request *http.Reques
 		Body:    body,
 	})
 	if err != nil {
+		p.record(request, tunnelID, "error", 0)
 		http.Error(response, "tunnel unavailable", http.StatusBadGateway)
 		return
 	}
 	if forwarded.Error != "" {
+		p.record(request, tunnelID, "error", 0)
 		http.Error(response, forwarded.Error, http.StatusBadGateway)
 		return
 	}
@@ -67,9 +83,26 @@ func (p *HTTPProxy) ServeHTTP(response http.ResponseWriter, request *http.Reques
 	}
 	decoded, err := base64.StdEncoding.DecodeString(forwarded.Body)
 	if err != nil {
+		p.record(request, tunnelID, "error", 0)
 		return
 	}
+	p.record(request, tunnelID, "request", int64(len(decoded)))
 	_, _ = response.Write(decoded)
+}
+
+func (p *HTTPProxy) SetUsageRecorder(recorder UsageRecorder) {
+	p.recorder = recorder
+}
+
+func (p *HTTPProxy) record(request *http.Request, tunnelID, eventType string, bytes int64) {
+	if p.recorder == nil {
+		return
+	}
+	organizationID, ok := p.router.OrganizationID(tunnelID)
+	if !ok {
+		return
+	}
+	_ = p.recorder.Record(request.Context(), UsageMeasurement{OrganizationID: organizationID, TunnelID: tunnelID, EventType: eventType, Bytes: bytes})
 }
 
 var errBodyTooLarge = fmt.Errorf("request body too large")

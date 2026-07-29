@@ -13,9 +13,11 @@ type UsageService struct {
 	usage repositories.UsageRepository
 }
 
+var ErrUsageServiceRequired = fmt.Errorf("usage service is required")
+
 func NewUsageService(usage repositories.UsageRepository) (*UsageService, error) {
 	if usage == nil {
-		return nil, fmt.Errorf("usage repository is required")
+		return nil, ErrUsageServiceRequired
 	}
 	return &UsageService{usage: usage}, nil
 }
@@ -44,4 +46,37 @@ func (s *UsageService) Snapshot(ctx context.Context, snapshot *models.UsageSnaps
 		return fmt.Errorf("save usage snapshot: %w", err)
 	}
 	return nil
+}
+
+func (s *UsageService) Aggregate(ctx context.Context, organizationID string, from, to time.Time) (models.UsageSnapshot, error) {
+	if organizationID == "" || from.IsZero() || to.IsZero() || !to.After(from) {
+		return models.UsageSnapshot{}, fmt.Errorf("organization and valid aggregation period are required")
+	}
+	snapshot, err := s.usage.AggregatePeriod(ctx, organizationID, from, to)
+	if err != nil {
+		return models.UsageSnapshot{}, fmt.Errorf("aggregate usage: %w", err)
+	}
+	if err := s.Snapshot(ctx, &snapshot); err != nil {
+		return models.UsageSnapshot{}, err
+	}
+	return snapshot, nil
+}
+
+func (s *UsageService) ListEvents(ctx context.Context, organizationID string, from, to time.Time) ([]models.UsageEvent, error) {
+	if organizationID == "" || from.IsZero() || to.IsZero() || !to.After(from) {
+		return nil, fmt.Errorf("organization and valid usage period are required")
+	}
+	events, err := s.usage.ListEvents(ctx, organizationID, from, to)
+	if err != nil {
+		return nil, fmt.Errorf("list usage events: %w", err)
+	}
+	return events, nil
+}
+
+func (s *UsageService) FindSnapshot(ctx context.Context, organizationID string, periodStart time.Time) (models.UsageSnapshot, error) {
+	snapshot, err := s.usage.FindSnapshot(ctx, organizationID, periodStart)
+	if err != nil {
+		return models.UsageSnapshot{}, fmt.Errorf("find usage snapshot: %w", err)
+	}
+	return snapshot, nil
 }
