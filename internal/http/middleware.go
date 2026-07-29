@@ -1,12 +1,30 @@
 package http
 
 import (
+	"context"
 	"strings"
 
 	"codedock.run/codedock-tunnel/internal/models"
 	"codedock.run/codedock-tunnel/internal/services"
 	"github.com/gofiber/fiber/v2"
 )
+
+func auditRequest(audit *services.AuditService) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		err := c.Next()
+		session, ok := c.Locals("session").(models.Session)
+		if audit != nil && ok {
+			organizationID := c.Params("organizationID")
+			var organization *string
+			if organizationID != "" {
+				organization = &organizationID
+			}
+			userID := session.UserID
+			_ = audit.Record(context.Background(), &models.AuditEvent{OrganizationID: organization, UserID: &userID, Action: c.Method() + " " + c.Path(), ResourceType: "http", ResourceID: c.Params("tunnelID"), IPAddress: c.IP(), UserAgent: c.Get("User-Agent"), Metadata: `{}`})
+		}
+		return err
+	}
+}
 
 func sessionRequired(auth *services.AuthService, cookieName string) fiber.Handler {
 	return func(c *fiber.Ctx) error {

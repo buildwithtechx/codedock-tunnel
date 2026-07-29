@@ -37,7 +37,7 @@ func RegisterRoutes(app *fiber.App, handlers Handlers, options RouterOptions) er
 	app.Get("/api/v1/auth/session", handlers.Auth.Session)
 	app.Post("/api/v1/auth/logout", handlers.Auth.Logout)
 
-	protected := app.Group("/api/v1", sessionRequired(handlers.authService, options.CookieName))
+	protected := app.Group("/api/v1", sessionRequired(handlers.authService, options.CookieName), auditRequest(handlers.auditService))
 	protected.Post("/auth/device/complete", handlers.Auth.CompleteDeviceLogin)
 	protected.Post("/organizations", handlers.Organizations.Create)
 	protected.Post("/organizations/:organizationID/members", organizationRoleRequired(handlers.organizationService, models.MemberRoleAdmin), handlers.Organizations.AddMember)

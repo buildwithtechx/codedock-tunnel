@@ -12,6 +12,7 @@ import (
 	"codedock.run/codedock-tunnel/internal/infra/redis"
 	"codedock.run/codedock-tunnel/internal/relay"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 )
 
@@ -30,7 +31,12 @@ func main() {
 	}
 	defer redisClient.Close()
 	sessions := engine.NewSessionRegistry()
-	if _, err := engine.NewRequestRouter(sessions, cfg.Tunnel.AgentInactivity); err != nil {
+	requestRouter, err := engine.NewRequestRouter(sessions, cfg.Tunnel.AgentInactivity)
+	if err != nil {
+		log.Fatal(err)
+	}
+	httpProxy, err := engine.NewHTTPProxy(cfg.Tunnel.Domain, requestRouter, cfg.Tunnel.MaxBytes)
+	if err != nil {
 		log.Fatal(err)
 	}
 	authenticator, err := relay.NewInternalAgentAuthenticator(cfg.Service.InternalAPIURL, cfg.Service.InternalAPISecret, nil)
@@ -53,6 +59,7 @@ func main() {
 		}
 		return c.JSON(fiber.Map{"status": "ready"})
 	})
+	app.All("/*", adaptor.HTTPHandler(httpProxy))
 	go func() {
 		if err := app.Listen(cfg.App.ListenAddress()); err != nil {
 			log.Printf("relay stopped: %v", err)
