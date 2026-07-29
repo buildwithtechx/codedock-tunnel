@@ -14,7 +14,13 @@
         "close_tunnel",
         "data",
         "heartbeat",
-        "error"
+        "error",
+        "http_request",
+        "http_response",
+        "tcp_data",
+        "tcp_close",
+        "udp_data",
+        "udp_response"
       ]
     },
     "request_id": { "type": "string" },

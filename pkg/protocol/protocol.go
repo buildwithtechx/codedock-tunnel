@@ -17,6 +17,12 @@ type CloseTunnel = generated.CloseTunnel
 type Data = generated.Data
 type Heartbeat = generated.Heartbeat
 type ErrorMessage = generated.ErrorMessage
+type HTTPRequest = generated.HTTPRequest
+type HTTPResponse = generated.HTTPResponse
+type TCPData = generated.TCPData
+type TCPClose = generated.TCPClose
+type UDPData = generated.UDPData
+type UDPResponse = generated.UDPResponse
 
 const (
 	MessageTypeOpenTunnel    = generated.MessageTypeOpenTunnel
@@ -25,6 +31,12 @@ const (
 	MessageTypeData          = generated.MessageTypeData
 	MessageTypeHeartbeat     = generated.MessageTypeHeartbeat
 	MessageTypeError         = generated.MessageTypeError
+	MessageTypeHTTPRequest   = generated.MessageTypeHTTPRequest
+	MessageTypeHTTPResponse  = generated.MessageTypeHTTPResponse
+	MessageTypeTCPData       = generated.MessageTypeTCPData
+	MessageTypeTCPClose      = generated.MessageTypeTCPClose
+	MessageTypeUDPData       = generated.MessageTypeUDPData
+	MessageTypeUDPResponse   = generated.MessageTypeUDPResponse
 )
 
 func Encode(message Envelope) ([]byte, error) {

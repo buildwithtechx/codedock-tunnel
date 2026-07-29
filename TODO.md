@@ -132,7 +132,7 @@ codedock-tunnel/
 - [ ] Organize business logic and provider-neutral use cases under `internal/services/`.
 - [ ] Organize Fiber HTTP controllers under `internal/handlers/`.
 - [ ] Organize Fiber server setup, routes, middleware, and WebSocket wiring under `internal/http/`.
-- [ ] Organize relay, HTTP, TCP, UDP, and WebSocket engines under `internal/engine/`.
+- [x] Organize relay, HTTP, TCP, UDP, and WebSocket engine primitives under `internal/engine/`.
 - [ ] Organize authentication and authorization helpers under `internal/auth/`.
 - [x] Organize environment and runtime configuration under `internal/config/`.
 - [x] Create the PostgreSQL infrastructure package under `internal/infra/postgres/`.
@@ -256,6 +256,15 @@ codedock-tunnel/
 - [ ] Create the `codedock-tunnel-server` binary.
 - [ ] Implement CLI tunnel registration and authenticated session management.
 - [ ] Implement persistent connections, heartbeats, reconnects, and graceful shutdown.
+- [x] Add a concurrency-safe session registry with takeover protection.
+- [x] Add a request broker with request IDs, timeouts, cancellation, and response routing.
+- [x] Add reusable HTTP, TCP, and UDP protocol payloads.
+- [x] Implement an HTTP edge adapter with bounded bodies and hop-by-hop header filtering.
+- [x] Implement hostname-to-tunnel session resolution with base-domain validation.
+- [x] Add bounded stream copying with context cancellation.
+- [x] Add O(1)-style port allocation and release for TCP/UDP listeners.
+- [x] Add bandwidth accounting and limit enforcement primitives.
+- [x] Add TCP connection and UDP packet state registries with cleanup operations.
 - [ ] Implement multiplexed stream handling.
 - [ ] Implement HTTP and TCP forwarding.
 - [ ] Implement tunnel routing by tunnel ID and hostname.
