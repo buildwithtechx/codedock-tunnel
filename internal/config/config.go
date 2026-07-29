@@ -1,0 +1,81 @@
+package config
+
+import "time"
+
+type Config struct {
+	App      AppConfig      `envPrefix:"CODEDOCK_"`
+	Auth     AuthConfig     `envPrefix:"CODEDOCK_"`
+	Database DatabaseConfig `envPrefix:"CODEDOCK_"`
+	Redis    RedisConfig    `envPrefix:"CODEDOCK_"`
+	Mail     MailConfig     `envPrefix:"CODEDOCK_"`
+	Tunnel   TunnelConfig   `envPrefix:"CODEDOCK_"`
+	Billing  BillingConfig  `envPrefix:"CODEDOCK_"`
+}
+
+type AppConfig struct {
+	Port            string        `env:"PORT" envDefault:"8080"`
+	Name            string        `env:"APP_NAME" envDefault:"codedock-tunnel"`
+	Environment     string        `env:"ENV" envDefault:"development"`
+	LogLevel        string        `env:"LOG_LEVEL" envDefault:"info"`
+	ShutdownTimeout time.Duration `env:"SHUTDOWN_TIMEOUT" envDefault:"10s"`
+	AllowedOrigins  string        `env:"ALLOWED_ORIGINS" envDefault:"http://localhost:3000,http://localhost:3001"`
+	CORSOrigin      string        `env:"CORS_ORIGIN" envDefault:"http://localhost:3000"`
+	PublicAPIURL    string        `env:"PUBLIC_API_URL" envDefault:"http://localhost:8080"`
+}
+
+type AuthConfig struct {
+	InternalAPISecret  string        `env:"INTERNAL_API_SECRET"`
+	SessionTTL         time.Duration `env:"SESSION_TTL" envDefault:"720h"`
+	DeviceLoginTTL     time.Duration `env:"DEVICE_LOGIN_TTL" envDefault:"10m"`
+	CookieName         string        `env:"AUTH_COOKIE_NAME" envDefault:"codedock_session"`
+	CookieSecure       bool          `env:"AUTH_COOKIE_SECURE" envDefault:"false"`
+	GoogleClientID     string        `env:"GOOGLE_CLIENT_ID"`
+	GoogleClientSecret string        `env:"GOOGLE_CLIENT_SECRET"`
+	GitHubClientID     string        `env:"GITHUB_CLIENT_ID"`
+	GitHubClientSecret string        `env:"GITHUB_CLIENT_SECRET"`
+}
+
+type DatabaseConfig struct {
+	URL         string        `env:"DATABASE_URL" envDefault:"postgres://codedock:codedock@localhost:5432/codedock?sslmode=disable"`
+	MaxConns    int           `env:"DATABASE_MAX_CONNS" envDefault:"25"`
+	MaxLifetime time.Duration `env:"DB_CONN_MAX_LIFETIME" envDefault:"30m"`
+	MaxIdleTime time.Duration `env:"DB_CONN_MAX_IDLE_TIME" envDefault:"5m"`
+}
+
+type RedisConfig struct {
+	Host     string `env:"REDIS_HOST" envDefault:"localhost"`
+	Port     string `env:"REDIS_PORT" envDefault:"6379"`
+	Password string `env:"REDIS_PASSWORD"`
+	DB       int    `env:"REDIS_DB" envDefault:"0"`
+}
+
+type MailConfig struct {
+	FromAddress string `env:"MAIL_FROM"`
+	ZeptoAPIKey string `env:"ZEPTO_API_KEY"`
+}
+
+type TunnelConfig struct {
+	Domain          string        `env:"TUNNEL_DOMAIN" envDefault:"tunnel.localhost"`
+	TokenTTL        time.Duration `env:"TUNNEL_TOKEN_TTL" envDefault:"24h"`
+	MaxConnections  int           `env:"TUNNEL_MAX_CONNECTIONS" envDefault:"1000"`
+	MaxBytes        int64         `env:"TUNNEL_MAX_BYTES" envDefault:"0"`
+	RequireTLS      bool          `env:"TUNNEL_REQUIRE_TLS" envDefault:"false"`
+	AgentInactivity time.Duration `env:"AGENT_INACTIVITY_TIMEOUT" envDefault:"90s"`
+}
+
+type BillingConfig struct {
+	Enabled                 bool   `env:"BILLING_ENABLED" envDefault:"false"`
+	PolarServer             string `env:"POLAR_SERVER" envDefault:"sandbox"`
+	PolarBaseURL            string `env:"POLAR_BASE_URL" envDefault:"https://sandbox-api.polar.sh"`
+	PolarAccessToken        string `env:"POLAR_ACCESS_TOKEN"`
+	PolarWebhookSecret      string `env:"POLAR_WEBHOOK_SECRET"`
+	PolarProductRay         string `env:"POLAR_PRODUCT_RAY"`
+	PolarProductBeam        string `env:"POLAR_PRODUCT_BEAM"`
+	PolarProductPulse       string `env:"POLAR_PRODUCT_PULSE"`
+	PolarProductRayYearly   string `env:"POLAR_PRODUCT_RAY_YEARLY"`
+	PolarProductBeamYearly  string `env:"POLAR_PRODUCT_BEAM_YEARLY"`
+	PolarProductPulseYearly string `env:"POLAR_PRODUCT_PULSE_YEARLY"`
+	PaystackBaseURL         string `env:"PAYSTACK_BASE_URL" envDefault:"https://api.paystack.co"`
+	PaystackSecret          string `env:"PAYSTACK_SECRET_KEY"`
+	WebhookSecret           string `env:"BILLING_WEBHOOK_SECRET"`
+}

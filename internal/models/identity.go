@@ -6,8 +6,6 @@ type User struct {
 	Base
 	Email           string     `json:"email" gorm:"uniqueIndex;not null"`
 	Name            string     `json:"name" gorm:"not null"`
-	PasswordHash    string     `json:"-" gorm:"not null"`
-	PasswordVersion int        `json:"-" gorm:"not null;default:1"`
 	Status          UserStatus `json:"status" gorm:"type:varchar(20);not null;default:'active'"`
 	EmailVerifiedAt *time.Time `json:"emailVerifiedAt,omitempty"`
 	LastLoginAt     *time.Time `json:"lastLoginAt,omitempty"`

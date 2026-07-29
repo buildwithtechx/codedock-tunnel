@@ -48,6 +48,29 @@ npm run test
 make docker-build
 ```
 
+## Deployment roles
+
+The Go commands are independently deployable and do not all need to run on the same machine.
+
+| Command | Deployment | Lifecycle |
+| --- | --- | --- |
+| `cmd/server` | Public VPS or container | Long-running relay and API |
+| `cmd/agent` | User’s private machine or container | Long-running outbound connection |
+| `cmd/cron` | Scheduled container, systemd timer, or Kubernetes CronJob | Short-lived maintenance jobs |
+| `cmd/check` | Scheduled job or health-check container | Short-lived domain and edge checks |
+| `cmd/cli` | User workstation binary or package manager | Invoked on demand |
+
+Build the server image by default, or select another command with `TARGET`:
+
+```sh
+docker build --build-arg TARGET=server -t codedock-tunnel-server .
+docker build --build-arg TARGET=agent -t codedock-tunnel-agent .
+docker build --build-arg TARGET=cron -t codedock-tunnel-cron .
+docker build --build-arg TARGET=check -t codedock-tunnel-check .
+```
+
+The CLI is normally distributed as a platform binary rather than deployed as a service.
+
 ## Standalone usage
 
 The CLI must support a configurable tunnel server URL so users can connect to the hosted service, a private installation, or a local development server.

@@ -9,7 +9,9 @@
     "typecheck": "tsc --noEmit"
   },
   "description": "Framework-neutral TypeScript and Node.js client for Codedock Tunnel",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "dependencies": {
     "@codedock-tunnel/protocol-ts": "0.1.0"
   },

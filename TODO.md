@@ -134,7 +134,7 @@ codedock-tunnel/
 - [ ] Organize Fiber server setup, routes, middleware, and WebSocket wiring under `internal/http/`.
 - [ ] Organize relay, HTTP, TCP, UDP, and WebSocket engines under `internal/engine/`.
 - [ ] Organize authentication and authorization helpers under `internal/auth/`.
-- [ ] Organize environment and runtime configuration under `internal/config/`.
+- [x] Organize environment and runtime configuration under `internal/config/`.
 - [x] Create the PostgreSQL infrastructure package under `internal/infra/postgres/`.
 - [ ] Organize Redis, billing providers, telemetry, storage, and distributed locks under `internal/infra/`.
 - [ ] Organize retryable cleanup, usage, billing, and reconciliation jobs under `internal/workers/`.
@@ -179,25 +179,22 @@ codedock-tunnel/
 - [x] Define the initial PostgreSQL control-plane models and GORM migration registry.
 - [ ] Use PostgreSQL as the primary control-plane database for hosted and self-hosted installations.
 - [ ] Use PostgreSQL transactions, constraints, indexes, and explicit versioned migrations for durable state.
-- [ ] Use `golang.org/x/crypto/argon2` with Argon2id for password hashing.
-- [ ] Define Argon2id parameters, version them, and support transparent rehashing when parameters change.
 - [ ] Use `github.com/redis/go-redis/v9` for ephemeral sessions, heartbeats, rate limits, presence, and relay coordination.
 - [ ] Keep tunnel payloads out of Redis and PostgreSQL unless explicitly required for analytics or audit purposes.
 - [ ] Use the standard library `log/slog` with structured, secret-redacting handlers.
 - [ ] Use `github.com/go-playground/validator/v10` or equivalent request validation at API boundaries.
 - [ ] Use `github.com/google/uuid` or a documented ID strategy consistently across database and protocol entities.
-- [ ] Use `github.com/joho/godotenv` only for local development and never as production secret storage.
+- [ ] Use `github.com/caarlos0/env/v11` for tagged environment configuration.
 - [ ] Define dependency versions in `go.mod` and review them through automated vulnerability scanning.
 - [ ] Document why each dependency is required and avoid duplicate HTTP, ORM, crypto, or WebSocket stacks.
 
 ## Identity, organizations, and access
 
 - [x] Create standalone user, session, organization, organization-member, and role models.
-- [ ] Implement email/password authentication with Argon2id and transparent password rehashing.
-- [ ] Implement short-lived access tokens and revocable refresh sessions.
+- [ ] Implement Google and GitHub OAuth sign-in with revocable sessions.
 - [ ] Add CLI login sessions with one-time device codes and explicit expiration.
 - [ ] Add organization membership roles and resource-level authorization.
-- [ ] Add optional OAuth providers without coupling identity to Codedock.
+- [ ] Keep Google and GitHub OAuth providers independent from Codedock.
 - [ ] Store session and refresh-token state in PostgreSQL or Redis with revocation support.
 - [ ] Add account deletion, organization ownership transfer, and member removal flows.
 - [ ] Audit authentication, membership, credential, billing, and tunnel-management actions.
@@ -219,6 +216,7 @@ codedock-tunnel/
 - [ ] Add grace periods, downgrade behavior, failed-payment handling, and free-plan fallback rules.
 - [ ] Add billing history, invoices, receipts, and customer self-service portal links.
 - [ ] Keep billing optional for self-hosted deployments while preserving local plan configuration.
+- [ ] Use Zepto Mail as the only transactional email provider.
 
 ## Usage, analytics, and operations data
 

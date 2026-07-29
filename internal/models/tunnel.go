@@ -13,7 +13,6 @@ type Tunnel struct {
 	TargetPort     int            `json:"targetPort" gorm:"not null"`
 	PublicHostname string         `json:"publicHostname" gorm:"uniqueIndex;not null"`
 	PublicPort     *int           `json:"publicPort,omitempty"`
-	PasswordHash   string         `json:"-"`
 	AccessPolicy   string         `json:"accessPolicy" gorm:"type:jsonb;not null;default:'{}'"`
 	ExpiresAt      *time.Time     `json:"expiresAt,omitempty" gorm:"index"`
 	LastActiveAt   *time.Time     `json:"lastActiveAt,omitempty"`

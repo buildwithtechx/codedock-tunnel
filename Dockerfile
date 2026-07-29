@@ -1,31 +1,31 @@
-FROM node:22-alpine AS web-build
+# syntax=docker/dockerfile:1
 
-WORKDIR /workspace
-COPY package.json package-lock.json* ./
-COPY apps/web/package.json apps/web/package.json
-COPY packages packages
-RUN npm ci
-COPY apps/web apps/web
-COPY tsconfig.base.json biome.json ./
-RUN npm run build:web
-
+# Build one Go command at a time so each runtime can be deployed independently.
 FROM golang:1.25-alpine AS go-build
 
 WORKDIR /workspace
+
 COPY go.mod go.sum ./
 RUN go mod download
-COPY . .
-RUN CGO_ENABLED=0 go build -ldflags='-s -w' -o /out/tunnel-server ./cmd/server
 
+COPY . .
+
+ARG TARGET=server
+ARG VERSION=dev
+RUN CGO_ENABLED=0 go build -ldflags="-s -w -X main.version=${VERSION}" -o /out/codedock-tunnel ./cmd/${TARGET}
+
+# Keep the runtime image small and non-root.
 FROM alpine:3.22
 
 RUN addgroup -S codedock && adduser -S -G codedock codedock
+
 WORKDIR /app
-COPY --from=go-build /out/tunnel-server /app/tunnel-server
-COPY --from=web-build /workspace/apps/web/dist /app/web
+
+COPY --from=go-build /out/codedock-tunnel /app/codedock-tunnel
+
 RUN mkdir -p /app/data && chown -R codedock:codedock /app
 
 USER codedock
-ENV CODEDOCK_TUNNEL_WEB_DIR=/app/web
-EXPOSE 8080
-ENTRYPOINT ["/app/tunnel-server"]
+
+STOPSIGNAL SIGTERM
+ENTRYPOINT ["/app/codedock-tunnel"]
