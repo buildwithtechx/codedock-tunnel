@@ -24,8 +24,13 @@ func RegisterRoutes(app *fiber.App, handlers Handlers, options RouterOptions) er
 	if handlers.Billing != nil {
 		handlers.Billing.SetWebhookSecret(options.BillingWebhookSecret)
 	}
+	app.Use(securityHeadersMiddleware(options.CookieSecure))
 	app.Get("/healthz", handlers.Health.Liveness)
 	app.Get("/readyz", handlers.Health.Readiness)
+	app.Get("/metrics", func(c *fiber.Ctx) error {
+		c.Set("Content-Type", "text/plain; version=0.0.4")
+		return c.SendString("# HELP codedock_status Status metric\n# TYPE codedock_status gauge\ncodedock_status 1\n")
+	})
 	app.Post("/api/v1/auth/device/start", handlers.Auth.StartDeviceLogin)
 	if handlers.Billing != nil {
 		app.Post("/api/v1/billing/webhooks/:provider", handlers.Billing.Webhook)

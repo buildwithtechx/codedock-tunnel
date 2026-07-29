@@ -33,20 +33,20 @@ This section is the authoritative list of backend implementation work still outs
 
 ### Domains and operations
 
-- [ ] Implement DNS and HTTP custom-domain ownership challenges.
-- [ ] Add certificate issuance/readiness checks and activate custom domains only after verification.
-- [ ] Prevent domain verification from probing private networks or internal metadata endpoints.
-- [ ] Add retry/backoff, dead-letter handling, and operator-visible status for cron jobs.
-- [ ] Add subscription reconciliation and provider polling to `cmd/cron`.
-- [ ] Add Prometheus-compatible metrics for relay, API, billing, usage, and worker health.
+- [x] Implement DNS and HTTP custom-domain ownership challenges.
+- [x] Add certificate issuance/readiness checks and activate custom domains only after verification.
+- [x] Prevent domain verification from probing private networks or internal metadata endpoints.
+- [x] Add retry/backoff, dead-letter handling, and operator-visible status for cron jobs.
+- [x] Add subscription reconciliation and provider polling to `cmd/cron`.
+- [x] Add Prometheus-compatible metrics for relay, API, billing, usage, and worker health.
 
 ### Security and hardening
 
-- [ ] Enforce TLS and secure WebSocket configuration in production mode.
-- [ ] Add strict origin, host, SSRF, open-proxy, port-scanning, and abuse controls.
-- [ ] Add security tests for token replay, cross-tunnel access, credential revocation, and stale sessions.
-- [ ] Add protocol fuzzing and malformed-frame tests.
-- [ ] Remove sensitive OAuth/provider secrets from logs and add secret rotation procedures.
+- [x] Enforce TLS and secure WebSocket configuration in production mode.
+- [x] Add strict origin, host, SSRF, open-proxy, port-scanning, and abuse controls.
+- [x] Add security tests for token replay, cross-tunnel access, credential revocation, and stale sessions.
+- [x] Add protocol fuzzing and malformed-frame tests.
+- [x] Remove sensitive OAuth/provider secrets from logs and add secret rotation procedures.
 
 ### Backend verification and release
 
