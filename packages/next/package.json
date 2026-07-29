@@ -9,12 +9,14 @@
     "typecheck": "tsc --noEmit"
   },
   "description": "Next.js integration for Codedock Tunnel",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "dependencies": {
     "@codedock-tunnel/sdk-ts": "0.1.0"
   },
   "peerDependencies": {
-    "next": ">=14"
+    "next": ">=15"
   },
   "exports": {
     ".": {

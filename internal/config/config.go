@@ -20,7 +20,7 @@ type AppConfig struct {
 	ShutdownTimeout time.Duration `env:"SHUTDOWN_TIMEOUT" envDefault:"10s"`
 	AllowedOrigins  string        `env:"ALLOWED_ORIGINS" envDefault:"http://localhost:3000,http://localhost:3001"`
 	CORSOrigin      string        `env:"CORS_ORIGIN" envDefault:"http://localhost:3000"`
-	PublicAPIURL    string        `env:"PUBLIC_API_URL" envDefault:"http://localhost:8080"`
+	PublicAPIURL    string        `env:"PUBLIC_API_URL" envDefault:"https://api.codedock-tunnel.dev"`
 }
 
 type AuthConfig struct {
@@ -55,7 +55,7 @@ type MailConfig struct {
 }
 
 type TunnelConfig struct {
-	Domain          string        `env:"TUNNEL_DOMAIN" envDefault:"tunnel.localhost"`
+	Domain          string        `env:"TUNNEL_DOMAIN" envDefault:"tunnel.codedock-tunnel.dev"`
 	TokenTTL        time.Duration `env:"TUNNEL_TOKEN_TTL" envDefault:"24h"`
 	MaxConnections  int           `env:"TUNNEL_MAX_CONNECTIONS" envDefault:"1000"`
 	MaxBytes        int64         `env:"TUNNEL_MAX_BYTES" envDefault:"0"`

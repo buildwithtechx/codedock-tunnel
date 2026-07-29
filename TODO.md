@@ -104,10 +104,12 @@ codedock-tunnel/
 │   ├── protocol/
 │   ├── security/
 │   └── e2e/
-├── deploy/
-│   ├── docker/
-│   ├── systemd/
-│   └── kubernetes/
+├── docker/
+│   ├── Dockerfile.api
+│   ├── Dockerfile.tunnel
+│   ├── Dockerfile.cron
+│   ├── Dockerfile.check
+│   └── Dockerfile.cli
 ├── docs/
 ├── scripts/
 ├── go.mod
@@ -157,8 +159,7 @@ codedock-tunnel/
 - [ ] Keep framework adapters independently versioned while preserving compatibility with the core SDK.
 - [ ] Keep `integrations/codedock/` as an optional external adapter.
 - [ ] Keep database migrations in `migrations/` and integration tests in `tests/`.
-- [x] Add independent Dockerfiles under `deploy/docker/` for API, tunnel, cron, check, and CLI.
-- [ ] Add systemd and self-hosted deployment configurations under `deploy/`.
+- [x] Add independent Dockerfiles under `docker/` for API, tunnel, cron, check, and CLI.
 - [ ] Keep the root workspace configuration independent from the Codedock repository.
 - [ ] Ensure the tunnel core has no imports of Codedock models, routes, authentication, or database packages.
 
@@ -349,7 +350,7 @@ codedock-tunnel/
 - [ ] Define cleanup for expired tunnels, sessions, and unused subdomains.
 - [ ] Add database migrations and migration integrity checks.
 - [ ] Add backups and restore procedures for control-plane metadata.
-- [ ] Add Docker and systemd deployment examples.
+- [ ] Add Docker deployment examples.
 - [ ] Add horizontal scaling design for multiple relay servers.
 - [ ] Define CLI-to-relay affinity and session handoff behavior.
 - [ ] Add Prometheus-compatible metrics and operational dashboards.

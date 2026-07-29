@@ -3,6 +3,7 @@
 set -euo pipefail
 
 repo="${CODEDOCK_TUNNEL_REPO:-codedock-tunnel/codedock-tunnel}"
+download_base_url="${CODEDOCK_TUNNEL_DOWNLOAD_BASE_URL:-https://cli.codedock-tunnel.dev/releases/cli}"
 version="${CODEDOCK_TUNNEL_VERSION:-latest}"
 install_dir="${CODEDOCK_TUNNEL_INSTALL_DIR:-$HOME/.local/bin}"
 
@@ -19,17 +20,20 @@ case "$(uname -m)" in
 esac
 
 asset="codedock-cli_${os}_${arch}.tar.gz"
-base_url="https://github.com/${repo}/releases"
 if [ "$version" = "latest" ]; then
-  download_url="${base_url}/latest/download/${asset}"
+  download_url="${download_base_url}/latest/${asset}"
+  fallback_url="https://github.com/${repo}/releases/latest/download/${asset}"
 else
-  download_url="${base_url}/download/${version}/${asset}"
+  download_url="${download_base_url}/${version}/${asset}"
+  fallback_url="https://github.com/${repo}/releases/download/${version}/${asset}"
 fi
 
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
 
-curl --fail --location --silent --show-error "$download_url" -o "$tmp_dir/$asset"
+if ! curl --fail --location --silent --show-error "$download_url" -o "$tmp_dir/$asset"; then
+  curl --fail --location --silent --show-error "$fallback_url" -o "$tmp_dir/$asset"
+fi
 tar -xzf "$tmp_dir/$asset" -C "$tmp_dir"
 
 mkdir -p "$install_dir"

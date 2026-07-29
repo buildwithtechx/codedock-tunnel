@@ -4,6 +4,14 @@ Codedock Tunnel is an independent tunneling platform for exposing local and priv
 
 It is designed to work without Codedock. Codedock is an optional integration that can create and manage tunnels through the public Codedock Tunnel API.
 
+## Hosted domains
+
+- `codedock-tunnel.dev` serves the Tunnel web dashboard.
+- `api.codedock-tunnel.dev` serves the Tunnel control-plane API.
+- `tunnel.codedock-tunnel.dev` serves the public tunnel relay and generated tunnel endpoints.
+- `cli.codedock-tunnel.dev` serves the CLI installer and release assets.
+- `desktop.codedock-tunnel.dev` serves Tunnel Desktop installers.
+
 ## Product surfaces
 
 - Go tunnel server and public relay
@@ -62,10 +70,10 @@ The Go commands are independently deployable and do not all need to run on the s
 Each deployable command has its own Dockerfile:
 
 ```sh
-docker build -f deploy/docker/api.Dockerfile -t codedock-api .
-docker build -f deploy/docker/tunnel.Dockerfile -t codedock-tunnel-server .
-docker build -f deploy/docker/cron.Dockerfile -t codedock-tunnel-cron .
-docker build -f deploy/docker/check.Dockerfile -t codedock-tunnel-check .
+docker build -f docker/Dockerfile.api -t codedock-api .
+docker build -f docker/Dockerfile.tunnel -t codedock-tunnel-server .
+docker build -f docker/Dockerfile.cron -t codedock-tunnel-cron .
+docker build -f docker/Dockerfile.check -t codedock-tunnel-check .
 ```
 
 The CLI is normally distributed as a platform binary. An optional CLI image is available for CI automation.
@@ -85,16 +93,18 @@ CHECK ◀── private HTTP request ── edge proxy
 
 The CLI must support a configurable tunnel server URL so users can connect to the hosted service, a private installation, or a local development server.
 
-After a release, Unix users can install the matching CLI binary with:
+After a release, Unix users can install the CLI with the branded domain:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/<owner>/codedock-tunnel/main/scripts/install-cli.sh | bash
+curl -fsSL https://cli.codedock-tunnel.dev | bash
 ```
 
-The installer defaults to `$HOME/.local/bin`. Set `CODEDOCK_TUNNEL_REPO` when the repository is hosted under a different owner. Windows users download the Windows release asset directly. Package-manager distribution can be added later through Homebrew, Scoop, and npm wrappers.
+`cli.codedock-tunnel.dev` should serve this installer, while `cli.codedock-tunnel.dev/releases/cli` should serve versioned release assets. The installer falls back to GitHub Releases if the downloads path is unavailable. It installs the `codedock-tunnel` CLI to `$HOME/.local/bin` by default. Windows users download the Tunnel CLI release asset directly.
+
+The CLI and desktop app are separate products. The CLI is a terminal binary for local tunnels, automation, and CI. The desktop app is a Tauri GUI distributed through platform installers; installing one does not install the other.
 
 ```sh
-codedock-tunnel login --server https://tunnel.example.com
+codedock-tunnel login --server https://api.codedock-tunnel.dev
 codedock-tunnel http 3000
 ```
 
