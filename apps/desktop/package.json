@@ -9,7 +9,8 @@
   "scripts": {
     "dev": "tauri dev",
     "build": "tauri build",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.11.1"

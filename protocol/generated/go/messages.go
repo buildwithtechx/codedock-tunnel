@@ -3,22 +3,34 @@ package protocol
 import "encoding/json"
 
 const Version = 1
+const MinSupportedVersion = 1
+const MaxSupportedVersion = 1
+
+const DefaultMaxFrameSize int64 = 16 * 1024 * 1024
+const AbsoluteMaxFrameSize int64 = 32 * 1024 * 1024
+const DefaultIdleTimeoutSeconds int = 60
+const DefaultConnectionTimeoutSeconds int = 30
 
 type MessageType string
 
 const (
-	MessageTypeOpenTunnel    MessageType = "open_tunnel"
-	MessageTypeOpenTunnelAck MessageType = "open_tunnel_ack"
-	MessageTypeCloseTunnel   MessageType = "close_tunnel"
-	MessageTypeData          MessageType = "data"
-	MessageTypeHeartbeat     MessageType = "heartbeat"
-	MessageTypeError         MessageType = "error"
-	MessageTypeHTTPRequest   MessageType = "http_request"
-	MessageTypeHTTPResponse  MessageType = "http_response"
-	MessageTypeTCPData       MessageType = "tcp_data"
-	MessageTypeTCPClose      MessageType = "tcp_close"
-	MessageTypeUDPData       MessageType = "udp_data"
-	MessageTypeUDPResponse   MessageType = "udp_response"
+	MessageTypeAuth                MessageType = "auth"
+	MessageTypeAuthResponse        MessageType = "auth_response"
+	MessageTypeVersionNegotiate    MessageType = "version_negotiate"
+	MessageTypeVersionNegotiateAck MessageType = "version_negotiate_ack"
+	MessageTypeFlowControl         MessageType = "flow_control"
+	MessageTypeOpenTunnel          MessageType = "open_tunnel"
+	MessageTypeOpenTunnelAck       MessageType = "open_tunnel_ack"
+	MessageTypeCloseTunnel         MessageType = "close_tunnel"
+	MessageTypeData                MessageType = "data"
+	MessageTypeHeartbeat           MessageType = "heartbeat"
+	MessageTypeError               MessageType = "error"
+	MessageTypeHTTPRequest         MessageType = "http_request"
+	MessageTypeHTTPResponse        MessageType = "http_response"
+	MessageTypeTCPData             MessageType = "tcp_data"
+	MessageTypeTCPClose            MessageType = "tcp_close"
+	MessageTypeUDPData             MessageType = "udp_data"
+	MessageTypeUDPResponse         MessageType = "udp_response"
 )
 
 type Envelope struct {
@@ -26,6 +38,40 @@ type Envelope struct {
 	Type      MessageType     `json:"type"`
 	RequestID string          `json:"request_id,omitempty"`
 	Payload   json.RawMessage `json:"payload,omitempty"`
+}
+
+type AuthRequest struct {
+	Token                 string   `json:"token"`
+	AgentID               string   `json:"agent_id,omitempty"`
+	RequestedCapabilities []string `json:"requested_capabilities,omitempty"`
+}
+
+type AuthResponse struct {
+	Authenticated       bool     `json:"authenticated"`
+	AgentID             string   `json:"agent_id,omitempty"`
+	OrganizationID      string   `json:"organization_id,omitempty"`
+	GrantedCapabilities []string `json:"granted_capabilities,omitempty"`
+	Error               string   `json:"error,omitempty"`
+}
+
+type VersionNegotiate struct {
+	MinVersion    int    `json:"min_version"`
+	MaxVersion    int    `json:"max_version"`
+	ClientName    string `json:"client_name,omitempty"`
+	ClientVersion string `json:"client_version,omitempty"`
+}
+
+type VersionNegotiateAck struct {
+	NegotiatedVersion int    `json:"negotiated_version"`
+	SupportedVersions []int  `json:"supported_versions"`
+	ServerName        string `json:"server_name,omitempty"`
+	ServerVersion     string `json:"server_version,omitempty"`
+}
+
+type FlowControl struct {
+	StreamID   string `json:"stream_id"`
+	Action     string `json:"action"`
+	WindowSize int64  `json:"window_size,omitempty"`
 }
 
 type OpenTunnel struct {

@@ -6,9 +6,14 @@
   "type": "object",
   "required": ["version", "type"],
   "properties": {
-    "version": { "const": 1 },
+    "version": { "type": "integer", "minimum": 1 },
     "type": {
       "enum": [
+        "auth",
+        "auth_response",
+        "version_negotiate",
+        "version_negotiate_ack",
+        "flow_control",
         "open_tunnel",
         "open_tunnel_ack",
         "close_tunnel",
@@ -28,6 +33,69 @@
   },
   "additionalProperties": false,
   "$defs": {
+    "auth": {
+      "type": "object",
+      "required": ["token"],
+      "properties": {
+        "token": { "type": "string" },
+        "agent_id": { "type": "string" },
+        "requested_capabilities": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "auth_response": {
+      "type": "object",
+      "required": ["authenticated"],
+      "properties": {
+        "authenticated": { "type": "boolean" },
+        "agent_id": { "type": "string" },
+        "organization_id": { "type": "string" },
+        "granted_capabilities": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "error": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "version_negotiate": {
+      "type": "object",
+      "required": ["min_version", "max_version"],
+      "properties": {
+        "min_version": { "type": "integer", "minimum": 1 },
+        "max_version": { "type": "integer", "minimum": 1 },
+        "client_name": { "type": "string" },
+        "client_version": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "version_negotiate_ack": {
+      "type": "object",
+      "required": ["negotiated_version", "supported_versions"],
+      "properties": {
+        "negotiated_version": { "type": "integer" },
+        "supported_versions": {
+          "type": "array",
+          "items": { "type": "integer" }
+        },
+        "server_name": { "type": "string" },
+        "server_version": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "flow_control": {
+      "type": "object",
+      "required": ["stream_id", "action"],
+      "properties": {
+        "stream_id": { "type": "string" },
+        "action": { "type": "string", "enum": ["pause", "resume"] },
+        "window_size": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
     "open_tunnel": {
       "type": "object",
       "required": ["token", "local_port", "protocol"],

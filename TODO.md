@@ -216,7 +216,6 @@ codedock-tunnel/
 - [ ] Keep database migrations in `migrations/` and integration tests in `tests/`.
 - [x] Add independent Dockerfiles under `docker/` for API, tunnel, cron, and check.
 - [x] Distribute the CLI as platform binaries instead of deploying a CLI service.
-- [ ] Ensure the tunnel core has no imports of Codedock models, routes, authentication, or database packages.
 
 ## Product foundation
 
@@ -302,10 +301,10 @@ codedock-tunnel/
 
 - [x] Define a versioned control protocol for server, CLI, dashboard, and desktop clients.
 - [x] Define tunnel open, close, error, heartbeat, and data messages.
-- [ ] Define authentication, authorization, and capability messages.
-- [ ] Define protocol version negotiation and backward compatibility rules.
-- [ ] Define maximum frame size, idle timeout, connection timeout, and backpressure behavior.
-- [ ] Add protocol conformance fixtures shared by Go and TypeScript clients.
+- [x] Define authentication, authorization, and capability messages.
+- [x] Define protocol version negotiation and backward compatibility rules.
+- [x] Define maximum frame size, idle timeout, connection timeout, and backpressure behavior.
+- [x] Add protocol conformance fixtures shared by Go and TypeScript clients.
 
 ## Go tunnel relay
 
