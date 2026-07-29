@@ -1,0 +1,117 @@
+package services
+
+import (
+	"context"
+	"fmt"
+	"strings"
+	"time"
+
+	"codedock.run/codedock-tunnel/internal/auth"
+	"codedock.run/codedock-tunnel/internal/models"
+	"codedock.run/codedock-tunnel/internal/repositories"
+)
+
+type AuthService struct {
+	users      repositories.UserRepository
+	identities repositories.OAuthIdentityRepository
+	sessions   repositories.SessionRepository
+	now        func() time.Time
+	sessionTTL time.Duration
+}
+
+func NewAuthService(users repositories.UserRepository, identities repositories.OAuthIdentityRepository, sessions repositories.SessionRepository, sessionTTL time.Duration) (*AuthService, error) {
+	if users == nil || identities == nil || sessions == nil {
+		return nil, fmt.Errorf("auth repositories are required")
+	}
+	if sessionTTL <= 0 {
+		return nil, fmt.Errorf("session ttl must be positive")
+	}
+	return &AuthService{users: users, identities: identities, sessions: sessions, now: time.Now, sessionTTL: sessionTTL}, nil
+}
+
+func (s *AuthService) CreateSession(ctx context.Context, userID, userAgent, ipAddress string) (string, models.Session, error) {
+	if userID == "" {
+		return "", models.Session{}, fmt.Errorf("user id is required")
+	}
+	now := s.now()
+	raw, err := auth.NewToken("cds", 32)
+	if err != nil {
+		return "", models.Session{}, err
+	}
+	session := models.Session{UserID: userID, TokenHash: auth.HashToken(raw), UserAgent: userAgent, IPAddress: ipAddress, ExpiresAt: now.Add(s.sessionTTL), LastSeenAt: &now}
+	if err := s.sessions.Create(ctx, &session); err != nil {
+		return "", models.Session{}, fmt.Errorf("create auth session: %w", err)
+	}
+	return raw, session, nil
+}
+
+func (s *AuthService) AuthenticateSession(ctx context.Context, raw string) (models.Session, error) {
+	if strings.TrimSpace(raw) == "" {
+		return models.Session{}, fmt.Errorf("session token is required")
+	}
+	now := s.now()
+	session, err := s.sessions.FindActive(ctx, auth.HashToken(raw), now)
+	if err != nil {
+		return models.Session{}, fmt.Errorf("find auth session: %w", err)
+	}
+	if _, err := s.users.FindByID(ctx, session.UserID); err != nil {
+		return models.Session{}, fmt.Errorf("find session user: %w", err)
+	}
+	if err := s.sessions.Touch(ctx, session.ID, now); err != nil {
+		return models.Session{}, fmt.Errorf("touch auth session: %w", err)
+	}
+	session.LastSeenAt = &now
+	return session, nil
+}
+
+func (s *AuthService) RevokeSession(ctx context.Context, sessionID string) error {
+	if sessionID == "" {
+		return fmt.Errorf("session id is required")
+	}
+	if err := s.sessions.Revoke(ctx, sessionID, s.now()); err != nil {
+		return fmt.Errorf("revoke auth session: %w", err)
+	}
+	return nil
+}
+
+func (s *AuthService) FindOrCreateOAuthUser(ctx context.Context, profile auth.OAuthProfile) (models.User, error) {
+	if err := auth.ValidateOAuthProfile(profile); err != nil {
+		return models.User{}, err
+	}
+	identity, err := s.identities.Find(ctx, profile.Provider, profile.Subject)
+	if err == nil {
+		user, findErr := s.users.FindByID(ctx, identity.UserID)
+		if findErr != nil {
+			return models.User{}, fmt.Errorf("find oauth user: %w", findErr)
+		}
+		return user, nil
+	}
+	if err != repositories.ErrNotFound {
+		return models.User{}, fmt.Errorf("find oauth identity: %w", err)
+	}
+	user, err := s.users.FindByEmail(ctx, strings.ToLower(strings.TrimSpace(profile.Email)))
+	if err == repositories.ErrNotFound {
+		name := strings.TrimSpace(profile.Name)
+		if name == "" {
+			name = strings.TrimSpace(strings.Split(profile.Email, "@")[0])
+		}
+		user = models.User{Email: strings.ToLower(strings.TrimSpace(profile.Email)), Name: name, Status: models.UserStatusActive}
+		if profile.EmailVerified {
+			now := s.now()
+			user.EmailVerifiedAt = &now
+		}
+		if err := s.users.Create(ctx, &user); err != nil {
+			return models.User{}, fmt.Errorf("create oauth user: %w", err)
+		}
+	} else if err != nil {
+		return models.User{}, fmt.Errorf("find oauth email: %w", err)
+	}
+	identity = models.OAuthIdentity{UserID: user.ID, Provider: profile.Provider, Subject: profile.Subject, Email: profile.Email, AccessToken: profile.AccessToken, RefreshToken: profile.RefreshToken, TokenExpiresAt: profile.TokenExpiresAt}
+	if err := s.identities.Save(ctx, &identity); err != nil {
+		return models.User{}, fmt.Errorf("save oauth identity: %w", err)
+	}
+	if err := s.users.UpdateLastLogin(ctx, user.ID, s.now()); err != nil {
+		return models.User{}, fmt.Errorf("update oauth login: %w", err)
+	}
+	return user, nil
+}

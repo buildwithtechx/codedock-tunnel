@@ -12,6 +12,17 @@ type User struct {
 	DeletedAt       *time.Time `json:"-"`
 }
 
+type OAuthIdentity struct {
+	Base
+	UserID         string     `json:"userId" gorm:"type:uuid;not null;uniqueIndex:oauth_provider_subject"`
+	Provider       string     `json:"provider" gorm:"type:varchar(20);not null;uniqueIndex:oauth_provider_subject"`
+	Subject        string     `json:"subject" gorm:"not null;uniqueIndex:oauth_provider_subject"`
+	Email          string     `json:"email,omitempty"`
+	AccessToken    string     `json:"-"`
+	RefreshToken   string     `json:"-"`
+	TokenExpiresAt *time.Time `json:"-"`
+}
+
 type Session struct {
 	Base
 	UserID     string     `json:"userId" gorm:"type:uuid;not null;index"`
@@ -25,12 +36,13 @@ type Session struct {
 
 type DeviceLogin struct {
 	Base
-	UserID      *string    `json:"userId,omitempty" gorm:"type:uuid;index"`
-	CodeHash    string     `json:"-" gorm:"uniqueIndex;not null"`
-	Status      string     `json:"status" gorm:"type:varchar(20);not null;default:'pending';index"`
-	ExpiresAt   time.Time  `json:"expiresAt" gorm:"not null;index"`
-	CompletedAt *time.Time `json:"completedAt,omitempty"`
-	IPAddress   string     `json:"ipAddress,omitempty"`
+	UserID        *string    `json:"userId,omitempty" gorm:"type:uuid;index"`
+	CodeHash      string     `json:"-" gorm:"uniqueIndex;not null"`
+	UserTokenHash string     `json:"-" gorm:"index"`
+	Status        string     `json:"status" gorm:"type:varchar(20);not null;default:'pending';index"`
+	ExpiresAt     time.Time  `json:"expiresAt" gorm:"not null;index"`
+	CompletedAt   *time.Time `json:"completedAt,omitempty"`
+	IPAddress     string     `json:"ipAddress,omitempty"`
 }
 
 type APIKey struct {

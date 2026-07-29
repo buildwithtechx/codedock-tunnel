@@ -128,18 +128,18 @@ codedock-tunnel/
 - [ ] Create `cmd/cron/` for cleanup, expiry, analytics rollups, certificate jobs, and scheduled maintenance.
 - [ ] Create `cmd/check/` for custom-domain verification and edge readiness checks.
 - [x] Organize domain models and DTOs under `internal/models/`.
-- [ ] Organize PostgreSQL persistence and repository interfaces under `internal/repositories/`.
-- [ ] Organize business logic and provider-neutral use cases under `internal/services/`.
+- [x] Organize PostgreSQL persistence and repository interfaces under `internal/repositories/`.
+- [x] Organize business logic and provider-neutral use cases under `internal/services/`.
 - [ ] Organize Fiber HTTP controllers under `internal/handlers/`.
 - [ ] Organize Fiber server setup, routes, middleware, and WebSocket wiring under `internal/http/`.
 - [x] Organize relay, HTTP, TCP, UDP, and WebSocket engine primitives under `internal/engine/`.
-- [ ] Organize authentication and authorization helpers under `internal/auth/`.
+- [x] Organize authentication and authorization helpers under `internal/auth/`.
 - [x] Organize environment and runtime configuration under `internal/config/`.
 - [x] Create the PostgreSQL infrastructure package under `internal/infra/postgres/`.
 - [x] Organize Redis, billing providers, telemetry, storage, and distributed locks under `internal/infra/`.
-- [ ] Organize retryable cleanup, usage, billing, and reconciliation jobs under `internal/workers/`.
-- [ ] Keep repositories free of business policy and keep services independent from Fiber handlers.
-- [ ] Keep infrastructure adapters behind narrow interfaces consumed by services and workers.
+- [x] Organize retryable cleanup, usage, billing, and reconciliation jobs under `internal/workers/`.
+- [x] Keep repositories free of business policy and keep services independent from Fiber handlers.
+- [x] Keep infrastructure adapters behind narrow interfaces consumed by services and workers.
 - [x] Create `pkg/client/` for reusable Go client functionality.
 - [x] Create `pkg/protocol/` for public Go protocol types and helpers.
 - [x] Create `pkg/version/` for shared build version metadata.
@@ -194,10 +194,10 @@ codedock-tunnel/
 
 - [x] Create standalone user, session, organization, organization-member, and role models.
 - [ ] Implement Google and GitHub OAuth sign-in with revocable sessions.
-- [ ] Add CLI login sessions with one-time device codes and explicit expiration.
+- [x] Add CLI login sessions with one-time device codes and explicit expiration.
 - [ ] Add organization membership roles and resource-level authorization.
 - [ ] Keep Google and GitHub OAuth providers independent from Codedock.
-- [ ] Store session and refresh-token state in PostgreSQL or Redis with revocation support.
+- [x] Store session state in PostgreSQL with revocation support.
 - [ ] Add account deletion, organization ownership transfer, and member removal flows.
 - [ ] Audit authentication, membership, credential, billing, and tunnel-management actions.
 
@@ -235,6 +235,8 @@ codedock-tunnel/
 
 ## Billing and operations jobs
 
+- [x] Add reusable stale-session, API-key, and device-login cleanup jobs.
+- [x] Add reusable usage aggregation and billing reconciliation worker contracts.
 - [ ] Run stale-session cleanup, Redis index reconciliation, usage aggregation, and subscription maintenance in `cmd/cron`.
 - [ ] Run recurring billing checks and provider reconciliation as retryable idempotent jobs.
 - [x] Use Redis distributed locks so only one cron worker processes a billing or reconciliation batch.
