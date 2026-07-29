@@ -15,7 +15,7 @@ WORKDIR /workspace
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 go build -ldflags='-s -w' -o /out/tunnel-server ./cmd/tunnel-server
+RUN CGO_ENABLED=0 go build -ldflags='-s -w' -o /out/tunnel-server ./cmd/server
 
 FROM alpine:3.22
 

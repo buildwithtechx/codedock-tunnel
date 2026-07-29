@@ -16,9 +16,9 @@ It is designed to work without Codedock. Codedock is an optional integration tha
 
 ## Repository layout
 
-- `cmd/tunnel-server` runs the relay and control-plane server.
-- `cmd/tunnel-agent` connects outward and forwards local traffic.
-- `cmd/codedock-tunnel` provides the standalone CLI.
+- `cmd/server` runs the relay and control-plane server.
+- `cmd/agent` connects outward and forwards local traffic.
+- `cmd/cli` provides the standalone CLI.
 - `internal` contains private server, relay, routing, storage, and authentication code.
 - `protocol` contains language-neutral protocol schemas and generated bindings.
 - `apps/web` contains the standalone web interface.

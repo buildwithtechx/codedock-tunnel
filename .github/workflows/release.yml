@@ -28,7 +28,12 @@ jobs:
         run: |
           mkdir -p dist
           for target in tunnel-server tunnel-agent codedock-tunnel; do
-            GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X main.version=${VERSION}" -o "dist/${target}_linux_amd64" "./cmd/${target}"
+            case "${target}" in
+              tunnel-server) source_dir="server" ;;
+              tunnel-agent) source_dir="agent" ;;
+              codedock-tunnel) source_dir="cli" ;;
+            esac
+            GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X main.version=${VERSION}" -o "dist/${target}_linux_amd64" "./cmd/${source_dir}"
             tar -czf "dist/${target}_linux_amd64.tar.gz" -C dist "${target}_linux_amd64"
             rm "dist/${target}_linux_amd64"
           done

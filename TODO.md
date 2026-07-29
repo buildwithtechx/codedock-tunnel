@@ -40,11 +40,11 @@ codedock-tunnel/
 │       ├── src-tauri/
 │       └── package.json
 ├── cmd/
-│   ├── tunnel-server/
-│   ├── tunnel-agent/
-│   ├── codedock-tunnel/
-│   ├── tunnel-cron/
-│   └── tunnel-internal-check/
+│   ├── server/
+│   ├── agent/
+│   ├── cli/
+│   ├── cron/
+│   └── check/
 ├── internal/
 │   ├── api/
 │   │   ├── handlers/
@@ -125,11 +125,11 @@ codedock-tunnel/
 
 - [ ] Create `apps/web/` for the standalone React dashboard.
 - [ ] Create `apps/desktop/` for the Tauri desktop application and `src-tauri/` Rust shell.
-- [ ] Create `cmd/tunnel-server/` for the public relay and control-plane server.
-- [ ] Create `cmd/tunnel-agent/` for the outbound local-network agent.
-- [ ] Create `cmd/codedock-tunnel/` for the standalone CLI.
-- [ ] Create `cmd/tunnel-cron/` for cleanup, expiry, analytics rollups, certificate jobs, and scheduled maintenance.
-- [ ] Create `cmd/tunnel-internal-check/` for custom-domain verification and edge readiness checks.
+- [ ] Create `cmd/server/` for the public relay and control-plane server.
+- [ ] Create `cmd/agent/` for the outbound local-network agent.
+- [ ] Create `cmd/cli/` for the standalone CLI.
+- [ ] Create `cmd/cron/` for cleanup, expiry, analytics rollups, certificate jobs, and scheduled maintenance.
+- [ ] Create `cmd/check/` for custom-domain verification and edge readiness checks.
 - [ ] Organize server code under `internal/api/`, `internal/auth/`, `internal/control/`, `internal/engine/`, `internal/relay/`, `internal/routing/`, `internal/sessions/`, `internal/storage/`, and `internal/telemetry/`.
 - [ ] Create `pkg/client/` for reusable Go client functionality.
 - [ ] Create `pkg/protocol/` for public Go protocol types and helpers.
@@ -187,12 +187,12 @@ codedock-tunnel/
 ## Background jobs and verification
 
 - [ ] Define jobs that can run inside the server for small self-hosted installations.
-- [ ] Define jobs that can run in `cmd/tunnel-cron` for independent horizontal scaling.
+- [ ] Define jobs that can run in `cmd/cron` for independent horizontal scaling.
 - [ ] Expire inactive tunnels, sessions, credentials, reservations, and public hostnames.
 - [ ] Roll up traffic and connection analytics without storing request secrets or bodies by default.
 - [ ] Verify custom-domain ownership using DNS and HTTP challenges.
 - [ ] Verify certificate readiness and edge routing before activating custom domains.
-- [ ] Prevent internal-check jobs from being used to probe arbitrary private networks.
+- [ ] Prevent verification jobs from being used to probe arbitrary private networks.
 - [ ] Make all jobs idempotent and safe to retry.
 
 ## Go tunnel agent

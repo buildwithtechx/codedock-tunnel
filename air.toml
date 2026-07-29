@@ -2,7 +2,7 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-  cmd = "go build -o ./tmp/tunnel-server ./cmd/tunnel-server"
+  cmd = "go build -o ./tmp/tunnel-server ./cmd/server"
   entrypoint = ["./tmp/tunnel-server"]
   full_bin = ""
   include_ext = ["go", "tpl", "tmpl", "html"]
