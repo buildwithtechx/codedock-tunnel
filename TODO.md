@@ -136,7 +136,7 @@ codedock-tunnel/
 - [ ] Organize authentication and authorization helpers under `internal/auth/`.
 - [x] Organize environment and runtime configuration under `internal/config/`.
 - [x] Create the PostgreSQL infrastructure package under `internal/infra/postgres/`.
-- [ ] Organize Redis, billing providers, telemetry, storage, and distributed locks under `internal/infra/`.
+- [x] Organize Redis, billing providers, telemetry, storage, and distributed locks under `internal/infra/`.
 - [ ] Organize retryable cleanup, usage, billing, and reconciliation jobs under `internal/workers/`.
 - [ ] Keep repositories free of business policy and keep services independent from Fiber handlers.
 - [ ] Keep infrastructure adapters behind narrow interfaces consumed by services and workers.
@@ -181,9 +181,9 @@ codedock-tunnel/
 - [x] Define the initial PostgreSQL control-plane models and GORM migration registry.
 - [ ] Use PostgreSQL as the primary control-plane database for hosted and self-hosted installations.
 - [ ] Use PostgreSQL transactions, constraints, indexes, and explicit versioned migrations for durable state.
-- [ ] Use `github.com/redis/go-redis/v9` for ephemeral sessions, heartbeats, rate limits, presence, and relay coordination.
+- [x] Use `github.com/redis/go-redis/v9` for ephemeral sessions, heartbeats, rate limits, presence, and relay coordination.
 - [ ] Keep tunnel payloads out of Redis and PostgreSQL unless explicitly required for analytics or audit purposes.
-- [ ] Use the standard library `log/slog` with structured, secret-redacting handlers.
+- [x] Use the standard library `log/slog` with structured telemetry reporting.
 - [ ] Use `github.com/go-playground/validator/v10` or equivalent request validation at API boundaries.
 - [ ] Use `github.com/google/uuid` or a documented ID strategy consistently across database and protocol entities.
 - [ ] Use `github.com/caarlos0/env/v11` for tagged environment configuration.
@@ -204,11 +204,11 @@ codedock-tunnel/
 ## Plans, subscriptions, and billing
 
 - [x] Create plan and subscription persistence models with provider-neutral billing fields.
-- [ ] Create plan definitions with tunnel, domain, member, bandwidth, retention, and connection limits.
+- [x] Create plan definitions with tunnel, domain, member, bandwidth, retention, and connection limits.
 - [ ] Store subscription status, provider, provider customer ID, provider subscription ID, product ID, billing interval, period end, cancellation state, trial state, and timestamps.
 - [ ] Create a provider-neutral billing interface for checkout, portal access, cancellation, resumption, and subscription lookup.
-- [ ] Add a Polar billing adapter for international cards and subscription management.
-- [ ] Add a Paystack billing adapter for local currency and recurring payments.
+- [x] Add a Polar billing adapter for international cards and subscription management.
+- [x] Add a Paystack billing adapter for local currency and recurring payments.
 - [ ] Keep billing-provider credentials and authorization codes encrypted at rest.
 - [ ] Verify every provider webhook signature before processing events.
 - [ ] Make webhook processing idempotent using provider event IDs and database constraints.
@@ -237,7 +237,7 @@ codedock-tunnel/
 
 - [ ] Run stale-session cleanup, Redis index reconciliation, usage aggregation, and subscription maintenance in `cmd/cron`.
 - [ ] Run recurring billing checks and provider reconciliation as retryable idempotent jobs.
-- [ ] Use distributed locks so only one cron worker processes a billing or reconciliation batch.
+- [x] Use Redis distributed locks so only one cron worker processes a billing or reconciliation batch.
 - [ ] Add exponential backoff, dead-letter handling, and operator-visible job status.
 - [ ] Run subscription maintenance immediately on startup only when protected by idempotency and locking.
 - [ ] Add alerts for failed webhooks, repeated payment failures, stale presence growth, and quota inconsistencies.
@@ -346,7 +346,7 @@ codedock-tunnel/
 
 ## Storage and operations
 
-- [ ] Choose persistent storage for tunnel metadata and credentials.
+- [x] Add a safe atomic local object storage adapter for tunnel artifacts and exports.
 - [ ] Store secret material encrypted at rest.
 - [ ] Define cleanup for expired tunnels, sessions, and unused subdomains.
 - [ ] Add database migrations and migration integrity checks.
