@@ -17,11 +17,15 @@ type Dependencies struct {
 	Domains       *services.DomainService
 	Usage         *services.UsageService
 	Billing       *services.BillingService
+	OAuth         *services.OAuthService
+	Account       *services.AccountService
+	Audit         *services.AuditService
 	Ready         func(context.Context) error
+	PublicAPIURL  string
 }
 
 func (d Dependencies) Validate() error {
-	if d.Auth == nil || d.DeviceLogin == nil || d.Organizations == nil || d.Tunnels == nil || d.Agents == nil || d.Domains == nil || d.Usage == nil || d.Billing == nil {
+	if d.Auth == nil || d.DeviceLogin == nil || d.Organizations == nil || d.Tunnels == nil || d.Agents == nil || d.Domains == nil || d.Usage == nil || d.Billing == nil || d.Account == nil || d.Audit == nil {
 		return fmt.Errorf("http service dependencies are incomplete")
 	}
 	return nil
@@ -36,6 +40,9 @@ type Handlers struct {
 	Domains             *handlers.DomainHandler
 	Usage               *handlers.UsageHandler
 	Billing             *handlers.BillingHandler
+	OAuth               *handlers.OAuthHandler
+	Account             *handlers.AccountHandler
+	auditService        *services.AuditService
 	authService         *services.AuthService
 	organizationService *services.OrganizationService
 }
@@ -72,5 +79,16 @@ func buildHandlers(deps Dependencies, cookieName string, cookieSecure bool) (Han
 	if err != nil {
 		return Handlers{}, err
 	}
-	return Handlers{Health: handlers.NewHealthHandler(deps.Ready), Auth: authHandler, Organizations: organizationHandler, Tunnels: tunnelHandler, Agents: agentHandler, Domains: domainHandler, Usage: usageHandler, Billing: billingHandler, authService: deps.Auth, organizationService: deps.Organizations}, nil
+	var oauthHandler *handlers.OAuthHandler
+	if deps.OAuth != nil {
+		oauthHandler, err = handlers.NewOAuthHandler(deps.OAuth, deps.PublicAPIURL, cookieName, cookieSecure)
+		if err != nil {
+			return Handlers{}, err
+		}
+	}
+	accountHandler, err := handlers.NewAccountHandler(deps.Account)
+	if err != nil {
+		return Handlers{}, err
+	}
+	return Handlers{Health: handlers.NewHealthHandler(deps.Ready), Auth: authHandler, Organizations: organizationHandler, Tunnels: tunnelHandler, Agents: agentHandler, Domains: domainHandler, Usage: usageHandler, Billing: billingHandler, OAuth: oauthHandler, Account: accountHandler, authService: deps.Auth, organizationService: deps.Organizations, auditService: deps.Audit}, nil
 }

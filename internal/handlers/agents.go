@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"codedock.run/codedock-tunnel/internal/models"
 	"codedock.run/codedock-tunnel/internal/services"
 	"github.com/gofiber/fiber/v2"
 )
@@ -55,4 +56,17 @@ func (h *AgentHandler) Revoke(c *fiber.Ctx) error {
 		return writeError(c, fiber.StatusNotFound, err)
 	}
 	return c.SendStatus(fiber.StatusNoContent)
+}
+
+func (h *AgentHandler) Authenticate(c *fiber.Ctx) error {
+	value := strings.TrimSpace(c.Get("Authorization"))
+	parts := strings.SplitN(value, " ", 2)
+	if len(parts) != 2 || !strings.EqualFold(parts[0], "bearer") {
+		return writeError(c, fiber.StatusUnauthorized, fmt.Errorf("bearer agent token is required"))
+	}
+	agent, err := h.agents.Authenticate(c.UserContext(), strings.TrimSpace(parts[1]))
+	if err != nil {
+		return writeError(c, fiber.StatusUnauthorized, err)
+	}
+	return c.JSON(fiber.Map{"agentId": agent.ID, "organizationId": agent.OrganizationID, "status": models.AgentStatusOnline})
 }

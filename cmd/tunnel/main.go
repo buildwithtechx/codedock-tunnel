@@ -10,6 +10,7 @@ import (
 	"codedock.run/codedock-tunnel/internal/config"
 	"codedock.run/codedock-tunnel/internal/engine"
 	"codedock.run/codedock-tunnel/internal/infra/redis"
+	"codedock.run/codedock-tunnel/internal/relay"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 )
@@ -32,8 +33,17 @@ func main() {
 	if _, err := engine.NewRequestRouter(sessions, cfg.Tunnel.AgentInactivity); err != nil {
 		log.Fatal(err)
 	}
+	authenticator, err := relay.NewInternalAgentAuthenticator(cfg.Service.InternalAPIURL, cfg.Service.InternalAPISecret, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	relayHandler, err := relay.NewHandler(authenticator, sessions, cfg.Tunnel.MaxConnections)
+	if err != nil {
+		log.Fatal(err)
+	}
 	app := fiber.New(fiber.Config{AppName: cfg.App.Name, DisableStartupMessage: true})
 	app.Use(recover.New())
+	app.Get("/v1/connect", relayHandler.Upgrade)
 	app.Get("/healthz", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"status": "ok", "sessions": len(sessions.Snapshot())})
 	})

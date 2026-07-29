@@ -6,14 +6,15 @@ import (
 
 	"codedock.run/codedock-tunnel/internal/models"
 	"codedock.run/codedock-tunnel/internal/services"
+	"codedock.run/codedock-tunnel/internal/validation"
 	"github.com/gofiber/fiber/v2"
 )
 
 type OrganizationHandler struct{ organizations *services.OrganizationService }
 
 type CreateOrganizationRequest struct {
-	Name string `json:"name"`
-	Slug string `json:"slug"`
+	Name string `json:"name" validate:"required,max=120"`
+	Slug string `json:"slug" validate:"required,max=63"`
 }
 
 type AddMemberRequest struct {
@@ -32,6 +33,9 @@ func (h *OrganizationHandler) Create(c *fiber.Ctx) error {
 	var input CreateOrganizationRequest
 	if err := c.BodyParser(&input); err != nil {
 		return writeError(c, fiber.StatusBadRequest, fmt.Errorf("decode organization request: %w", err))
+	}
+	if err := validation.Struct(input); err != nil {
+		return writeError(c, fiber.StatusBadRequest, err)
 	}
 	userID, err := sessionUserID(c)
 	if err != nil {

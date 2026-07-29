@@ -15,6 +15,7 @@ type UserRepository interface {
 	FindByEmail(context.Context, string) (models.User, error)
 	Create(context.Context, *models.User) error
 	UpdateLastLogin(context.Context, string, time.Time) error
+	Delete(context.Context, string, time.Time) error
 }
 
 type OAuthIdentityRepository interface {
@@ -80,6 +81,17 @@ func (r *GormUserRepository) Create(ctx context.Context, user *models.User) erro
 
 func (r *GormUserRepository) UpdateLastLogin(ctx context.Context, id string, at time.Time) error {
 	return wrap(r.db.WithContext(ctx).Model(&models.User{}).Where("id = ?", id).Updates(map[string]any{"last_login_at": at}).Error, "update last login")
+}
+
+func (r *GormUserRepository) Delete(ctx context.Context, id string, at time.Time) error {
+	result := r.db.WithContext(ctx).Model(&models.User{}).Where("id = ? AND deleted_at IS NULL", id).Update("deleted_at", at)
+	if result.Error != nil {
+		return fmt.Errorf("delete user: %w", result.Error)
+	}
+	if result.RowsAffected != 1 {
+		return ErrNotFound
+	}
+	return nil
 }
 
 type GormOAuthIdentityRepository struct{ db *gorm.DB }

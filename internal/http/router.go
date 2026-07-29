@@ -8,9 +8,10 @@ import (
 )
 
 type RouterOptions struct {
-	CookieName        string
-	CookieSecure      bool
-	InternalAPISecret string
+	CookieName           string
+	CookieSecure         bool
+	InternalAPISecret    string
+	BillingWebhookSecret string
 }
 
 func RegisterRoutes(app *fiber.App, handlers Handlers, options RouterOptions) error {
@@ -20,9 +21,19 @@ func RegisterRoutes(app *fiber.App, handlers Handlers, options RouterOptions) er
 	if handlers.Health == nil || handlers.Auth == nil {
 		return fmt.Errorf("health and auth handlers are required")
 	}
+	if handlers.Billing != nil {
+		handlers.Billing.SetWebhookSecret(options.BillingWebhookSecret)
+	}
 	app.Get("/healthz", handlers.Health.Liveness)
 	app.Get("/readyz", handlers.Health.Readiness)
 	app.Post("/api/v1/auth/device/start", handlers.Auth.StartDeviceLogin)
+	if handlers.Billing != nil {
+		app.Post("/api/v1/billing/webhooks/:provider", handlers.Billing.Webhook)
+	}
+	if handlers.OAuth != nil {
+		app.Get("/api/v1/auth/oauth/:provider", handlers.OAuth.Start)
+		app.Get("/api/v1/auth/oauth/:provider/callback", handlers.OAuth.Callback)
+	}
 	app.Get("/api/v1/auth/session", handlers.Auth.Session)
 	app.Post("/api/v1/auth/logout", handlers.Auth.Logout)
 
@@ -30,12 +41,18 @@ func RegisterRoutes(app *fiber.App, handlers Handlers, options RouterOptions) er
 	protected.Post("/auth/device/complete", handlers.Auth.CompleteDeviceLogin)
 	protected.Post("/organizations", handlers.Organizations.Create)
 	protected.Post("/organizations/:organizationID/members", organizationRoleRequired(handlers.organizationService, models.MemberRoleAdmin), handlers.Organizations.AddMember)
+	protected.Delete("/account", handlers.Account.Delete)
+	protected.Post("/organizations/:organizationID/transfer", organizationRoleRequired(handlers.organizationService, models.MemberRoleOwner), handlers.Account.TransferOwnership)
 	protected.Post("/organizations/:organizationID/tunnels", organizationRoleRequired(handlers.organizationService, models.MemberRoleMember), handlers.Tunnels.Create)
 	protected.Post("/organizations/:organizationID/agents", organizationRoleRequired(handlers.organizationService, models.MemberRoleAdmin), handlers.Agents.Register)
 	protected.Post("/organizations/:organizationID/domains", organizationRoleRequired(handlers.organizationService, models.MemberRoleAdmin), handlers.Domains.Create)
 	protected.Get("/organizations/:organizationID/usage/events", organizationRoleRequired(handlers.organizationService, models.MemberRoleViewer), handlers.Usage.Events)
 	protected.Get("/organizations/:organizationID/usage/snapshot", organizationRoleRequired(handlers.organizationService, models.MemberRoleViewer), handlers.Usage.Snapshot)
 	protected.Get("/organizations/:organizationID/billing", organizationRoleRequired(handlers.organizationService, models.MemberRoleViewer), handlers.Billing.Status)
+	protected.Post("/organizations/:organizationID/billing/checkout", organizationRoleRequired(handlers.organizationService, models.MemberRoleOwner), handlers.Billing.Checkout)
+	protected.Get("/organizations/:organizationID/billing/portal", organizationRoleRequired(handlers.organizationService, models.MemberRoleOwner), handlers.Billing.Portal)
+	protected.Post("/organizations/:organizationID/billing/cancel", organizationRoleRequired(handlers.organizationService, models.MemberRoleOwner), handlers.Billing.Cancel)
+	protected.Post("/organizations/:organizationID/billing/resume", organizationRoleRequired(handlers.organizationService, models.MemberRoleOwner), handlers.Billing.Resume)
 	protected.Patch("/tunnels/:tunnelID/status", handlers.Tunnels.SetStatus)
 	protected.Delete("/tunnels/:tunnelID", handlers.Tunnels.Revoke)
 	protected.Post("/domains/:domainID/verify", handlers.Domains.Verify)
@@ -44,6 +61,7 @@ func RegisterRoutes(app *fiber.App, handlers Handlers, options RouterOptions) er
 
 	if options.InternalAPISecret != "" {
 		app.Get("/internal/health", internalSecretRequired(options.InternalAPISecret), handlers.Health.Readiness)
+		app.Get("/internal/agents/authenticate", internalSecretRequired(options.InternalAPISecret), handlers.Agents.Authenticate)
 	}
 	return nil
 }

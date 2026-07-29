@@ -14,8 +14,11 @@ import (
 
 type DomainService struct {
 	domains repositories.DomainRepository
+	billing *BillingService
 	now     func() time.Time
 }
+
+func (s *DomainService) SetBilling(billing *BillingService) { s.billing = billing }
 
 func NewDomainService(domains repositories.DomainRepository) (*DomainService, error) {
 	if domains == nil {
@@ -29,6 +32,22 @@ func (s *DomainService) Create(ctx context.Context, organizationID, hostname, me
 	method = strings.ToLower(strings.TrimSpace(method))
 	if organizationID == "" || !validHostname(hostname) || method == "" {
 		return "", models.Domain{}, fmt.Errorf("organization, hostname, and verification method are required")
+	}
+	if s.billing != nil {
+		plan, _, err := s.billing.Entitlements(ctx, organizationID)
+		if err != nil {
+			return "", models.Domain{}, fmt.Errorf("check domain entitlement: %w", err)
+		}
+		if plan.MaxDomains == 0 {
+			return "", models.Domain{}, fmt.Errorf("custom domains are not available on this plan")
+		}
+		count, err := s.domains.CountByOrganization(ctx, organizationID)
+		if err != nil {
+			return "", models.Domain{}, fmt.Errorf("count organization domains: %w", err)
+		}
+		if count >= int64(plan.MaxDomains) {
+			return "", models.Domain{}, fmt.Errorf("organization domain limit reached")
+		}
 	}
 	raw, err := auth.NewToken("cdv", 24)
 	if err != nil {

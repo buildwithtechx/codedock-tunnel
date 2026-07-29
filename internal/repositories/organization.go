@@ -18,6 +18,9 @@ type OrganizationRepository interface {
 	FindMember(context.Context, string, string) (models.OrganizationMember, error)
 	ListMembers(context.Context, string) ([]models.OrganizationMember, error)
 	RemoveMember(context.Context, string, string) error
+	ListOwned(context.Context, string) ([]models.Organization, error)
+	TransferOwnership(context.Context, string, string, string) error
+	CountMembers(context.Context, string) (int64, error)
 }
 
 type GormOrganizationRepository struct{ db *gorm.DB }
@@ -103,4 +106,43 @@ func (r *GormOrganizationRepository) RemoveMember(ctx context.Context, organizat
 		return ErrNotFound
 	}
 	return nil
+}
+
+func (r *GormOrganizationRepository) ListOwned(ctx context.Context, ownerID string) ([]models.Organization, error) {
+	var organizations []models.Organization
+	if err := r.db.WithContext(ctx).Where("owner_id = ?", ownerID).Find(&organizations).Error; err != nil {
+		return nil, fmt.Errorf("list owned organizations: %w", err)
+	}
+	return organizations, nil
+}
+
+func (r *GormOrganizationRepository) TransferOwnership(ctx context.Context, organizationID, currentOwnerID, newOwnerID string) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var member models.OrganizationMember
+		if err := tx.Where("organization_id = ? AND user_id = ?", organizationID, newOwnerID).First(&member).Error; err != nil {
+			return mapError(err)
+		}
+		result := tx.Model(&models.Organization{}).Where("id = ? AND owner_id = ?", organizationID, currentOwnerID).Update("owner_id", newOwnerID)
+		if result.Error != nil {
+			return fmt.Errorf("transfer organization ownership: %w", result.Error)
+		}
+		if result.RowsAffected != 1 {
+			return ErrNotFound
+		}
+		if err := tx.Model(&models.OrganizationMember{}).Where("organization_id = ? AND user_id = ?", organizationID, currentOwnerID).Update("role", models.MemberRoleAdmin).Error; err != nil {
+			return fmt.Errorf("update previous owner role: %w", err)
+		}
+		if err := tx.Model(&models.OrganizationMember{}).Where("organization_id = ? AND user_id = ?", organizationID, newOwnerID).Update("role", models.MemberRoleOwner).Error; err != nil {
+			return fmt.Errorf("update new owner role: %w", err)
+		}
+		return nil
+	})
+}
+
+func (r *GormOrganizationRepository) CountMembers(ctx context.Context, organizationID string) (int64, error) {
+	var count int64
+	if err := r.db.WithContext(ctx).Model(&models.OrganizationMember{}).Where("organization_id = ?", organizationID).Count(&count).Error; err != nil {
+		return 0, fmt.Errorf("count organization members: %w", err)
+	}
+	return count, nil
 }

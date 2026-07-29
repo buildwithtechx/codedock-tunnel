@@ -10,6 +10,7 @@ type APIConfig struct {
 	Mail     MailConfig     `envPrefix:"CODEDOCK_"`
 	Service  ServiceConfig  `envPrefix:"CODEDOCK_"`
 	Billing  BillingConfig  `envPrefix:"CODEDOCK_"`
+	Tunnel   TunnelConfig   `envPrefix:"CODEDOCK_"`
 }
 
 type RelayConfig struct {
@@ -57,12 +58,14 @@ type AppConfig struct {
 type AuthConfig struct {
 	SessionTTL         time.Duration `env:"SESSION_TTL" envDefault:"720h"`
 	DeviceLoginTTL     time.Duration `env:"DEVICE_LOGIN_TTL" envDefault:"10m"`
+	OAuthStateTTL      time.Duration `env:"OAUTH_STATE_TTL" envDefault:"10m"`
 	CookieName         string        `env:"AUTH_COOKIE_NAME" envDefault:"codedock_session"`
 	CookieSecure       bool          `env:"AUTH_COOKIE_SECURE" envDefault:"false"`
 	GoogleClientID     string        `env:"GOOGLE_CLIENT_ID"`
 	GoogleClientSecret string        `env:"GOOGLE_CLIENT_SECRET"`
 	GitHubClientID     string        `env:"GITHUB_CLIENT_ID"`
 	GitHubClientSecret string        `env:"GITHUB_CLIENT_SECRET"`
+	EncryptionKey      string        `env:"AUTH_ENCRYPTION_KEY"`
 }
 
 type DatabaseConfig struct {

@@ -6,17 +6,18 @@ import (
 
 	"codedock.run/codedock-tunnel/internal/models"
 	"codedock.run/codedock-tunnel/internal/services"
+	"codedock.run/codedock-tunnel/internal/validation"
 	"github.com/gofiber/fiber/v2"
 )
 
 type TunnelHandler struct{ tunnels *services.TunnelService }
 
 type CreateTunnelRequest struct {
-	Name           string                `json:"name"`
-	Protocol       models.TunnelProtocol `json:"protocol"`
-	TargetHost     string                `json:"targetHost"`
-	TargetPort     int                   `json:"targetPort"`
-	PublicHostname string                `json:"publicHostname"`
+	Name           string                `json:"name" validate:"required,max=120"`
+	Protocol       models.TunnelProtocol `json:"protocol" validate:"required"`
+	TargetHost     string                `json:"targetHost" validate:"required,max=253"`
+	TargetPort     int                   `json:"targetPort" validate:"gte=1,lte=65535"`
+	PublicHostname string                `json:"publicHostname,omitempty" validate:"max=253"`
 }
 
 type UpdateTunnelStatusRequest struct {
@@ -34,6 +35,9 @@ func (h *TunnelHandler) Create(c *fiber.Ctx) error {
 	var input CreateTunnelRequest
 	if err := c.BodyParser(&input); err != nil {
 		return writeError(c, fiber.StatusBadRequest, fmt.Errorf("decode tunnel request: %w", err))
+	}
+	if err := validation.Struct(input); err != nil {
+		return writeError(c, fiber.StatusBadRequest, err)
 	}
 	tunnel, err := h.tunnels.Create(c.UserContext(), strings.TrimSpace(c.Params("organizationID")), input.Name, input.Protocol, input.TargetHost, input.TargetPort, input.PublicHostname)
 	if err != nil {

@@ -11,6 +11,7 @@ import (
 
 type BillingService struct {
 	billing repositories.BillingRepository
+	gateway BillingGateway
 	now     func() time.Time
 }
 

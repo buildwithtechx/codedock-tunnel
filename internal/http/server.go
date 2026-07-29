@@ -16,6 +16,7 @@ type Server struct {
 }
 
 func NewServer(cfg config.APIConfig, deps Dependencies) (*Server, error) {
+	deps.PublicAPIURL = cfg.App.PublicAPIURL
 	handlers, err := buildHandlers(deps, cfg.Auth.CookieName, cfg.Auth.CookieSecure)
 	if err != nil {
 		return nil, err
@@ -24,7 +25,7 @@ func NewServer(cfg config.APIConfig, deps Dependencies) (*Server, error) {
 	app.Use(recover.New())
 	app.Use(helmet.New())
 	app.Use(cors.New(cors.Config{AllowOrigins: cfg.App.AllowedOrigins, AllowHeaders: "Origin, Content-Type, Accept, Authorization, X-Internal-Secret", AllowCredentials: true}))
-	if err := RegisterRoutes(app, handlers, RouterOptions{CookieName: cfg.Auth.CookieName, CookieSecure: cfg.Auth.CookieSecure, InternalAPISecret: cfg.Service.InternalAPISecret}); err != nil {
+	if err := RegisterRoutes(app, handlers, RouterOptions{CookieName: cfg.Auth.CookieName, CookieSecure: cfg.Auth.CookieSecure, InternalAPISecret: cfg.Service.InternalAPISecret, BillingWebhookSecret: cfg.Billing.WebhookSecret}); err != nil {
 		return nil, err
 	}
 	return &Server{app: app}, nil

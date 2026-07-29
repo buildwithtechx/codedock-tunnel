@@ -13,6 +13,7 @@ type DomainRepository interface {
 	FindByID(context.Context, string) (models.Domain, error)
 	FindByHostname(context.Context, string) (models.Domain, error)
 	FindByOrganization(context.Context, string) ([]models.Domain, error)
+	CountByOrganization(context.Context, string) (int64, error)
 	Update(context.Context, *models.Domain) error
 	UpdateStatus(context.Context, string, models.DomainStatus) error
 	Delete(context.Context, string) error
@@ -56,6 +57,14 @@ func (r *GormDomainRepository) FindByOrganization(ctx context.Context, organizat
 		return nil, fmt.Errorf("list domains: %w", err)
 	}
 	return domains, nil
+}
+
+func (r *GormDomainRepository) CountByOrganization(ctx context.Context, organizationID string) (int64, error) {
+	var count int64
+	if err := r.db.WithContext(ctx).Model(&models.Domain{}).Where("organization_id = ? AND status != ?", organizationID, models.DomainStatusRevoked).Count(&count).Error; err != nil {
+		return 0, fmt.Errorf("count organization domains: %w", err)
+	}
+	return count, nil
 }
 
 func (r *GormDomainRepository) Update(ctx context.Context, domain *models.Domain) error {

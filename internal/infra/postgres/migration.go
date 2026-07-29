@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"fmt"
+	"time"
 
 	"codedock.run/codedock-tunnel/internal/models"
 	"gorm.io/gorm"
@@ -12,28 +13,70 @@ func Migrate(db *gorm.DB) error {
 		return fmt.Errorf("postgres database is required")
 	}
 
-	err := db.AutoMigrate(
-		&models.User{},
-		&models.OAuthIdentity{},
-		&models.Session{},
-		&models.DeviceLogin{},
-		&models.APIKey{},
-		&models.Organization{},
-		&models.OrganizationMember{},
-		&models.Agent{},
-		&models.Tunnel{},
-		&models.TunnelToken{},
-		&models.Domain{},
-		&models.Plan{},
-		&models.Subscription{},
-		&models.BillingEvent{},
-		&models.UsageSnapshot{},
-		&models.UsageEvent{},
-		&models.AuditEvent{},
-	)
+	err := db.Exec("CREATE TABLE IF NOT EXISTS schema_migrations (version BIGINT PRIMARY KEY, name VARCHAR(200) NOT NULL, applied_at TIMESTAMPTZ NOT NULL)").Error
 	if err != nil {
-		return fmt.Errorf("migrate postgres models: %w", err)
+		return fmt.Errorf("create schema migrations table: %w", err)
 	}
+	return db.Transaction(func(tx *gorm.DB) error {
+		var applied []int64
+		if err := tx.Raw("SELECT version FROM schema_migrations ORDER BY version").Scan(&applied).Error; err != nil {
+			return fmt.Errorf("read schema migrations: %w", err)
+		}
+		appliedVersions := make(map[int64]struct{}, len(applied))
+		for _, version := range applied {
+			appliedVersions[version] = struct{}{}
+		}
+		for _, migration := range migrations() {
+			if _, ok := appliedVersions[migration.version]; ok {
+				continue
+			}
+			if err := migration.up(tx); err != nil {
+				return fmt.Errorf("apply migration %d %s: %w", migration.version, migration.name, err)
+			}
+			if err := tx.Exec("INSERT INTO schema_migrations (version, name, applied_at) VALUES (?, ?, ?)", migration.version, migration.name, time.Now().UTC()).Error; err != nil {
+				return fmt.Errorf("record migration %d: %w", migration.version, err)
+			}
+		}
+		return nil
+	})
+}
 
+type migration struct {
+	version int64
+	name    string
+	up      func(*gorm.DB) error
+}
+
+func migrations() []migration {
+	return []migration{{version: 1, name: "initial_control_plane", up: func(db *gorm.DB) error {
+		return db.AutoMigrate(
+			&models.User{},
+			&models.OAuthIdentity{},
+			&models.Session{},
+			&models.DeviceLogin{},
+			&models.APIKey{},
+			&models.Organization{},
+			&models.OrganizationMember{},
+			&models.Agent{},
+			&models.Tunnel{},
+			&models.TunnelToken{},
+			&models.Domain{},
+			&models.Plan{},
+			&models.Subscription{},
+			&models.BillingEvent{},
+			&models.UsageSnapshot{},
+			&models.UsageEvent{},
+			&models.AuditEvent{},
+		)
+	}}}
+}
+
+func WithTransaction(db *gorm.DB, fn func(*gorm.DB) error) error {
+	if db == nil || fn == nil {
+		return fmt.Errorf("database and transaction function are required")
+	}
+	if err := db.Transaction(fn); err != nil {
+		return fmt.Errorf("run transaction: %w", err)
+	}
 	return nil
 }

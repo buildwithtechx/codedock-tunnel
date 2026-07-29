@@ -11,9 +11,10 @@ import (
 )
 
 type TunnelService struct {
-	tunnels repositories.TunnelRepository
-	billing *BillingService
-	now     func() time.Time
+	tunnels   repositories.TunnelRepository
+	billing   *BillingService
+	allocator *HostnameAllocator
+	now       func() time.Time
 }
 
 func NewTunnelService(tunnels repositories.TunnelRepository) (*TunnelService, error) {
@@ -27,9 +28,23 @@ func (s *TunnelService) SetBilling(billing *BillingService) {
 	s.billing = billing
 }
 
+func (s *TunnelService) SetHostnameAllocator(allocator *HostnameAllocator) {
+	s.allocator = allocator
+}
+
 func (s *TunnelService) Create(ctx context.Context, organizationID, name string, protocol models.TunnelProtocol, targetHost string, targetPort int, publicHostname string) (models.Tunnel, error) {
-	if organizationID == "" || strings.TrimSpace(name) == "" || strings.TrimSpace(targetHost) == "" || strings.TrimSpace(publicHostname) == "" || !validTunnelProtocol(protocol) || targetPort < 1 || targetPort > 65535 {
+	if organizationID == "" || strings.TrimSpace(name) == "" || strings.TrimSpace(targetHost) == "" || !validTunnelProtocol(protocol) || targetPort < 1 || targetPort > 65535 {
 		return models.Tunnel{}, fmt.Errorf("invalid tunnel configuration")
+	}
+	if s.allocator != nil {
+		allocated, err := s.allocator.Allocate(ctx, strings.TrimSpace(publicHostname))
+		if err != nil {
+			return models.Tunnel{}, fmt.Errorf("allocate public hostname: %w", err)
+		}
+		publicHostname = allocated
+	}
+	if strings.TrimSpace(publicHostname) == "" {
+		return models.Tunnel{}, fmt.Errorf("public hostname is required")
 	}
 	tunnel := models.Tunnel{OrganizationID: organizationID, Name: strings.TrimSpace(name), Protocol: protocol, Status: models.TunnelStatusCreated, TargetHost: strings.TrimSpace(targetHost), TargetPort: targetPort, PublicHostname: strings.ToLower(strings.TrimSpace(publicHostname)), AccessPolicy: `{}`}
 	if s.billing != nil {

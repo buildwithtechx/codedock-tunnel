@@ -17,7 +17,12 @@ type AuthService struct {
 	sessions   repositories.SessionRepository
 	now        func() time.Time
 	sessionTTL time.Duration
+	protector  SecretProtector
 }
+
+type SecretProtector interface{ Seal(string) (string, error) }
+
+func (s *AuthService) SetSecretProtector(protector SecretProtector) { s.protector = protector }
 
 func NewAuthService(users repositories.UserRepository, identities repositories.OAuthIdentityRepository, sessions repositories.SessionRepository, sessionTTL time.Duration) (*AuthService, error) {
 	if users == nil || identities == nil || sessions == nil {
@@ -106,7 +111,22 @@ func (s *AuthService) FindOrCreateOAuthUser(ctx context.Context, profile auth.OA
 	} else if err != nil {
 		return models.User{}, fmt.Errorf("find oauth email: %w", err)
 	}
-	identity = models.OAuthIdentity{UserID: user.ID, Provider: profile.Provider, Subject: profile.Subject, Email: profile.Email, AccessToken: profile.AccessToken, RefreshToken: profile.RefreshToken, TokenExpiresAt: profile.TokenExpiresAt}
+	accessToken, refreshToken := profile.AccessToken, profile.RefreshToken
+	if s.protector != nil {
+		if accessToken != "" {
+			accessToken, err = s.protector.Seal(accessToken)
+			if err != nil {
+				return models.User{}, fmt.Errorf("encrypt oauth access token: %w", err)
+			}
+		}
+		if refreshToken != "" {
+			refreshToken, err = s.protector.Seal(refreshToken)
+			if err != nil {
+				return models.User{}, fmt.Errorf("encrypt oauth refresh token: %w", err)
+			}
+		}
+	}
+	identity = models.OAuthIdentity{UserID: user.ID, Provider: profile.Provider, Subject: profile.Subject, Email: profile.Email, AccessToken: accessToken, RefreshToken: refreshToken, TokenExpiresAt: profile.TokenExpiresAt}
 	if err := s.identities.Save(ctx, &identity); err != nil {
 		return models.User{}, fmt.Errorf("save oauth identity: %w", err)
 	}

@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func NewDatabaseDependencies(db *gorm.DB, cfg config.AuthConfig) (Dependencies, error) {
+func NewDatabaseDependencies(db *gorm.DB, cfg config.APIConfig) (Dependencies, error) {
 	if db == nil {
 		return Dependencies{}, fmt.Errorf("database is required")
 	}
@@ -50,11 +50,11 @@ func NewDatabaseDependencies(db *gorm.DB, cfg config.AuthConfig) (Dependencies, 
 	if err != nil {
 		return Dependencies{}, err
 	}
-	authService, err := services.NewAuthService(users, identities, sessions, cfg.SessionTTL)
+	authService, err := services.NewAuthService(users, identities, sessions, cfg.Auth.SessionTTL)
 	if err != nil {
 		return Dependencies{}, err
 	}
-	deviceService, err := services.NewDeviceLoginService(deviceLogins, cfg.DeviceLoginTTL)
+	deviceService, err := services.NewDeviceLoginService(deviceLogins, cfg.Auth.DeviceLoginTTL)
 	if err != nil {
 		return Dependencies{}, err
 	}
@@ -70,12 +70,19 @@ func NewDatabaseDependencies(db *gorm.DB, cfg config.AuthConfig) (Dependencies, 
 	if err != nil {
 		return Dependencies{}, err
 	}
-	tunnelService.SetBilling(billingService)
-	agentService, err := services.NewAgentService(agents)
+	domainService, err := services.NewDomainService(domains)
 	if err != nil {
 		return Dependencies{}, err
 	}
-	domainService, err := services.NewDomainService(domains)
+	tunnelService.SetBilling(billingService)
+	organizationService.SetBilling(billingService)
+	domainService.SetBilling(billingService)
+	hostnameAllocator, err := services.NewHostnameAllocator(tunnels, cfg.Tunnel.Domain)
+	if err != nil {
+		return Dependencies{}, err
+	}
+	tunnelService.SetHostnameAllocator(hostnameAllocator)
+	agentService, err := services.NewAgentService(agents)
 	if err != nil {
 		return Dependencies{}, err
 	}
@@ -87,7 +94,19 @@ func NewDatabaseDependencies(db *gorm.DB, cfg config.AuthConfig) (Dependencies, 
 	if err != nil {
 		return Dependencies{}, err
 	}
-	return Dependencies{Auth: authService, DeviceLogin: deviceService, Organizations: organizationService, Tunnels: tunnelService, Agents: agentService, Domains: domainService, Usage: usageService, Billing: billingService, Ready: func(ctx context.Context) error {
+	auditRepository, err := repositories.NewAuditRepository(db)
+	if err != nil {
+		return Dependencies{}, err
+	}
+	auditService, err := services.NewAuditService(auditRepository)
+	if err != nil {
+		return Dependencies{}, err
+	}
+	accountService, err := services.NewAccountService(users, organizations)
+	if err != nil {
+		return Dependencies{}, err
+	}
+	return Dependencies{Auth: authService, DeviceLogin: deviceService, Organizations: organizationService, Tunnels: tunnelService, Agents: agentService, Domains: domainService, Usage: usageService, Billing: billingService, Account: accountService, Audit: auditService, Ready: func(ctx context.Context) error {
 		sqlDB, err := db.DB()
 		if err != nil {
 			return fmt.Errorf("get database connection: %w", err)

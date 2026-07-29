@@ -14,7 +14,10 @@ var slugPattern = regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$`)
 
 type OrganizationService struct {
 	organizations repositories.OrganizationRepository
+	billing       *BillingService
 }
+
+func (s *OrganizationService) SetBilling(billing *BillingService) { s.billing = billing }
 
 func NewOrganizationService(organizations repositories.OrganizationRepository) (*OrganizationService, error) {
 	if organizations == nil {
@@ -43,6 +46,19 @@ func (s *OrganizationService) Create(ctx context.Context, ownerID, name, slug st
 func (s *OrganizationService) AddMember(ctx context.Context, organizationID, userID string, role models.MemberRole) error {
 	if organizationID == "" || userID == "" || !validMemberRole(role) {
 		return fmt.Errorf("organization, user, and valid role are required")
+	}
+	if s.billing != nil {
+		plan, _, err := s.billing.Entitlements(ctx, organizationID)
+		if err != nil {
+			return fmt.Errorf("check member entitlement: %w", err)
+		}
+		count, err := s.organizations.CountMembers(ctx, organizationID)
+		if err != nil {
+			return fmt.Errorf("count organization members: %w", err)
+		}
+		if plan.MaxMembers > 0 && count >= int64(plan.MaxMembers) {
+			return fmt.Errorf("organization member limit reached")
+		}
 	}
 	if err := s.organizations.AddMember(ctx, &models.OrganizationMember{OrganizationID: organizationID, UserID: userID, Role: role}); err != nil {
 		return fmt.Errorf("add organization member: %w", err)

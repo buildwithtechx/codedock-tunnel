@@ -167,26 +167,26 @@ codedock-tunnel/
 ## Product foundation
 
 - [ ] Define the initial product boundary between `codedock-tunnel` and Codedock.
-- [ ] Choose the first supported tunnel types: HTTP, HTTPS, and raw TCP.
-- [ ] Define tunnel lifecycle states: creating, connecting, active, disconnected, expired, and revoked.
+- [x] Choose the first supported tunnel types: HTTP, HTTPS, and raw TCP.
+- [x] Define tunnel lifecycle states: creating, connecting, active, disconnected, expired, and revoked.
 - [ ] Define the public URL and subdomain allocation strategy.
 - [ ] Document the self-hosted and managed deployment models.
 - [ ] Choose the project license and contribution policy.
 
 ## Go technology baseline
 
-- [ ] Use `github.com/gofiber/fiber/v2` for the HTTP API and server middleware.
+- [x] Use `github.com/gofiber/fiber/v2` for the HTTP API and server middleware.
 - [ ] Use `github.com/gofiber/contrib/websocket` for CLI and dashboard WebSocket connections.
 - [x] Install `gorm.io/gorm` with `gorm.io/driver/postgres` for PostgreSQL persistence.
 - [x] Define the initial PostgreSQL control-plane models and GORM migration registry.
-- [ ] Use PostgreSQL as the primary control-plane database for hosted and self-hosted installations.
+- [x] Use PostgreSQL as the primary control-plane database for hosted and self-hosted installations.
 - [ ] Use PostgreSQL transactions, constraints, indexes, and explicit versioned migrations for durable state.
 - [x] Use `github.com/redis/go-redis/v9` for ephemeral sessions, heartbeats, rate limits, presence, and relay coordination.
-- [ ] Keep tunnel payloads out of Redis and PostgreSQL unless explicitly required for analytics or audit purposes.
+- [x] Keep tunnel payloads out of Redis and PostgreSQL unless explicitly required for analytics or audit purposes.
 - [x] Use the standard library `log/slog` with structured telemetry reporting.
 - [ ] Use `github.com/go-playground/validator/v10` or equivalent request validation at API boundaries.
-- [ ] Use `github.com/google/uuid` or a documented ID strategy consistently across database and protocol entities.
-- [ ] Use `github.com/caarlos0/env/v11` for tagged environment configuration.
+- [x] Use `github.com/google/uuid` or a documented ID strategy consistently across database and protocol entities.
+- [x] Use `github.com/caarlos0/env/v11` for tagged environment configuration.
 - [ ] Define dependency versions in `go.mod` and review them through automated vulnerability scanning.
 - [ ] Document why each dependency is required and avoid duplicate HTTP, ORM, crypto, or WebSocket stacks.
 
@@ -195,7 +195,7 @@ codedock-tunnel/
 - [x] Create standalone user, session, organization, organization-member, and role models.
 - [ ] Implement Google and GitHub OAuth sign-in with revocable sessions.
 - [x] Add CLI login sessions with one-time device codes and explicit expiration.
-- [ ] Add organization membership roles and resource-level authorization.
+- [x] Add organization membership roles and resource-level authorization.
 - [ ] Keep Google and GitHub OAuth providers independent from Codedock.
 - [x] Store session state in PostgreSQL with revocation support.
 - [ ] Add account deletion, organization ownership transfer, and member removal flows.
@@ -205,7 +205,7 @@ codedock-tunnel/
 
 - [x] Create plan and subscription persistence models with provider-neutral billing fields.
 - [x] Create plan definitions with tunnel, domain, member, bandwidth, retention, and connection limits.
-- [ ] Store subscription status, provider, provider customer ID, provider subscription ID, product ID, billing interval, period end, cancellation state, trial state, and timestamps.
+- [x] Store subscription status, provider, provider customer ID, provider subscription ID, product ID, billing interval, period end, cancellation state, trial state, and timestamps.
 - [ ] Create a provider-neutral billing interface for checkout, portal access, cancellation, resumption, and subscription lookup.
 - [x] Add a Polar billing adapter for international cards and subscription management.
 - [x] Add a Paystack billing adapter for local currency and recurring payments.
