@@ -1,5 +1,60 @@
 # Codedock Tunnel TODO
 
+## Remaining Go backend
+
+This section is the authoritative list of backend implementation work still outstanding. Frontend, desktop, documentation, product decisions, and external infrastructure are tracked separately below.
+
+### Relay and protocol
+
+- [ ] Add authenticated protocol capability negotiation and backward-compatible version negotiation.
+- [ ] Implement full multiplexed stream routing for HTTP, TCP, and UDP data messages.
+- [ ] Bind every incoming stream to the authenticated tunnel session, target, and organization.
+- [ ] Add relay-side TCP and UDP listeners and connect them to the session registry.
+- [ ] Add reconnect, session handoff, connection draining, and stale-session cleanup.
+- [ ] Add frame-size limits, read/write deadlines, backpressure, and bounded buffers to WebSocket transport.
+- [ ] Wire usage metering into HTTP, TCP, and UDP traffic, including active-connection deltas and bandwidth limits.
+
+### CLI
+
+- [ ] Implement CLI login using device authorization and secure local credential storage.
+- [ ] Implement CLI create, list, inspect, start, stop, revoke, HTTP, and TCP commands.
+- [ ] Add JSON output and shell completion.
+- [ ] Add local TCP forwarding and explicit authorization checks.
+
+### Billing and entitlements
+
+- [ ] Implement concrete Polar and Paystack checkout, portal, cancellation, and resume gateways.
+- [ ] Parse provider-specific webhook payloads and apply subscription state transitions transactionally.
+- [ ] Verify Paystack and Polar signatures using their provider-specific algorithms on their routes.
+- [ ] Encrypt billing credentials, authorization codes, and provider customer secrets at rest.
+- [ ] Add grace periods, failed-payment handling, downgrade behavior, and free-plan fallback.
+- [ ] Enforce bandwidth, connection, domain, and member limits at both API and relay boundaries.
+- [ ] Add billing history, invoice, receipt, and portal persistence/response models.
+
+### Domains and operations
+
+- [ ] Implement DNS and HTTP custom-domain ownership challenges.
+- [ ] Add certificate issuance/readiness checks and activate custom domains only after verification.
+- [ ] Prevent domain verification from probing private networks or internal metadata endpoints.
+- [ ] Add retry/backoff, dead-letter handling, and operator-visible status for cron jobs.
+- [ ] Add subscription reconciliation and provider polling to `cmd/cron`.
+- [ ] Add Prometheus-compatible metrics for relay, API, billing, usage, and worker health.
+
+### Security and hardening
+
+- [ ] Enforce TLS and secure WebSocket configuration in production mode.
+- [ ] Add strict origin, host, SSRF, open-proxy, port-scanning, and abuse controls.
+- [ ] Add security tests for token replay, cross-tunnel access, credential revocation, and stale sessions.
+- [ ] Add protocol fuzzing and malformed-frame tests.
+- [ ] Remove sensitive OAuth/provider secrets from logs and add secret rotation procedures.
+
+### Backend verification and release
+
+- [ ] Add integration tests with real local HTTP, TCP, and UDP targets.
+- [ ] Add reconnect, timeout, backpressure, migration, webhook, and graceful-shutdown tests.
+- [ ] Add container vulnerability scanning and signed/reproducible Go releases.
+- [ ] Add backup/restore verification and migration integrity checks in CI.
+
 ## Standalone product principles
 
 - [ ] Make `codedock-tunnel` usable without Codedock, a Codedock account, or a Codedock server.
@@ -187,7 +242,7 @@ codedock-tunnel/
 - [x] Use `github.com/go-playground/validator/v10` or equivalent request validation at API boundaries.
 - [x] Use `github.com/google/uuid` or a documented ID strategy consistently across database and protocol entities.
 - [x] Use `github.com/caarlos0/env/v11` for tagged environment configuration.
-- [ ] Define dependency versions in `go.mod` and review them through automated vulnerability scanning.
+- [x] Define dependency versions in `go.mod` and review them through automated vulnerability scanning.
 - [ ] Document why each dependency is required and avoid duplicate HTTP, ORM, crypto, or WebSocket stacks.
 
 ## Identity, organizations, and access
@@ -206,7 +261,7 @@ codedock-tunnel/
 - [x] Create plan and subscription persistence models with provider-neutral billing fields.
 - [x] Create plan definitions with tunnel, domain, member, bandwidth, retention, and connection limits.
 - [x] Store subscription status, provider, provider customer ID, provider subscription ID, product ID, billing interval, period end, cancellation state, trial state, and timestamps.
-- [ ] Create a provider-neutral billing interface for checkout, portal access, cancellation, resumption, and subscription lookup.
+- [x] Create a provider-neutral billing interface for checkout, portal access, cancellation, resumption, and subscription lookup.
 - [x] Add a Polar billing adapter for international cards and subscription management.
 - [x] Add a Paystack billing adapter for local currency and recurring payments.
 - [ ] Keep billing-provider credentials and authorization codes encrypted at rest.
@@ -256,8 +311,8 @@ codedock-tunnel/
 
 ## Go tunnel relay
 
-- [ ] Create the `codedock-tunnel-server` binary.
-- [ ] Implement CLI tunnel registration and authenticated session management.
+- [x] Create the `codedock-tunnel-server` binary.
+- [x] Implement CLI tunnel registration and authenticated session management.
 - [ ] Implement persistent connections, heartbeats, reconnects, and graceful shutdown.
 - [x] Add a concurrency-safe session registry with takeover protection.
 - [x] Add a request broker with request IDs, timeouts, cancellation, and response routing.
@@ -289,7 +344,7 @@ codedock-tunnel/
 
 ## CLI
 
-- [ ] Create the `codedock-tunnel` CLI.
+- [x] Create the `codedock-tunnel` CLI.
 - [ ] Implement `login` and credential storage.
 - [ ] Implement `create`, `list`, `inspect`, `start`, `stop`, and `revoke` commands.
 - [ ] Implement `codedock-tunnel http 3000` for local development.

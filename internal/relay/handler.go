@@ -76,6 +76,9 @@ func (h *Handler) Connect(connection *websocket.Conn) {
 }
 
 func (h *Handler) handleMessage(ctx context.Context, connection *websocket.Conn, identity AgentIdentity, message protocol.Envelope) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	switch message.Type {
 	case protocol.MessageTypeOpenTunnel:
 		var open protocol.OpenTunnel
@@ -86,7 +89,10 @@ func (h *Handler) handleMessage(ctx context.Context, connection *websocket.Conn,
 			return fmt.Errorf("invalid tunnel open request")
 		}
 		tunnelID := uuid.NewString()
-		session := engine.Session{ID: uuid.NewString(), OrganizationID: identity.OrganizationID, TunnelID: tunnelID, Send: func(_ context.Context, outgoing protocol.Envelope) error {
+		session := engine.Session{ID: uuid.NewString(), OrganizationID: identity.OrganizationID, TunnelID: tunnelID, Send: func(sendCtx context.Context, outgoing protocol.Envelope) error {
+			if err := sendCtx.Err(); err != nil {
+				return err
+			}
 			return connection.WriteJSON(outgoing)
 		}, Close: func() { _ = connection.Close() }}
 		if err := h.sessions.Reserve(session, false); err != nil {
