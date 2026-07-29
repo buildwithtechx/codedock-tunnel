@@ -19,7 +19,7 @@ It is designed to work without Codedock. Codedock is an optional integration tha
 - React dashboard for accounts, organizations, tunnels, access policies, and analytics
 - Tauri desktop application
 - Go and TypeScript client SDKs
-- Self-hosted and managed deployment modes
+- Hosted deployment with open-source clients and integrations
 
 ## Repository layout
 

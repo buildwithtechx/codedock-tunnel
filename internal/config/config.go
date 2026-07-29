@@ -104,7 +104,6 @@ type TunnelConfig struct {
 }
 
 type BillingConfig struct {
-	Enabled                 bool   `env:"BILLING_ENABLED" envDefault:"false"`
 	PolarServer             string `env:"POLAR_SERVER" envDefault:"sandbox"`
 	PolarBaseURL            string `env:"POLAR_BASE_URL" envDefault:"https://sandbox-api.polar.sh"`
 	PolarAccessToken        string `env:"POLAR_ACCESS_TOKEN"`

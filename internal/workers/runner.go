@@ -16,6 +16,7 @@ type Runner struct {
 	jobs     []Job
 	interval time.Duration
 	logger   *slog.Logger
+	tracker  *StatusTracker
 }
 
 func NewRunner(jobs []Job, interval time.Duration, logger *slog.Logger) (*Runner, error) {
@@ -25,7 +26,21 @@ func NewRunner(jobs []Job, interval time.Duration, logger *slog.Logger) (*Runner
 	if logger == nil {
 		logger = slog.Default()
 	}
-	return &Runner{jobs: append([]Job(nil), jobs...), interval: interval, logger: logger}, nil
+	return &Runner{jobs: append([]Job(nil), jobs...), interval: interval, logger: logger, tracker: NewStatusTracker()}, nil
+}
+
+func (r *Runner) Statuses() []JobStatus {
+	if r == nil || r.tracker == nil {
+		return nil
+	}
+	return r.tracker.Statuses()
+}
+
+func (r *Runner) Tracker() *StatusTracker {
+	if r == nil {
+		return nil
+	}
+	return r.tracker
 }
 
 func (r *Runner) RunOnce(ctx context.Context) error {

@@ -27,7 +27,7 @@ This section is the authoritative list of backend implementation work still outs
 - [ ] Parse provider-specific webhook payloads and apply subscription state transitions transactionally.
 - [ ] Verify Paystack and Polar signatures using their provider-specific algorithms on their routes.
 - [ ] Encrypt billing credentials, authorization codes, and provider customer secrets at rest.
-- [ ] Add grace periods, failed-payment handling, downgrade behavior, and free-plan fallback.
+- [ ] Add grace periods, failed-payment handling, and downgrade behavior for hosted subscriptions.
 - [ ] Enforce bandwidth, connection, domain, and member limits at both API and relay boundaries.
 - [ ] Add billing history, invoice, receipt, and portal persistence/response models.
 
@@ -60,13 +60,13 @@ This section is the authoritative list of backend implementation work still outs
 - [ ] Make `codedock-tunnel` usable without Codedock, a Codedock account, or a Codedock server.
 - [ ] Treat Codedock as one optional integration among many, not as the tunnel system's control plane.
 - [ ] Support an independent hosted service with its own accounts, organizations, billing, API, dashboard, and CLI.
-- [ ] Support a fully self-hosted deployment with a user-owned relay, database, domain, and TLS certificates.
+- [x] Keep the product hosted with billing enforced; open-source clients and relay components do not provide a self-hosted bypass.
 - [ ] Keep tunnel identity, credentials, sessions, routing, quotas, analytics, and audit history owned by `codedock-tunnel`.
 - [ ] Define an integration-neutral public API for dashboards, CLIs, SDKs, and external platforms.
 - [ ] Ensure the core tunnel server never imports or requires Codedock packages, models, routes, or authentication tokens.
 - [ ] Provide Codedock integration as an optional adapter, plugin, or external API client.
 - [ ] Allow users to run the tunnel CLI directly against any compatible tunnel server URL.
-- [ ] Document the difference between the standalone product, self-hosted mode, and optional Codedock integration.
+- [ ] Document the hosted standalone product and optional Codedock integration.
 
 ## Product surfaces
 
@@ -74,7 +74,7 @@ This section is the authoritative list of backend implementation work still outs
 - [ ] Build a standalone CLI that can create and manage tunnels without Codedock.
 - [ ] Publish one reusable `sdk-ts` package for Node.js, TypeScript, browser, and framework integrations.
 - [ ] Keep the Tauri desktop application usable with standalone tunnel servers.
-- [ ] Support configuration of a custom server URL for local, self-hosted, and enterprise deployments.
+- [ ] Support configuration of the hosted server URL for local development and enterprise environments.
 - [ ] Define stable public API and protocol versioning independent of any Codedock release.
 
 ## Repository structure
@@ -224,7 +224,7 @@ codedock-tunnel/
 - [x] Choose the first supported tunnel types: HTTP, HTTPS, and raw TCP.
 - [x] Define tunnel lifecycle states: creating, connecting, active, disconnected, expired, and revoked.
 - [ ] Define the public URL and subdomain allocation strategy.
-- [ ] Document the self-hosted and managed deployment models.
+- [ ] Document the hosted deployment model and open-source integration boundary.
 - [ ] Choose the project license and contribution policy.
 
 ## Go technology baseline
@@ -233,7 +233,7 @@ codedock-tunnel/
 - [x] Use `github.com/gofiber/contrib/websocket` for CLI and relay WebSocket connections.
 - [x] Install `gorm.io/gorm` with `gorm.io/driver/postgres` for PostgreSQL persistence.
 - [x] Define the initial PostgreSQL control-plane models and GORM migration registry.
-- [x] Use PostgreSQL as the primary control-plane database for hosted and self-hosted installations.
+- [x] Use PostgreSQL as the primary control-plane database for the hosted product.
 - [x] Use PostgreSQL transactions, constraints, indexes, and explicit versioned migrations for durable state.
 - [x] Use `github.com/redis/go-redis/v9` for ephemeral sessions, heartbeats, rate limits, presence, and relay coordination.
 - [x] Keep tunnel payloads out of Redis and PostgreSQL unless explicitly required for analytics or audit purposes.
@@ -268,9 +268,9 @@ codedock-tunnel/
 - [ ] Handle subscription created, active, updated, canceled, paused, past-due, expired, and revoked events.
 - [ ] Implement plan entitlement checks in the API and relay before allocating tunnels or connections.
 - [ ] Prevent client-provided plan or limit values from overriding server-side entitlements.
-- [ ] Add grace periods, downgrade behavior, failed-payment handling, and free-plan fallback rules.
+- [ ] Add grace periods, downgrade behavior, and failed-payment handling for hosted subscriptions.
 - [ ] Add billing history, invoices, receipts, and customer self-service portal links.
-- [ ] Keep billing optional for self-hosted deployments while preserving local plan configuration.
+- [x] Make billing mandatory for the hosted product; open-source clients and relay components do not bypass entitlements.
 - [x] Use Zepto Mail as the only transactional email provider.
 
 ## Usage, analytics, and operations data
@@ -291,12 +291,12 @@ codedock-tunnel/
 
 - [x] Add reusable stale-session, API-key, and device-login cleanup jobs.
 - [x] Add reusable usage aggregation and billing reconciliation worker contracts.
-- [ ] Run stale-session cleanup, Redis index reconciliation, usage aggregation, and subscription maintenance in `cmd/cron`.
-- [ ] Run recurring billing checks and provider reconciliation as retryable idempotent jobs.
+- [x] Run stale-session cleanup, Redis index reconciliation, usage aggregation, and subscription maintenance in `cmd/cron`.
+- [x] Run recurring billing checks and provider reconciliation as retryable idempotent jobs.
 - [x] Use Redis distributed locks so only one cron worker processes a billing or reconciliation batch.
-- [ ] Add exponential backoff, dead-letter handling, and operator-visible job status.
-- [ ] Run subscription maintenance immediately on startup only when protected by idempotency and locking.
-- [ ] Add alerts for failed webhooks, repeated payment failures, stale presence growth, and quota inconsistencies.
+- [x] Add exponential backoff, dead-letter handling, and operator-visible job status.
+- [x] Run subscription maintenance immediately on startup only when protected by idempotency and locking.
+- [x] Add alerts for failed webhooks, repeated payment failures, stale presence growth, and quota inconsistencies.
 
 ## Protocol
 
@@ -331,7 +331,7 @@ codedock-tunnel/
 
 ## Background jobs and verification
 
-- [ ] Define jobs that can run inside the server for small self-hosted installations.
+- [ ] Define jobs that can run inside the hosted server for low-volume environments.
 - [ ] Define jobs that can run in `cmd/cron` for independent horizontal scaling.
 - [ ] Expire inactive tunnels, sessions, credentials, reservations, and public hostnames.
 - [ ] Roll up traffic and connection analytics without storing request secrets or bodies by default.
