@@ -2,14 +2,45 @@ package config
 
 import "time"
 
-type Config struct {
+type APIConfig struct {
 	App      AppConfig      `envPrefix:"CODEDOCK_"`
 	Auth     AuthConfig     `envPrefix:"CODEDOCK_"`
 	Database DatabaseConfig `envPrefix:"CODEDOCK_"`
 	Redis    RedisConfig    `envPrefix:"CODEDOCK_"`
 	Mail     MailConfig     `envPrefix:"CODEDOCK_"`
-	Tunnel   TunnelConfig   `envPrefix:"CODEDOCK_"`
+	Service  ServiceConfig  `envPrefix:"CODEDOCK_"`
 	Billing  BillingConfig  `envPrefix:"CODEDOCK_"`
+}
+
+type RelayConfig struct {
+	App     AppConfig     `envPrefix:"CODEDOCK_"`
+	Redis   RedisConfig   `envPrefix:"CODEDOCK_"`
+	Tunnel  TunnelConfig  `envPrefix:"CODEDOCK_"`
+	Service ServiceConfig `envPrefix:"CODEDOCK_"`
+}
+
+type CronConfig struct {
+	App      AppConfig      `envPrefix:"CODEDOCK_"`
+	Database DatabaseConfig `envPrefix:"CODEDOCK_"`
+	Redis    RedisConfig    `envPrefix:"CODEDOCK_"`
+	Service  ServiceConfig  `envPrefix:"CODEDOCK_"`
+}
+
+type CheckConfig struct {
+	App     AppConfig     `envPrefix:"CODEDOCK_"`
+	Service ServiceConfig `envPrefix:"CODEDOCK_"`
+}
+
+type CLIConfig struct {
+	APIURL     string `env:"CODEDOCK_TUNNEL_API_URL" envDefault:"http://localhost:8080"`
+	RelayURL   string `env:"CODEDOCK_TUNNEL_RELAY_URL" envDefault:"ws://localhost:8081"`
+	APIKey     string `env:"CODEDOCK_TUNNEL_API_KEY"`
+	ConfigPath string `env:"CODEDOCK_TUNNEL_CONFIG_PATH" envDefault:".config/codedock-tunnel/config.json"`
+}
+
+type ServiceConfig struct {
+	InternalAPIURL    string `env:"INTERNAL_API_URL" envDefault:"http://localhost:8080"`
+	InternalAPISecret string `env:"INTERNAL_API_SECRET"`
 }
 
 type AppConfig struct {
@@ -24,7 +55,6 @@ type AppConfig struct {
 }
 
 type AuthConfig struct {
-	InternalAPISecret  string        `env:"INTERNAL_API_SECRET"`
 	SessionTTL         time.Duration `env:"SESSION_TTL" envDefault:"720h"`
 	DeviceLoginTTL     time.Duration `env:"DEVICE_LOGIN_TTL" envDefault:"10m"`
 	CookieName         string        `env:"AUTH_COOKIE_NAME" envDefault:"codedock_session"`

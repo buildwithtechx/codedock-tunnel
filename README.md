@@ -65,9 +65,9 @@ The Go commands are independently deployable and do not all need to run on the s
 | `cmd/tunnel` | Public VPS or container                                         | Long-running tunnel relay and data plane |
 | `cmd/cron`   | Long-running worker under a process manager or worker container | Scheduled maintenance jobs               |
 | `cmd/check`  | Internal service container or process-manager service           | HTTP domain and edge verification        |
-| `cmd/cli`    | User workstation binary, package manager, or optional CLI image | Opens tunnels and calls the API          |
+| `cmd/cli`    | User workstation binary or package manager                  | Opens tunnels and calls the API          |
 
-Each deployable command has its own Dockerfile:
+Each server-side command has its own Dockerfile:
 
 ```sh
 docker build -f docker/Dockerfile.api -t codedock-api .
@@ -76,7 +76,17 @@ docker build -f docker/Dockerfile.cron -t codedock-tunnel-cron .
 docker build -f docker/Dockerfile.check -t codedock-tunnel-check .
 ```
 
-The CLI is normally distributed as a platform binary. An optional CLI image is available for CI automation.
+The CLI is distributed as a platform binary. It runs on the user’s workstation or CI runner and connects to the API and relay; it is not deployed as a server process.
+
+Each independently deployed command has a focused environment example:
+
+| Command | Environment example |
+| --- | --- |
+| API server | `cmd/server/.env.example` |
+| Tunnel relay | `cmd/tunnel/.env.example` |
+| Cron worker | `cmd/cron/.env.example` |
+| Check service | `cmd/check/.env.example` |
+| CLI | `cmd/cli/.env.example` |
 
 ## Runtime communication
 

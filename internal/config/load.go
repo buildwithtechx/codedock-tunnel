@@ -6,32 +6,101 @@ import (
 	"github.com/caarlos0/env/v11"
 )
 
-func Load() (Config, error) {
-	var cfg Config
-	if err := env.Parse(&cfg); err != nil {
-		return Config{}, fmt.Errorf("parse environment: %w", err)
+func LoadAPI() (APIConfig, error) {
+	var cfg APIConfig
+	if err := parse(&cfg); err != nil {
+		return APIConfig{}, err
 	}
-	if err := cfg.Validate(); err != nil {
-		return Config{}, err
+	if err := validateAPI(cfg); err != nil {
+		return APIConfig{}, err
 	}
 	return cfg, nil
 }
 
-func (c Config) Validate() error {
-	if c.App.Port == "" {
+func LoadRelay() (RelayConfig, error) {
+	var cfg RelayConfig
+	if err := parse(&cfg); err != nil {
+		return RelayConfig{}, err
+	}
+	if err := validateRelay(cfg); err != nil {
+		return RelayConfig{}, err
+	}
+	return cfg, nil
+}
+
+func LoadCron() (CronConfig, error) {
+	var cfg CronConfig
+	if err := parse(&cfg); err != nil {
+		return CronConfig{}, err
+	}
+	if err := validateDatabase(cfg.Database); err != nil {
+		return CronConfig{}, err
+	}
+	return cfg, nil
+}
+
+func LoadCheck() (CheckConfig, error) {
+	var cfg CheckConfig
+	if err := parse(&cfg); err != nil {
+		return CheckConfig{}, err
+	}
+	if err := validateApp(cfg.App); err != nil {
+		return CheckConfig{}, err
+	}
+	return cfg, nil
+}
+
+func LoadCLI() (CLIConfig, error) {
+	var cfg CLIConfig
+	if err := parse(&cfg); err != nil {
+		return CLIConfig{}, err
+	}
+	if cfg.APIURL == "" || cfg.RelayURL == "" {
+		return CLIConfig{}, fmt.Errorf("tunnel api and relay urls are required")
+	}
+	return cfg, nil
+}
+
+func parse[T any](cfg *T) error {
+	if err := env.Parse(cfg); err != nil {
+		return fmt.Errorf("parse environment: %w", err)
+	}
+	return nil
+}
+
+func validateAPI(cfg APIConfig) error {
+	if err := validateApp(cfg.App); err != nil {
+		return err
+	}
+	return validateDatabase(cfg.Database)
+}
+
+func validateRelay(cfg RelayConfig) error {
+	if err := validateApp(cfg.App); err != nil {
+		return err
+	}
+	if cfg.Tunnel.MaxConnections < 1 {
+		return fmt.Errorf("tunnel max connections must be positive")
+	}
+	return nil
+}
+
+func validateApp(cfg AppConfig) error {
+	if cfg.Port == "" {
 		return fmt.Errorf("port is required")
 	}
-	if c.App.PublicAPIURL == "" {
+	if cfg.PublicAPIURL == "" {
 		return fmt.Errorf("public api url is required")
 	}
-	if c.Database.URL == "" {
+	return nil
+}
+
+func validateDatabase(cfg DatabaseConfig) error {
+	if cfg.URL == "" {
 		return fmt.Errorf("database url is required")
 	}
-	if c.Database.MaxConns < 1 {
+	if cfg.MaxConns < 1 {
 		return fmt.Errorf("database max connections must be positive")
-	}
-	if c.Tunnel.MaxConnections < 1 {
-		return fmt.Errorf("tunnel max connections must be positive")
 	}
 	return nil
 }

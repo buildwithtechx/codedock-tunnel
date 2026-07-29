@@ -108,8 +108,7 @@ codedock-tunnel/
 │   ├── Dockerfile.api
 │   ├── Dockerfile.tunnel
 │   ├── Dockerfile.cron
-│   ├── Dockerfile.check
-│   └── Dockerfile.cli
+│   └── Dockerfile.check
 ├── docs/
 ├── scripts/
 ├── go.mod
@@ -159,7 +158,8 @@ codedock-tunnel/
 - [ ] Keep framework adapters independently versioned while preserving compatibility with the core SDK.
 - [ ] Keep `integrations/codedock/` as an optional external adapter.
 - [ ] Keep database migrations in `migrations/` and integration tests in `tests/`.
-- [x] Add independent Dockerfiles under `docker/` for API, tunnel, cron, check, and CLI.
+- [x] Add independent Dockerfiles under `docker/` for API, tunnel, cron, and check.
+- [x] Distribute the CLI as platform binaries instead of deploying a CLI service.
 - [ ] Keep the root workspace configuration independent from the Codedock repository.
 - [ ] Ensure the tunnel core has no imports of Codedock models, routes, authentication, or database packages.
 

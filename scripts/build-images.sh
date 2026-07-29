@@ -8,4 +8,3 @@ docker build -f docker/Dockerfile.api -t "codedock-api:$tag" .
 docker build -f docker/Dockerfile.tunnel -t "codedock-tunnel-server:$tag" .
 docker build -f docker/Dockerfile.cron -t "codedock-tunnel-cron:$tag" .
 docker build -f docker/Dockerfile.check -t "codedock-tunnel-check:$tag" .
-docker build -f docker/Dockerfile.cli -t "codedock-tunnel-cli:$tag" .

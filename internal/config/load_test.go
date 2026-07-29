@@ -10,7 +10,7 @@ func TestLoadUsesCodedockEnvironmentPrefix(t *testing.T) {
 	t.Setenv("CODEDOCK_GITHUB_CLIENT_ID", "github-client")
 	t.Setenv("CODEDOCK_ZEPTO_API_KEY", "zepto-key")
 
-	cfg, err := Load()
+	cfg, err := LoadAPI()
 	if err != nil {
 		t.Fatalf("load config: %v", err)
 	}
@@ -29,5 +29,28 @@ func TestLoadUsesCodedockEnvironmentPrefix(t *testing.T) {
 	}
 	if cfg.Mail.ZeptoAPIKey != "zepto-key" {
 		t.Fatal("zepto configuration did not load")
+	}
+}
+
+func TestLoadRelayDoesNotRequireDatabase(t *testing.T) {
+	t.Setenv("CODEDOCK_PORT", "8081")
+	t.Setenv("CODEDOCK_TUNNEL_MAX_CONNECTIONS", "20")
+
+	cfg, err := LoadRelay()
+	if err != nil {
+		t.Fatalf("load relay config: %v", err)
+	}
+	if cfg.App.Port != "8081" {
+		t.Fatalf("expected relay port 8081, got %s", cfg.App.Port)
+	}
+}
+
+func TestLoadCLIDoesNotRequireServerSecrets(t *testing.T) {
+	cfg, err := LoadCLI()
+	if err != nil {
+		t.Fatalf("load cli config: %v", err)
+	}
+	if cfg.APIKey != "" {
+		t.Fatal("expected API key to be optional")
 	}
 }
