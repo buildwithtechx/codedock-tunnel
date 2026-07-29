@@ -124,9 +124,9 @@ codedock-tunnel/
 - [ ] Create `apps/desktop/` for the Tauri desktop application and `src-tauri/` Rust shell.
 - [x] Create `cmd/server/` for the control-plane API server.
 - [x] Create `cmd/tunnel/` for the public tunnel relay and data plane.
-- [ ] Create `cmd/cli/` for the standalone CLI.
-- [ ] Create `cmd/cron/` for cleanup, expiry, analytics rollups, certificate jobs, and scheduled maintenance.
-- [ ] Create `cmd/check/` for custom-domain verification and edge readiness checks.
+- [x] Create `cmd/cli/` for the standalone CLI.
+- [x] Create `cmd/cron/` for cleanup, expiry, analytics rollups, certificate jobs, and scheduled maintenance.
+- [x] Create `cmd/check/` for custom-domain verification and edge readiness checks.
 - [x] Organize domain models and DTOs under `internal/models/`.
 - [x] Organize PostgreSQL persistence and repository interfaces under `internal/repositories/`.
 - [x] Organize business logic and provider-neutral use cases under `internal/services/`.

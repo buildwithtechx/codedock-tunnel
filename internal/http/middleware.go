@@ -1,7 +1,6 @@
 package http
 
 import (
-	"fmt"
 	"strings"
 
 	"codedock.run/codedock-tunnel/internal/models"
@@ -37,7 +36,7 @@ func organizationRoleRequired(organizations *services.OrganizationService, requi
 func internalSecretRequired(expected string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		if expected == "" || c.Get("X-Internal-Secret") != expected {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": fmt.Sprintf("invalid internal secret")})
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid internal secret"})
 		}
 		return c.Next()
 	}

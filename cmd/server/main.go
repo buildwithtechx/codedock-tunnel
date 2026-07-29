@@ -12,8 +12,6 @@ import (
 	"codedock.run/codedock-tunnel/internal/infra/postgres"
 )
 
-var version = "dev"
-
 func main() {
 	cfg, err := config.LoadAPI()
 	if err != nil {
