@@ -59,10 +59,7 @@ export const decodeMessage = <TPayload>(
   value: string,
 ): ProtocolEnvelope<TPayload> => {
   const message = JSON.parse(value) as ProtocolEnvelope<TPayload>;
-  if (
-    message.version !== protocolVersion ||
-    !messageTypes.includes(message.type)
-  ) {
+  if (message.version !== protocolVersion || !messageTypes.includes(message.type)) {
     throw new Error('unsupported tunnel protocol message');
   }
   return message;

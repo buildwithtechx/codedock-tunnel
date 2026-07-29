@@ -140,11 +140,12 @@ codedock-tunnel/
 - [ ] Organize retryable cleanup, usage, billing, and reconciliation jobs under `internal/workers/`.
 - [ ] Keep repositories free of business policy and keep services independent from Fiber handlers.
 - [ ] Keep infrastructure adapters behind narrow interfaces consumed by services and workers.
-- [ ] Create `pkg/client/` for reusable Go client functionality.
-- [ ] Create `pkg/protocol/` for public Go protocol types and helpers.
-- [ ] Create `protocol/schema/` for language-neutral protocol definitions.
-- [ ] Generate protocol bindings under `protocol/generated/go/` and `protocol/generated/typescript/`.
-- [ ] Create `packages/protocol-ts/` for generated and hand-written TypeScript protocol types.
+- [x] Create `pkg/client/` for reusable Go client functionality.
+- [x] Create `pkg/protocol/` for public Go protocol types and helpers.
+- [x] Create `pkg/version/` for shared build version metadata.
+- [x] Create `protocol/schema/` for language-neutral protocol definitions.
+- [x] Generate protocol bindings under `protocol/generated/go/` and `protocol/generated/typescript/`.
+- [x] Create `packages/protocol-ts/` for generated and hand-written TypeScript protocol types.
 - [ ] Create `packages/sdk-ts/` as the framework-neutral Node.js and browser client.
 - [ ] Create `packages/react/` as a thin React hooks and provider layer over `sdk-ts`.
 - [ ] Create `packages/vite-plugin/` for local development tunnel integration with Vite.
@@ -243,9 +244,9 @@ codedock-tunnel/
 
 ## Protocol
 
-- [ ] Define a versioned control protocol for server, CLI, dashboard, and desktop clients.
+- [x] Define a versioned control protocol for server, CLI, dashboard, and desktop clients.
+- [x] Define tunnel open, close, error, heartbeat, and data messages.
 - [ ] Define authentication, authorization, and capability messages.
-- [ ] Define tunnel open, accept, close, error, heartbeat, and reconnect messages.
 - [ ] Define protocol version negotiation and backward compatibility rules.
 - [ ] Define maximum frame size, idle timeout, connection timeout, and backpressure behavior.
 - [ ] Add protocol conformance fixtures shared by Go and TypeScript clients.
