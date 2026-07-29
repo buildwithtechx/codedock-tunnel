@@ -43,11 +43,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	usage := newUsageRecorder(cfg.Service.InternalAPIURL, cfg.Service.InternalAPISecret)
+	httpProxy.SetUsageRecorder(usage)
 	authenticator, err := relay.NewInternalAgentAuthenticator(cfg.Service.InternalAPIURL, cfg.Service.InternalAPISecret, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
-	relayHandler, err := relay.NewHandlerWithOptions(authenticator, sessions, requestRouter, tcpManager, udpManager, relay.HandlerOptions{MaxConnections: cfg.Tunnel.MaxConnections, MaxTunnels: cfg.Tunnel.MaxTunnels, MaxBandwidth: cfg.Tunnel.MaxBandwidth, Heartbeat: cfg.Tunnel.Heartbeat, ReadTimeout: cfg.Tunnel.ReadTimeout, MaxFrameBytes: cfg.Tunnel.MaxFrameBytes, Logger: slog.Default(), Metrics: metrics})
+	relayHandler, err := relay.NewHandlerWithOptions(authenticator, sessions, requestRouter, tcpManager, udpManager, relay.HandlerOptions{MaxConnections: cfg.Tunnel.MaxConnections, MaxTunnels: cfg.Tunnel.MaxTunnels, MaxBandwidth: cfg.Tunnel.MaxBandwidth, Heartbeat: cfg.Tunnel.Heartbeat, ReadTimeout: cfg.Tunnel.ReadTimeout, DrainTimeout: cfg.Tunnel.DrainTimeout, MaxFrameBytes: cfg.Tunnel.MaxFrameBytes, Logger: slog.Default(), Metrics: metrics, UsageRecorder: usage})
 	if err != nil {
 		log.Fatal(err)
 	}

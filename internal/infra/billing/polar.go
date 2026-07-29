@@ -8,12 +8,45 @@ import (
 	"io"
 	"net/http"
 	"strings"
+
+	"codedock.run/codedock-tunnel/internal/models"
 )
 
 type PolarConfig struct {
 	BaseURL     string
 	AccessToken string
 	HTTPClient  *http.Client
+}
+
+func (c *PolarClient) Checkout(ctx context.Context, plan models.Plan, organizationID string) (string, error) {
+	var response struct {
+		URL string `json:"url"`
+	}
+	if err := c.Request(ctx, http.MethodPost, "/v1/checkouts", map[string]any{"product_id": plan.Key, "metadata": map[string]string{"organization_id": organizationID}}, &response); err != nil {
+		return "", err
+	}
+	if response.URL == "" {
+		return "", fmt.Errorf("polar checkout returned no url")
+	}
+	return response.URL, nil
+}
+
+func (c *PolarClient) Portal(ctx context.Context, customerID string) (string, error) {
+	var response struct {
+		URL string `json:"url"`
+	}
+	if err := c.Request(ctx, http.MethodPost, "/v1/customer-portal/sessions", map[string]string{"customer_id": customerID}, &response); err != nil {
+		return "", err
+	}
+	return response.URL, nil
+}
+
+func (c *PolarClient) Cancel(ctx context.Context, subscriptionID string) error {
+	return c.Request(ctx, http.MethodPost, "/v1/subscriptions/"+subscriptionID+"/cancel", nil, nil)
+}
+
+func (c *PolarClient) Resume(ctx context.Context, subscriptionID string) error {
+	return c.Request(ctx, http.MethodPost, "/v1/subscriptions/"+subscriptionID+"/uncancel", nil, nil)
 }
 
 type PolarClient struct {

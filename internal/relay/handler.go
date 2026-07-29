@@ -24,6 +24,11 @@ type AgentAuthenticator interface {
 	Authenticate(context.Context, string) (AgentIdentity, error)
 }
 
+type connectionState struct {
+	negotiated    bool
+	authenticated bool
+}
+
 type Handler struct {
 	authenticator AgentAuthenticator
 	sessions      *engine.SessionRegistry
@@ -36,9 +41,11 @@ type Handler struct {
 	heartbeat     time.Duration
 	readTimeout   time.Duration
 	maxFrameBytes int64
+	drainTimeout  time.Duration
 	logger        *slog.Logger
 	metrics       *Metrics
 	bandwidth     *engine.BandwidthLimiter
+	usage         engine.UsageRecorder
 	mu            sync.Mutex
 	connections   int
 	writeMu       sync.Mutex
@@ -51,8 +58,10 @@ type HandlerOptions struct {
 	Heartbeat      time.Duration
 	ReadTimeout    time.Duration
 	MaxFrameBytes  int64
+	DrainTimeout   time.Duration
 	Logger         *slog.Logger
 	Metrics        *Metrics
+	UsageRecorder  engine.UsageRecorder
 }
 
 func NewHandler(authenticator AgentAuthenticator, sessions *engine.SessionRegistry, router *engine.RequestRouter, tcp *TCPManager, udp *UDPManager, maxSessions int) (*Handler, error) {
@@ -72,9 +81,12 @@ func NewHandlerWithOptions(authenticator AgentAuthenticator, sessions *engine.Se
 	if options.Metrics == nil {
 		options.Metrics = NewMetrics()
 	}
+	if options.DrainTimeout < 0 {
+		return nil, fmt.Errorf("drain timeout cannot be negative")
+	}
 	tcp.SetMaxConnections(options.MaxConnections)
 	udp.SetMaxPackets(options.MaxConnections)
-	return &Handler{authenticator: authenticator, sessions: sessions, router: router, tcp: tcp, udp: udp, maxSessions: options.MaxConnections, maxTunnels: options.MaxTunnels, maxBandwidth: options.MaxBandwidth, heartbeat: options.Heartbeat, readTimeout: options.ReadTimeout, maxFrameBytes: options.MaxFrameBytes, logger: options.Logger, metrics: options.Metrics, bandwidth: engine.NewBandwidthLimiter()}, nil
+	return &Handler{authenticator: authenticator, sessions: sessions, router: router, tcp: tcp, udp: udp, maxSessions: options.MaxConnections, maxTunnels: options.MaxTunnels, maxBandwidth: options.MaxBandwidth, heartbeat: options.Heartbeat, readTimeout: options.ReadTimeout, maxFrameBytes: options.MaxFrameBytes, drainTimeout: options.DrainTimeout, logger: options.Logger, metrics: options.Metrics, usage: options.UsageRecorder, bandwidth: engine.NewBandwidthLimiter()}, nil
 }
 
 func (h *Handler) Metrics() *Metrics { return h.metrics }
@@ -104,16 +116,19 @@ func (h *Handler) Connect(connection *websocket.Conn) {
 	}
 	h.logger.Info("relay connection authenticated", slog.String("agent_id", identity.AgentID), slog.String("organization_id", identity.OrganizationID))
 	owned := make(map[string]string)
+	state := connectionState{}
 	connectionCtx, cancelConnection := context.WithCancel(ctx)
 	defer cancelConnection()
 	go h.sendHeartbeats(connectionCtx, connection, identity.OrganizationID)
 	defer func() {
 		for tunnelID, sessionID := range owned {
-			h.sessions.Remove(tunnelID, sessionID)
-			h.metrics.AddTunnel(-1)
-			h.router.RemoveTunnel(tunnelID)
-			h.tcp.CloseTunnel(tunnelID)
-			h.udp.CloseTunnel(tunnelID)
+			if h.sessions.Remove(tunnelID, sessionID) {
+				h.recordUsage(ctx, identity.OrganizationID, tunnelID, "tunnel_close", 0, 0)
+				h.metrics.AddTunnel(-1)
+				h.router.RemoveTunnel(tunnelID)
+				h.tcp.CloseTunnel(tunnelID)
+				h.udp.CloseTunnel(tunnelID)
+			}
 		}
 		h.logger.Info("relay connection closed", slog.String("agent_id", identity.AgentID), slog.Int("tunnels", len(owned)))
 	}()
@@ -133,10 +148,11 @@ func (h *Handler) Connect(connection *websocket.Conn) {
 			h.writeError(connection, "protocol", err.Error())
 			continue
 		}
-		if err := h.handleMessage(ctx, connection, identity, message, owned); err != nil {
+		if err := h.handleMessage(ctx, connection, identity, message, owned, &state); err != nil {
 			h.metrics.AddError()
 			h.writeError(connection, "message", err.Error())
 		}
+		h.recordMessageUsage(ctx, identity.OrganizationID, message)
 	}
 }
 
@@ -161,9 +177,13 @@ func (h *Handler) sendHeartbeats(ctx context.Context, connection *websocket.Conn
 	}
 }
 
-func (h *Handler) handleMessage(ctx context.Context, connection *websocket.Conn, identity AgentIdentity, message protocol.Envelope, owned map[string]string) error {
+func (h *Handler) handleMessage(ctx context.Context, connection *websocket.Conn, identity AgentIdentity, message protocol.Envelope, owned map[string]string, states ...*connectionState) error {
 	if err := ctx.Err(); err != nil {
 		return err
+	}
+	state := &connectionState{negotiated: true, authenticated: true}
+	if len(states) > 0 && states[0] != nil {
+		state = states[0]
 	}
 	if h.maxBandwidth > 0 && isDataMessage(message.Type) {
 		if err := h.bandwidth.Consume(identity.OrganizationID, h.maxBandwidth, int64(len(message.Payload))); err != nil {
@@ -180,12 +200,16 @@ func (h *Handler) handleMessage(ctx context.Context, connection *websocket.Conn,
 		if err != nil {
 			return err
 		}
+		state.negotiated = true
 		payload, err := protocol.EncodePayload(protocol.MessageTypeVersionNegotiateAck, message.RequestID, ack)
 		if err != nil {
 			return err
 		}
 		return h.writeMessage(connection, websocket.TextMessage, payload)
 	case protocol.MessageTypeAuth:
+		if !state.negotiated {
+			return fmt.Errorf("protocol version must be negotiated before authentication")
+		}
 		var authReq protocol.AuthRequest
 		if err := protocol.DecodePayload(message, &authReq); err != nil {
 			return err
@@ -196,6 +220,7 @@ func (h *Handler) handleMessage(ctx context.Context, connection *websocket.Conn,
 			_ = h.writeMessage(connection, websocket.TextMessage, payload)
 			return err
 		}
+		state.authenticated = true
 		payload, err := protocol.EncodePayload(protocol.MessageTypeAuthResponse, message.RequestID, protocol.AuthResponse{Authenticated: true, AgentID: id.AgentID, OrganizationID: id.OrganizationID, GrantedCapabilities: []string{"http", "https", "tcp", "udp"}})
 		if err != nil {
 			return err
@@ -209,6 +234,9 @@ func (h *Handler) handleMessage(ctx context.Context, connection *websocket.Conn,
 		h.logger.DebugContext(ctx, "flow control message received", slog.String("stream_id", fc.StreamID), slog.String("action", fc.Action))
 		return nil
 	case protocol.MessageTypeOpenTunnel:
+		if !state.negotiated || !state.authenticated {
+			return fmt.Errorf("protocol authentication and negotiation are required")
+		}
 		var open protocol.OpenTunnel
 		if err := protocol.DecodePayload(message, &open); err != nil {
 			return err
@@ -216,8 +244,15 @@ func (h *Handler) handleMessage(ctx context.Context, connection *websocket.Conn,
 		if open.Protocol == "" || open.LocalPort < 1 || open.LocalPort > 65535 {
 			return fmt.Errorf("invalid tunnel open request")
 		}
-		tunnelID := uuid.NewString()
-		if len(h.sessions.Snapshot()) >= h.maxTunnels {
+		tunnelID := open.TunnelID
+		if tunnelID == "" {
+			tunnelID = uuid.NewString()
+		}
+		previous, exists := h.sessions.Get(tunnelID)
+		if exists && previous.OrganizationID != identity.OrganizationID {
+			return fmt.Errorf("tunnel belongs to another organization")
+		}
+		if !exists && len(h.sessions.Snapshot()) >= h.maxTunnels {
 			return fmt.Errorf("tunnel capacity reached")
 		}
 		session := engine.Session{ID: uuid.NewString(), OrganizationID: identity.OrganizationID, TunnelID: tunnelID, Send: func(sendCtx context.Context, outgoing protocol.Envelope) error {
@@ -229,13 +264,17 @@ func (h *Handler) handleMessage(ctx context.Context, connection *websocket.Conn,
 					return err
 				}
 			}
+			h.recordMessageUsage(sendCtx, identity.OrganizationID, outgoing)
 			return h.writeJSON(connection, outgoing)
 		}, Close: func() { _ = connection.Close() }}
-		if err := h.sessions.Reserve(session, false); err != nil {
+		if err := h.sessions.ReserveWithDrain(session, exists, h.drainTimeout); err != nil {
 			return err
 		}
 		owned[tunnelID] = session.ID
-		h.metrics.AddTunnel(1)
+		h.recordUsage(ctx, identity.OrganizationID, tunnelID, "tunnel_open", 0, 1)
+		if !exists {
+			h.metrics.AddTunnel(1)
+		}
 		alias := open.CustomDomain
 		if alias == "" {
 			alias = open.Subdomain
@@ -244,27 +283,43 @@ func (h *Handler) handleMessage(ctx context.Context, connection *websocket.Conn,
 			if err := h.sessions.BindAlias(alias, tunnelID); err != nil {
 				h.sessions.Remove(tunnelID, session.ID)
 				delete(owned, tunnelID)
-				h.metrics.AddTunnel(-1)
+				if !exists {
+					h.metrics.AddTunnel(-1)
+				}
 				return err
 			}
 		}
 		publicPort := 0
 		var err error
 		if open.Protocol == "tcp" {
-			publicPort, err = h.tcp.Open(tunnelID, session.Send)
+			if exists {
+				h.tcp.SetSender(tunnelID, session.Send)
+				publicPort = h.tcp.Port(tunnelID)
+			} else {
+				publicPort, err = h.tcp.Open(tunnelID, session.Send)
+			}
 			if err != nil {
 				h.sessions.Remove(tunnelID, session.ID)
 				delete(owned, tunnelID)
-				h.metrics.AddTunnel(-1)
+				if !exists {
+					h.metrics.AddTunnel(-1)
+				}
 				return err
 			}
 		}
 		if open.Protocol == "udp" {
-			publicPort, err = h.udp.Open(tunnelID, session.Send)
+			if exists {
+				h.udp.SetSender(tunnelID, session.Send)
+				publicPort = h.udp.Port(tunnelID)
+			} else {
+				publicPort, err = h.udp.Open(tunnelID, session.Send)
+			}
 			if err != nil {
 				h.sessions.Remove(tunnelID, session.ID)
 				delete(owned, tunnelID)
-				h.metrics.AddTunnel(-1)
+				if !exists {
+					h.metrics.AddTunnel(-1)
+				}
 				return err
 			}
 		}
@@ -274,7 +329,9 @@ func (h *Handler) handleMessage(ctx context.Context, connection *websocket.Conn,
 			delete(owned, tunnelID)
 			h.tcp.CloseTunnel(tunnelID)
 			h.udp.CloseTunnel(tunnelID)
-			h.metrics.AddTunnel(-1)
+			if !exists {
+				h.metrics.AddTunnel(-1)
+			}
 			return err
 		}
 		return h.writeMessage(connection, websocket.TextMessage, payload)
@@ -310,27 +367,94 @@ func (h *Handler) handleMessage(ctx context.Context, connection *websocket.Conn,
 		if err := protocol.DecodePayload(message, &data); err != nil {
 			return err
 		}
+		if data.TunnelID == "" {
+			return fmt.Errorf("tcp tunnel id is required")
+		}
 		decoded, err := base64.StdEncoding.DecodeString(data.Data)
 		if err != nil {
 			return fmt.Errorf("decode tcp data: %w", err)
 		}
-		return h.tcp.Write(data.ConnectionID, decoded)
+		return h.tcp.Write(data.TunnelID, data.ConnectionID, decoded)
 	case protocol.MessageTypeTCPClose:
 		var closeMessage protocol.TCPClose
 		if err := protocol.DecodePayload(message, &closeMessage); err != nil {
 			return err
 		}
-		h.tcp.CloseConnection(closeMessage.ConnectionID)
+		if closeMessage.TunnelID == "" {
+			return fmt.Errorf("tcp tunnel id is required")
+		}
+		h.tcp.CloseConnection(closeMessage.TunnelID, closeMessage.ConnectionID)
 		return nil
 	case protocol.MessageTypeUDPResponse:
 		var response protocol.UDPResponse
 		if err := protocol.DecodePayload(message, &response); err != nil {
 			return err
 		}
-		return h.udp.Write(response)
+		return h.udp.Write(response.TunnelID, response)
 	default:
 		return fmt.Errorf("unsupported relay message type %q", message.Type)
 	}
+}
+
+func (h *Handler) recordMessageUsage(ctx context.Context, organizationID string, message protocol.Envelope) {
+	if h.usage == nil {
+		return
+	}
+	var eventType string
+	var encoded string
+	switch message.Type {
+	case protocol.MessageTypeTCPData:
+		var data protocol.TCPData
+		if protocol.DecodePayload(message, &data) == nil {
+			eventType, encoded = "tcp", data.Data
+		}
+	case protocol.MessageTypeUDPData:
+		var data protocol.UDPData
+		if protocol.DecodePayload(message, &data) == nil {
+			eventType, encoded = "udp", data.Data
+		}
+	case protocol.MessageTypeUDPResponse:
+		var data protocol.UDPResponse
+		if protocol.DecodePayload(message, &data) == nil {
+			eventType, encoded = "udp", data.Data
+		}
+	default:
+		return
+	}
+	data, err := base64.StdEncoding.DecodeString(encoded)
+	if err != nil {
+		return
+	}
+	tunnelID := tunnelIDFromMessage(message)
+	h.recordUsage(ctx, organizationID, tunnelID, eventType, int64(len(data)), 0)
+}
+
+func (h *Handler) recordUsage(ctx context.Context, organizationID, tunnelID, eventType string, bytes int64, connections int) {
+	if h.usage == nil || organizationID == "" {
+		return
+	}
+	_ = h.usage.Record(ctx, engine.UsageMeasurement{OrganizationID: organizationID, TunnelID: tunnelID, EventType: eventType, Bytes: bytes, Connections: connections})
+}
+
+func tunnelIDFromMessage(message protocol.Envelope) string {
+	switch message.Type {
+	case protocol.MessageTypeTCPData:
+		var data protocol.TCPData
+		if protocol.DecodePayload(message, &data) == nil {
+			return data.TunnelID
+		}
+	case protocol.MessageTypeUDPData:
+		var data protocol.UDPData
+		if protocol.DecodePayload(message, &data) == nil {
+			return data.TunnelID
+		}
+	case protocol.MessageTypeUDPResponse:
+		var data protocol.UDPResponse
+		if protocol.DecodePayload(message, &data) == nil {
+			return data.TunnelID
+		}
+	}
+	return ""
 }
 
 func (h *Handler) writeError(connection *websocket.Conn, code, message string) {

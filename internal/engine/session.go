@@ -32,6 +32,10 @@ func NewSessionRegistry() *SessionRegistry {
 }
 
 func (r *SessionRegistry) Reserve(session Session, takeover bool) error {
+	return r.ReserveWithDrain(session, takeover, 0)
+}
+
+func (r *SessionRegistry) ReserveWithDrain(session Session, takeover bool, drain time.Duration) error {
 	if session.ID == "" || session.TunnelID == "" {
 		return fmt.Errorf("session and tunnel ids are required")
 	}
@@ -53,7 +57,16 @@ func (r *SessionRegistry) Reserve(session Session, takeover bool) error {
 	r.sessions[session.TunnelID] = session
 	r.mu.Unlock()
 	if exists && previous.Close != nil {
-		previous.Close()
+		if drain <= 0 {
+			previous.Close()
+		} else {
+			go func() {
+				timer := time.NewTimer(drain)
+				defer timer.Stop()
+				<-timer.C
+				previous.Close()
+			}()
+		}
 	}
 	return nil
 }

@@ -9,9 +9,9 @@ import (
 
 type BillingGateway interface {
 	Checkout(context.Context, models.Plan, string) (string, error)
-	Portal(context.Context, string) (string, error)
-	Cancel(context.Context, string) error
-	Resume(context.Context, string) error
+	Portal(context.Context, models.BillingProvider, string) (string, error)
+	Cancel(context.Context, models.BillingProvider, string) error
+	Resume(context.Context, models.BillingProvider, string) error
 }
 
 func (s *BillingService) SetGateway(gateway BillingGateway) { s.gateway = gateway }
@@ -35,7 +35,11 @@ func (s *BillingService) Portal(ctx context.Context, organizationID string) (str
 	if s.gateway == nil {
 		return "", fmt.Errorf("billing gateway is not configured")
 	}
-	url, err := s.gateway.Portal(ctx, organizationID)
+	subscription, err := s.billing.FindSubscription(ctx, organizationID)
+	if err != nil {
+		return "", fmt.Errorf("find subscription for portal: %w", err)
+	}
+	url, err := s.gateway.Portal(ctx, subscription.Provider, subscription.ProviderCustomerID)
 	if err != nil {
 		return "", fmt.Errorf("create billing portal: %w", err)
 	}
@@ -50,7 +54,7 @@ func (s *BillingService) Cancel(ctx context.Context, organizationID string) erro
 	if err != nil {
 		return fmt.Errorf("find subscription to cancel: %w", err)
 	}
-	return s.gateway.Cancel(ctx, subscription.ProviderSubID)
+	return s.gateway.Cancel(ctx, subscription.Provider, subscription.ProviderSubID)
 }
 
 func (s *BillingService) Resume(ctx context.Context, organizationID string) error {
@@ -61,5 +65,5 @@ func (s *BillingService) Resume(ctx context.Context, organizationID string) erro
 	if err != nil {
 		return fmt.Errorf("find subscription to resume: %w", err)
 	}
-	return s.gateway.Resume(ctx, subscription.ProviderSubID)
+	return s.gateway.Resume(ctx, subscription.Provider, subscription.ProviderSubID)
 }

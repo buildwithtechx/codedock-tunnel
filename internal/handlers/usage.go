@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"codedock.run/codedock-tunnel/internal/models"
 	"codedock.run/codedock-tunnel/internal/services"
 	"github.com/gofiber/fiber/v2"
 )
@@ -15,6 +16,17 @@ func NewUsageHandler(usage *services.UsageService) (*UsageHandler, error) {
 		return nil, fmt.Errorf("usage service is required")
 	}
 	return &UsageHandler{usage: usage}, nil
+}
+
+func (h *UsageHandler) Ingest(c *fiber.Ctx) error {
+	var event models.UsageEvent
+	if err := c.BodyParser(&event); err != nil {
+		return writeError(c, fiber.StatusBadRequest, err)
+	}
+	if err := h.usage.Record(c.UserContext(), &event); err != nil {
+		return writeError(c, fiber.StatusBadRequest, err)
+	}
+	return c.SendStatus(fiber.StatusAccepted)
 }
 
 func (h *UsageHandler) Events(c *fiber.Ctx) error {

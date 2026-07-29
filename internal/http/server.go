@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"codedock.run/codedock-tunnel/internal/config"
+	"codedock.run/codedock-tunnel/internal/infra/billing"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
@@ -27,6 +28,16 @@ func NewServer(cfg config.APIConfig, deps Dependencies) (*Server, error) {
 	app.Use(cors.New(cors.Config{AllowOrigins: cfg.App.AllowedOrigins, AllowHeaders: "Origin, Content-Type, Accept, Authorization, X-Internal-Secret", AllowCredentials: true}))
 	if err := RegisterRoutes(app, handlers, RouterOptions{CookieName: cfg.Auth.CookieName, CookieSecure: cfg.Auth.CookieSecure, InternalAPISecret: cfg.Service.InternalAPISecret, BillingWebhookSecret: cfg.Billing.WebhookSecret}); err != nil {
 		return nil, err
+	}
+	if handlers.Billing != nil {
+		var paystackClient *billing.PaystackClient
+		if cfg.Billing.PaystackSecret != "" {
+			paystackClient, err = billing.NewPaystack(billing.PaystackConfig{BaseURL: cfg.Billing.PaystackBaseURL, SecretKey: cfg.Billing.PaystackSecret})
+			if err != nil {
+				return nil, err
+			}
+		}
+		handlers.Billing.SetProviderSecrets(cfg.Billing.PolarWebhookSecret, paystackClient)
 	}
 	return &Server{app: app}, nil
 }

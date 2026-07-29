@@ -76,6 +76,7 @@ type FlowControl struct {
 
 type OpenTunnel struct {
 	Token        string `json:"token"`
+	TunnelID     string `json:"tunnel_id,omitempty"`
 	LocalPort    int    `json:"local_port"`
 	Subdomain    string `json:"subdomain,omitempty"`
 	Protocol     string `json:"protocol"`
@@ -123,16 +124,19 @@ type HTTPResponse struct {
 }
 
 type TCPData struct {
+	TunnelID     string `json:"tunnel_id,omitempty"`
 	ConnectionID string `json:"connection_id"`
 	Data         string `json:"data"`
 }
 
 type TCPClose struct {
+	TunnelID     string `json:"tunnel_id,omitempty"`
 	ConnectionID string `json:"connection_id"`
 	Reason       string `json:"reason,omitempty"`
 }
 
 type UDPData struct {
+	TunnelID      string `json:"tunnel_id,omitempty"`
 	PacketID      string `json:"packet_id"`
 	SourceAddress string `json:"source_address"`
 	SourcePort    int    `json:"source_port"`
@@ -140,6 +144,7 @@ type UDPData struct {
 }
 
 type UDPResponse struct {
+	TunnelID      string `json:"tunnel_id,omitempty"`
 	PacketID      string `json:"packet_id"`
 	TargetAddress string `json:"target_address"`
 	TargetPort    int    `json:"target_port"`

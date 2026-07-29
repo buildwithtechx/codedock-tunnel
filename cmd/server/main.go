@@ -40,6 +40,7 @@ func main() {
 			log.Fatal(err)
 		}
 		deps.Auth.SetSecretProtector(secretBox)
+		deps.Billing.SetSecretProtector(secretBox)
 	}
 	redisClient, err := redis.Open(ctx, redis.Config{Host: cfg.Redis.Host, Port: cfg.Redis.Port, Password: cfg.Redis.Password, DB: cfg.Redis.DB})
 	if err != nil {

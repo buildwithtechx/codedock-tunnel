@@ -46,6 +46,22 @@ func (h *TunnelHandler) Create(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(tunnel)
 }
 
+func (h *TunnelHandler) List(c *fiber.Ctx) error {
+	tunnels, err := h.tunnels.List(c.UserContext(), strings.TrimSpace(c.Params("organizationID")))
+	if err != nil {
+		return writeError(c, fiber.StatusBadRequest, err)
+	}
+	return c.JSON(tunnels)
+}
+
+func (h *TunnelHandler) Inspect(c *fiber.Ctx) error {
+	tunnel, err := h.tunnels.Find(c.UserContext(), strings.TrimSpace(c.Params("tunnelID")))
+	if err != nil {
+		return writeError(c, fiber.StatusNotFound, err)
+	}
+	return c.JSON(tunnel)
+}
+
 func (h *TunnelHandler) SetStatus(c *fiber.Ctx) error {
 	var input UpdateTunnelStatusRequest
 	if err := c.BodyParser(&input); err != nil {

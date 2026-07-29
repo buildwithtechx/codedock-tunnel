@@ -13,6 +13,18 @@ type BillingService struct {
 	billing repositories.BillingRepository
 	gateway BillingGateway
 	now     func() time.Time
+	secrets SecretProtector
+}
+
+type BillingTransition struct {
+	Provider              models.BillingProvider
+	ProviderSubscription  string
+	ProviderCustomer      string
+	ProviderProduct       string
+	Status                models.SubscriptionStatus
+	CurrentPeriodEnd      *time.Time
+	CancelAtPeriodEnd     bool
+	ProviderAuthorization string
 }
 
 func NewBillingService(billing repositories.BillingRepository) (*BillingService, error) {
@@ -20,6 +32,41 @@ func NewBillingService(billing repositories.BillingRepository) (*BillingService,
 		return nil, fmt.Errorf("billing repository is required")
 	}
 	return &BillingService{billing: billing, now: time.Now}, nil
+}
+
+func (s *BillingService) SetSecretProtector(protector SecretProtector) { s.secrets = protector }
+
+func (s *BillingService) ApplyTransition(ctx context.Context, transition BillingTransition) error {
+	if transition.Provider == "" || transition.ProviderSubscription == "" || transition.Status == "" {
+		return fmt.Errorf("complete billing transition is required")
+	}
+	subscription, err := s.billing.FindSubscriptionByProvider(ctx, transition.Provider, transition.ProviderSubscription)
+	if err != nil {
+		return fmt.Errorf("find subscription transition: %w", err)
+	}
+	subscription.Status = transition.Status
+	subscription.ProviderCustomerID = transition.ProviderCustomer
+	subscription.ProviderProductID = transition.ProviderProduct
+	subscription.CurrentPeriodEnd = transition.CurrentPeriodEnd
+	subscription.CancelAtPeriodEnd = transition.CancelAtPeriodEnd
+	if transition.Status == models.SubscriptionStatusCanceled || transition.Status == models.SubscriptionStatusExpired {
+		now := s.now()
+		subscription.CanceledAt = &now
+	}
+	if transition.ProviderAuthorization != "" {
+		if s.secrets == nil {
+			return fmt.Errorf("billing secret protector is not configured")
+		}
+		encrypted, err := s.secrets.Seal(transition.ProviderAuthorization)
+		if err != nil {
+			return fmt.Errorf("encrypt provider authorization: %w", err)
+		}
+		subscription.ProviderAuthCode = encrypted
+	}
+	if err := s.billing.SaveSubscription(ctx, &subscription); err != nil {
+		return fmt.Errorf("save billing transition: %w", err)
+	}
+	return nil
 }
 
 func (s *BillingService) Entitlements(ctx context.Context, organizationID string) (models.Plan, models.Subscription, error) {

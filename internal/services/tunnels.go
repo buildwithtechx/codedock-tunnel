@@ -32,6 +32,28 @@ func (s *TunnelService) SetHostnameAllocator(allocator *HostnameAllocator) {
 	s.allocator = allocator
 }
 
+func (s *TunnelService) Find(ctx context.Context, id string) (models.Tunnel, error) {
+	if id == "" {
+		return models.Tunnel{}, fmt.Errorf("tunnel id is required")
+	}
+	tunnel, err := s.tunnels.FindByID(ctx, id)
+	if err != nil {
+		return models.Tunnel{}, fmt.Errorf("find tunnel: %w", err)
+	}
+	return tunnel, nil
+}
+
+func (s *TunnelService) List(ctx context.Context, organizationID string) ([]models.Tunnel, error) {
+	if organizationID == "" {
+		return nil, fmt.Errorf("organization id is required")
+	}
+	tunnels, err := s.tunnels.FindByOrganization(ctx, organizationID)
+	if err != nil {
+		return nil, fmt.Errorf("list tunnels: %w", err)
+	}
+	return tunnels, nil
+}
+
 func (s *TunnelService) Create(ctx context.Context, organizationID, name string, protocol models.TunnelProtocol, targetHost string, targetPort int, publicHostname string) (models.Tunnel, error) {
 	if organizationID == "" || strings.TrimSpace(name) == "" || strings.TrimSpace(targetHost) == "" || !validTunnelProtocol(protocol) || targetPort < 1 || targetPort > 65535 {
 		return models.Tunnel{}, fmt.Errorf("invalid tunnel configuration")

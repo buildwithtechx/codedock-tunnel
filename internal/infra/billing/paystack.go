@@ -20,6 +20,20 @@ type PaystackConfig struct {
 	HTTPClient *http.Client
 }
 
+func (c *PaystackClient) Portal(context.Context, string) (string, error) {
+	return "", fmt.Errorf("paystack does not provide a hosted customer portal")
+}
+
+func (c *PaystackClient) Cancel(ctx context.Context, subscriptionID string) error {
+	_, err := c.request(ctx, http.MethodPost, "/subscription/disable", map[string]any{"code": subscriptionID, "token": subscriptionID})
+	return err
+}
+
+func (c *PaystackClient) Resume(ctx context.Context, subscriptionID string) error {
+	_, err := c.request(ctx, http.MethodPost, "/subscription/enable", map[string]any{"code": subscriptionID, "token": subscriptionID})
+	return err
+}
+
 type PaystackClient struct {
 	baseURL    string
 	secretKey  string

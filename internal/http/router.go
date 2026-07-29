@@ -49,6 +49,7 @@ func RegisterRoutes(app *fiber.App, handlers Handlers, options RouterOptions) er
 	protected.Delete("/account", handlers.Account.Delete)
 	protected.Post("/organizations/:organizationID/transfer", organizationRoleRequired(handlers.organizationService, models.MemberRoleOwner), handlers.Account.TransferOwnership)
 	protected.Post("/organizations/:organizationID/tunnels", organizationRoleRequired(handlers.organizationService, models.MemberRoleMember), handlers.Tunnels.Create)
+	protected.Get("/organizations/:organizationID/tunnels", organizationRoleRequired(handlers.organizationService, models.MemberRoleViewer), handlers.Tunnels.List)
 	protected.Post("/organizations/:organizationID/agents", organizationRoleRequired(handlers.organizationService, models.MemberRoleAdmin), handlers.Agents.Register)
 	protected.Post("/organizations/:organizationID/domains", organizationRoleRequired(handlers.organizationService, models.MemberRoleAdmin), handlers.Domains.Create)
 	protected.Get("/organizations/:organizationID/usage/events", organizationRoleRequired(handlers.organizationService, models.MemberRoleViewer), handlers.Usage.Events)
@@ -59,6 +60,7 @@ func RegisterRoutes(app *fiber.App, handlers Handlers, options RouterOptions) er
 	protected.Post("/organizations/:organizationID/billing/cancel", organizationRoleRequired(handlers.organizationService, models.MemberRoleOwner), handlers.Billing.Cancel)
 	protected.Post("/organizations/:organizationID/billing/resume", organizationRoleRequired(handlers.organizationService, models.MemberRoleOwner), handlers.Billing.Resume)
 	protected.Patch("/tunnels/:tunnelID/status", handlers.Tunnels.SetStatus)
+	protected.Get("/tunnels/:tunnelID", handlers.Tunnels.Inspect)
 	protected.Delete("/tunnels/:tunnelID", handlers.Tunnels.Revoke)
 	protected.Post("/domains/:domainID/verify", handlers.Domains.Verify)
 	protected.Post("/agents/:agentID/heartbeat", handlers.Agents.Heartbeat)
@@ -67,6 +69,7 @@ func RegisterRoutes(app *fiber.App, handlers Handlers, options RouterOptions) er
 	if options.InternalAPISecret != "" {
 		app.Get("/internal/health", internalSecretRequired(options.InternalAPISecret), handlers.Health.Readiness)
 		app.Get("/internal/agents/authenticate", internalSecretRequired(options.InternalAPISecret), handlers.Agents.Authenticate)
+		app.Post("/internal/usage", internalSecretRequired(options.InternalAPISecret), handlers.Usage.Ingest)
 	}
 	return nil
 }

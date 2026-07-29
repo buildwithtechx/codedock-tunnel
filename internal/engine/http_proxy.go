@@ -62,13 +62,16 @@ func (p *HTTPProxy) ServeHTTP(response http.ResponseWriter, request *http.Reques
 		Headers: requestHeaders(request.Header),
 		Body:    body,
 	})
+	if decodedRequest, decodeErr := base64.StdEncoding.DecodeString(body); decodeErr == nil {
+		p.record(request, route, "http_request", int64(len(decodedRequest)))
+	}
 	if err != nil {
-		p.record(request, route, "error", 0)
+		p.record(request, route, "http_error", 0)
 		http.Error(response, "tunnel unavailable", http.StatusBadGateway)
 		return
 	}
 	if forwarded.Error != "" {
-		p.record(request, route, "error", 0)
+		p.record(request, route, "http_error", 0)
 		http.Error(response, forwarded.Error, http.StatusBadGateway)
 		return
 	}
@@ -83,10 +86,10 @@ func (p *HTTPProxy) ServeHTTP(response http.ResponseWriter, request *http.Reques
 	}
 	decoded, err := base64.StdEncoding.DecodeString(forwarded.Body)
 	if err != nil {
-		p.record(request, route, "error", 0)
+		p.record(request, route, "http_error", 0)
 		return
 	}
-	p.record(request, route, "request", int64(len(decoded)))
+	p.record(request, route, "http_response", int64(len(decoded)))
 	_, _ = response.Write(decoded)
 }
 

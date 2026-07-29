@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"codedock.run/codedock-tunnel/internal/config"
+	"codedock.run/codedock-tunnel/internal/infra/billing"
 	"codedock.run/codedock-tunnel/internal/repositories"
 	"codedock.run/codedock-tunnel/internal/services"
 	"gorm.io/gorm"
@@ -69,6 +70,37 @@ func NewDatabaseDependencies(db *gorm.DB, cfg config.APIConfig) (Dependencies, e
 	billingService, err := services.NewBillingService(billingRepository)
 	if err != nil {
 		return Dependencies{}, err
+	}
+	var polarClient *billing.PolarClient
+	if cfg.Billing.PolarAccessToken != "" {
+		polarClient, err = billing.NewPolar(billing.PolarConfig{BaseURL: cfg.Billing.PolarBaseURL, AccessToken: cfg.Billing.PolarAccessToken})
+		if err != nil {
+			return Dependencies{}, err
+		}
+	}
+	var paystackClient *billing.PaystackClient
+	if cfg.Billing.PaystackSecret != "" {
+		paystackClient, err = billing.NewPaystack(billing.PaystackConfig{BaseURL: cfg.Billing.PaystackBaseURL, SecretKey: cfg.Billing.PaystackSecret})
+		if err != nil {
+			return Dependencies{}, err
+		}
+	}
+	if polarClient != nil || paystackClient != nil {
+		gateway, gatewayErr := billing.NewGateway(billing.GatewayConfig{Polar: polarClient, Paystack: paystackClient, Email: func(ctx context.Context, organizationID string) (string, error) {
+			organization, findErr := organizations.FindByID(ctx, organizationID)
+			if findErr != nil {
+				return "", findErr
+			}
+			user, findErr := users.FindByID(ctx, organization.OwnerID)
+			if findErr != nil {
+				return "", findErr
+			}
+			return user.Email, nil
+		}})
+		if gatewayErr != nil {
+			return Dependencies{}, gatewayErr
+		}
+		billingService.SetGateway(gateway)
 	}
 	domainService, err := services.NewDomainService(domains)
 	if err != nil {

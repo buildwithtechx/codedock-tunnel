@@ -72,6 +72,7 @@ export type FlowControl = {
 
 export type OpenTunnel = {
   token: string;
+  tunnel_id?: string;
   local_port: number;
   subdomain?: string;
   protocol: string;
@@ -119,16 +120,19 @@ export type HTTPResponse = {
 };
 
 export type TCPData = {
+  tunnel_id?: string;
   connection_id: string;
   data: string;
 };
 
 export type TCPClose = {
+  tunnel_id?: string;
   connection_id: string;
   reason?: string;
 };
 
 export type UDPData = {
+  tunnel_id?: string;
   packet_id: string;
   source_address: string;
   source_port: number;
@@ -136,6 +140,7 @@ export type UDPData = {
 };
 
 export type UDPResponse = {
+  tunnel_id?: string;
   packet_id: string;
   target_address: string;
   target_port: number;

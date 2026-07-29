@@ -79,6 +79,21 @@ func SaveCLI(cfg CLIConfig) error {
 	return os.WriteFile(cfg.ConfigPath, data, 0600)
 }
 
+func LoadCLIFile(path string) (CLIConfig, error) {
+	if path == "" {
+		return CLIConfig{}, fmt.Errorf("config path is required")
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return CLIConfig{}, fmt.Errorf("read cli config: %w", err)
+	}
+	var cfg CLIConfig
+	if err := json.Unmarshal(data, &cfg); err != nil {
+		return CLIConfig{}, fmt.Errorf("decode cli config: %w", err)
+	}
+	return cfg, nil
+}
+
 func parse[T any](cfg *T) error {
 	if err := env.Parse(cfg); err != nil {
 		return fmt.Errorf("parse environment: %w", err)

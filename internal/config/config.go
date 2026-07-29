@@ -100,6 +100,7 @@ type TunnelConfig struct {
 	AgentInactivity time.Duration `env:"AGENT_INACTIVITY_TIMEOUT" envDefault:"90s"`
 	Heartbeat       time.Duration `env:"TUNNEL_HEARTBEAT_INTERVAL" envDefault:"20s"`
 	ReadTimeout     time.Duration `env:"TUNNEL_READ_TIMEOUT" envDefault:"90s"`
+	DrainTimeout    time.Duration `env:"TUNNEL_DRAIN_TIMEOUT" envDefault:"10s"`
 	MaxFrameBytes   int64         `env:"TUNNEL_MAX_FRAME_BYTES" envDefault:"16777216"`
 }
 

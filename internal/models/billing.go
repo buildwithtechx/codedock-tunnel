@@ -47,6 +47,7 @@ type Subscription struct {
 	ProviderCustomerID string             `json:"-"`
 	ProviderSubID      string             `json:"-" gorm:"uniqueIndex"`
 	ProviderProductID  string             `json:"-"`
+	ProviderAuthCode   string             `json:"-"`
 	BillingInterval    string             `json:"billingInterval" gorm:"type:varchar(10);not null"`
 	CurrentPeriodEnd   *time.Time         `json:"currentPeriodEnd,omitempty"`
 	CancelAtPeriodEnd  bool               `json:"cancelAtPeriodEnd" gorm:"not null;default:false"`

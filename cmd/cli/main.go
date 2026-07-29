@@ -23,6 +23,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	if stored, loadErr := config.LoadCLIFile(cfg.ConfigPath); loadErr == nil {
+		if _, ok := os.LookupEnv("CODEDOCK_TUNNEL_API_KEY"); !ok {
+			cfg.APIKey = stored.APIKey
+		}
+		if _, ok := os.LookupEnv("CODEDOCK_TUNNEL_AGENT_TOKEN"); !ok {
+			cfg.AgentToken = stored.AgentToken
+		}
+	}
 	if len(os.Args) < 2 || os.Args[1] == "help" {
 		printUsage()
 		return
