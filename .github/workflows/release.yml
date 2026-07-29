@@ -27,16 +27,32 @@ jobs:
           VERSION: ${{ github.ref_name }}
         run: |
           mkdir -p dist
-          for target in tunnel-server tunnel-agent codedock-tunnel; do
+          for target in codedock-api codedock-tunnel codedock-cron codedock-check; do
             case "${target}" in
-              tunnel-server) source_dir="server" ;;
-              tunnel-agent) source_dir="agent" ;;
-              codedock-tunnel) source_dir="cli" ;;
+              codedock-api) source_dir="server" ;;
+              codedock-tunnel) source_dir="tunnel" ;;
+              codedock-cron) source_dir="cron" ;;
+              codedock-check) source_dir="check" ;;
             esac
             GOOS=linux GOARCH=amd64 go build -ldflags="-s -w -X main.version=${VERSION}" -o "dist/${target}_linux_amd64" "./cmd/${source_dir}"
             tar -czf "dist/${target}_linux_amd64.tar.gz" -C dist "${target}_linux_amd64"
             rm "dist/${target}_linux_amd64"
           done
+          for platform in linux_amd64 darwin_amd64 darwin_arm64 windows_amd64; do
+            os="${platform%_*}"
+            arch="${platform#*_}"
+            if [ "$os" = "windows" ]; then
+              binary="codedock-cli_${platform}.exe"
+              GOOS="${os}" GOARCH="${arch}" go build -ldflags="-s -w -X main.version=${VERSION}" -o "dist/${binary}" ./cmd/cli
+              (cd dist && zip "${binary%.exe}.zip" "$binary" && rm "$binary")
+            else
+              binary="codedock-cli_${platform}"
+              GOOS="${os}" GOARCH="${arch}" go build -ldflags="-s -w -X main.version=${VERSION}" -o "dist/${binary}" ./cmd/cli
+              tar -czf "dist/${binary}.tar.gz" -C dist "$binary"
+              rm "dist/${binary}"
+            fi
+          done
+          (cd dist && sha256sum * > SHA256SUMS)
       - uses: softprops/action-gh-release@v2
         with:
           files: dist/*

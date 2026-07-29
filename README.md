@@ -7,7 +7,6 @@ It is designed to work without Codedock. Codedock is an optional integration tha
 ## Product surfaces
 
 - Go tunnel server and public relay
-- Go tunnel agent for machines behind NAT or firewalls
 - Standalone `codedock-tunnel` CLI
 - React dashboard for accounts, organizations, tunnels, access policies, and analytics
 - Tauri desktop application
@@ -16,8 +15,8 @@ It is designed to work without Codedock. Codedock is an optional integration tha
 
 ## Repository layout
 
-- `cmd/server` runs the relay and control-plane server.
-- `cmd/agent` connects outward and forwards local traffic.
+- `cmd/server` runs the control-plane API.
+- `cmd/tunnel` runs the public tunnel relay and data plane.
 - `cmd/cli` provides the standalone CLI.
 - `internal` contains private server, relay, routing, storage, and authentication code.
 - `protocol` contains language-neutral protocol schemas and generated bindings.
@@ -52,28 +51,47 @@ make docker-build
 
 The Go commands are independently deployable and do not all need to run on the same machine.
 
-| Command | Deployment | Lifecycle |
-| --- | --- | --- |
-| `cmd/server` | Public VPS or container | Long-running relay and API |
-| `cmd/agent` | User’s private machine or container | Long-running outbound connection |
-| `cmd/cron` | Scheduled container, systemd timer, or Kubernetes CronJob | Short-lived maintenance jobs |
-| `cmd/check` | Scheduled job or health-check container | Short-lived domain and edge checks |
-| `cmd/cli` | User workstation binary or package manager | Invoked on demand |
+| Command      | Deployment                                                      | Lifecycle                                |
+| ------------ | --------------------------------------------------------------- | ---------------------------------------- |
+| `cmd/server` | Public VPS or container                                         | Long-running control-plane API           |
+| `cmd/tunnel` | Public VPS or container                                         | Long-running tunnel relay and data plane |
+| `cmd/cron`   | Long-running worker under a process manager or worker container | Scheduled maintenance jobs               |
+| `cmd/check`  | Internal service container or process-manager service           | HTTP domain and edge verification        |
+| `cmd/cli`    | User workstation binary, package manager, or optional CLI image | Opens tunnels and calls the API          |
 
-Build the server image by default, or select another command with `TARGET`:
+Each deployable command has its own Dockerfile:
 
 ```sh
-docker build --build-arg TARGET=server -t codedock-tunnel-server .
-docker build --build-arg TARGET=agent -t codedock-tunnel-agent .
-docker build --build-arg TARGET=cron -t codedock-tunnel-cron .
-docker build --build-arg TARGET=check -t codedock-tunnel-check .
+docker build -f deploy/docker/api.Dockerfile -t codedock-api .
+docker build -f deploy/docker/tunnel.Dockerfile -t codedock-tunnel-server .
+docker build -f deploy/docker/cron.Dockerfile -t codedock-tunnel-cron .
+docker build -f deploy/docker/check.Dockerfile -t codedock-tunnel-check .
 ```
 
-The CLI is normally distributed as a platform binary rather than deployed as a service.
+The CLI is normally distributed as a platform binary. An optional CLI image is available for CI automation.
+
+## Runtime communication
+
+The API owns accounts, organizations, OAuth sessions, billing, and tunnel metadata. The tunnel relay owns public ingress and data-plane forwarding. The CLI calls the API for authentication and tunnel management, then opens the tunnel WebSocket to the relay. Cron shares backend storage and providers, while check exposes a private HTTP endpoint that an edge proxy can call before accepting a custom domain.
+
+```text
+CLI ── HTTPS ─────▶ API ── control ──▶ TUNNEL RELAY ◀── TLS/WebSocket ── CLI ──▶ local application
+
+CRON ── PostgreSQL / Redis ──▶ backend state
+CHECK ◀── private HTTP request ── edge proxy
+```
 
 ## Standalone usage
 
 The CLI must support a configurable tunnel server URL so users can connect to the hosted service, a private installation, or a local development server.
+
+After a release, Unix users can install the matching CLI binary with:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/<owner>/codedock-tunnel/main/scripts/install-cli.sh | bash
+```
+
+The installer defaults to `$HOME/.local/bin`. Set `CODEDOCK_TUNNEL_REPO` when the repository is hosted under a different owner. Windows users download the Windows release asset directly. Package-manager distribution can be added later through Homebrew, Scoop, and npm wrappers.
 
 ```sh
 codedock-tunnel login --server https://tunnel.example.com

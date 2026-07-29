@@ -1,4 +1,4 @@
-.PHONY: dev build fmt format typecheck test clean docker-build
+.PHONY: dev build fmt format typecheck test clean build-binaries install-cli docker-build docker-images docker-api docker-tunnel docker-cron docker-check docker-cli
 
 dev:
 	npm run dev
@@ -21,5 +21,29 @@ test:
 clean:
 	npm run clean
 
+build-binaries:
+	bash scripts/build-binaries.sh
+
+install-cli:
+	bash scripts/install-cli.sh
+
 docker-build:
-	docker build -t codedock-tunnel:dev .
+	docker build -f deploy/docker/api.Dockerfile -t codedock-api:dev .
+
+docker-images:
+	bash scripts/build-images.sh
+
+docker-api:
+	docker build -f deploy/docker/api.Dockerfile -t codedock-api:dev .
+
+docker-tunnel:
+	docker build -f deploy/docker/tunnel.Dockerfile -t codedock-tunnel-server:dev .
+
+docker-cron:
+	docker build -f deploy/docker/cron.Dockerfile -t codedock-tunnel-cron:dev .
+
+docker-check:
+	docker build -f deploy/docker/check.Dockerfile -t codedock-tunnel-check:dev .
+
+docker-cli:
+	docker build -f deploy/docker/cli.Dockerfile -t codedock-tunnel-cli:dev .

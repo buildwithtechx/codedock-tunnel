@@ -41,7 +41,7 @@ codedock-tunnel/
 │       └── package.json
 ├── cmd/
 │   ├── server/
-│   ├── agent/
+│   ├── tunnel/
 │   ├── cli/
 │   ├── cron/
 │   └── check/
@@ -115,15 +115,14 @@ codedock-tunnel/
 ├── tsconfig.base.json
 ├── biome.json
 ├── Makefile
-├── Dockerfile
 ├── README.md
 └── TODO.md
 ```
 
 - [ ] Create `apps/web/` for the standalone React dashboard.
 - [ ] Create `apps/desktop/` for the Tauri desktop application and `src-tauri/` Rust shell.
-- [ ] Create `cmd/server/` for the public relay and control-plane server.
-- [ ] Create `cmd/agent/` for the outbound local-network agent.
+- [ ] Create `cmd/server/` for the control-plane API server.
+- [x] Create `cmd/tunnel/` for the public tunnel relay and data plane.
 - [ ] Create `cmd/cli/` for the standalone CLI.
 - [ ] Create `cmd/cron/` for cleanup, expiry, analytics rollups, certificate jobs, and scheduled maintenance.
 - [ ] Create `cmd/check/` for custom-domain verification and edge readiness checks.
@@ -151,14 +150,15 @@ codedock-tunnel/
 - [ ] Create `packages/next/` for Next.js server, route, and development integration.
 - [ ] Create `packages/nest/` for NestJS modules, providers, and tunnel lifecycle integration.
 - [ ] Create `packages/express/` for Express middleware and tunnel lifecycle integration.
-- [ ] Create `packages/tauri-bridge/` for desktop commands and Go agent communication.
+- [ ] Create `packages/tauri-bridge/` for desktop commands and Go CLI tunnel-client communication.
 - [ ] Keep framework integrations as thin adapters over the same protocol and SDK lifecycle.
 - [ ] Use peer dependencies for optional frameworks so the base SDK stays lightweight.
 - [ ] Add package export maps, type declarations, and tree-shakable entrypoints.
 - [ ] Keep framework adapters independently versioned while preserving compatibility with the core SDK.
 - [ ] Keep `integrations/codedock/` as an optional external adapter.
 - [ ] Keep database migrations in `migrations/` and integration tests in `tests/`.
-- [ ] Add `deploy/` for Docker, systemd, and self-hosted deployment configurations.
+- [x] Add independent Dockerfiles under `deploy/docker/` for API, tunnel, cron, check, and CLI.
+- [ ] Add systemd and self-hosted deployment configurations under `deploy/`.
 - [ ] Keep the root workspace configuration independent from the Codedock repository.
 - [ ] Ensure the tunnel core has no imports of Codedock models, routes, authentication, or database packages.
 
@@ -174,7 +174,7 @@ codedock-tunnel/
 ## Go technology baseline
 
 - [ ] Use `github.com/gofiber/fiber/v2` for the HTTP API and server middleware.
-- [ ] Use `github.com/gofiber/contrib/websocket` for agent and dashboard WebSocket connections.
+- [ ] Use `github.com/gofiber/contrib/websocket` for CLI and dashboard WebSocket connections.
 - [x] Install `gorm.io/gorm` with `gorm.io/driver/postgres` for PostgreSQL persistence.
 - [x] Define the initial PostgreSQL control-plane models and GORM migration registry.
 - [ ] Use PostgreSQL as the primary control-plane database for hosted and self-hosted installations.
@@ -242,17 +242,17 @@ codedock-tunnel/
 
 ## Protocol
 
-- [ ] Define a versioned control protocol for server, agent, CLI, dashboard, and desktop clients.
+- [ ] Define a versioned control protocol for server, CLI, dashboard, and desktop clients.
 - [ ] Define authentication, authorization, and capability messages.
 - [ ] Define tunnel open, accept, close, error, heartbeat, and reconnect messages.
 - [ ] Define protocol version negotiation and backward compatibility rules.
 - [ ] Define maximum frame size, idle timeout, connection timeout, and backpressure behavior.
 - [ ] Add protocol conformance fixtures shared by Go and TypeScript clients.
 
-## Go tunnel server
+## Go tunnel relay
 
-- [ ] Create the `tunnel-server` binary.
-- [ ] Implement agent registration and authenticated session management.
+- [ ] Create the `codedock-tunnel-server` binary.
+- [ ] Implement CLI tunnel registration and authenticated session management.
 - [ ] Implement persistent connections, heartbeats, reconnects, and graceful shutdown.
 - [ ] Implement multiplexed stream handling.
 - [ ] Implement HTTP and TCP forwarding.
@@ -273,18 +273,6 @@ codedock-tunnel/
 - [ ] Prevent verification jobs from being used to probe arbitrary private networks.
 - [ ] Make all jobs idempotent and safe to retry.
 
-## Go tunnel agent
-
-- [ ] Create the `tunnel-agent` binary.
-- [ ] Implement local target validation and loopback-only defaults.
-- [ ] Implement outbound TLS connection to the tunnel server.
-- [ ] Implement reconnect with bounded exponential backoff and jitter.
-- [ ] Implement graceful shutdown and connection draining.
-- [ ] Implement local HTTP, HTTPS, and TCP forwarding.
-- [ ] Prevent access to link-local, metadata, and unintended private network targets by default.
-- [ ] Add optional explicit target allowlists.
-- [ ] Add service installation instructions for Linux, macOS, and Windows.
-
 ## CLI
 
 - [ ] Create the `codedock-tunnel` CLI.
@@ -301,14 +289,14 @@ codedock-tunnel/
 - [ ] Use TLS for all control and data-plane connections.
 - [ ] Use short-lived, scoped tunnel credentials.
 - [ ] Support immediate credential and tunnel revocation.
-- [ ] Separate user identity, agent identity, and tunnel capability tokens.
+- [ ] Separate user identity, client identity, and tunnel capability tokens.
 - [ ] Bind every stream to an authorized tunnel and target.
 - [ ] Validate hostnames and reject ambiguous or malformed routing input.
 - [ ] Add origin and host validation for HTTP tunnels.
 - [ ] Add rate limiting for tunnel creation, authentication, and connection attempts.
 - [ ] Add abuse controls for open proxies, port scanning, and excessive bandwidth.
 - [ ] Redact credentials, tokens, cookies, and request bodies from logs.
-- [ ] Threat-model the relay server, agent, public edge, and Codedock integration.
+- [ ] Threat-model the relay server, CLI client, public edge, and Codedock integration.
 - [ ] Add security tests for token replay, cross-tunnel access, stale sessions, and SSRF.
 
 ## Public edge and routing
@@ -325,7 +313,7 @@ codedock-tunnel/
 
 - [ ] Create the tunnel dashboard workspace.
 - [ ] Implement tunnel creation and target configuration.
-- [ ] Display connection status, public URL, agent version, and last heartbeat.
+- [ ] Display connection status, public URL, client version, and last heartbeat.
 - [ ] Add start, stop, rotate credentials, and revoke actions.
 - [ ] Display active connections and bandwidth usage.
 - [ ] Add tunnel expiration and access policy controls.
@@ -335,12 +323,12 @@ codedock-tunnel/
 ## Tauri desktop app
 
 - [ ] Create the Tauri 2 application shell.
-- [ ] Define how the desktop app starts and supervises the Go agent.
+- [ ] Define how the desktop app starts and supervises the Go CLI tunnel client.
 - [ ] Keep tunnel data-plane logic in Go rather than duplicating it in Rust or TypeScript.
 - [ ] Store credentials using the native operating-system secret store.
 - [ ] Add tray controls for tunnel status and quick start/stop.
 - [ ] Add native notifications for disconnects, expiry, and authentication failures.
-- [ ] Package the agent and desktop application for macOS, Windows, and Linux.
+- [ ] Package the CLI and desktop application for macOS, Windows, and Linux.
 
 ## Codedock integration
 
@@ -363,7 +351,7 @@ codedock-tunnel/
 - [ ] Add backups and restore procedures for control-plane metadata.
 - [ ] Add Docker and systemd deployment examples.
 - [ ] Add horizontal scaling design for multiple relay servers.
-- [ ] Define agent-to-relay affinity and session handoff behavior.
+- [ ] Define CLI-to-relay affinity and session handoff behavior.
 - [ ] Add Prometheus-compatible metrics and operational dashboards.
 - [ ] Add resource budgets to preserve the lightweight runtime target.
 
@@ -372,7 +360,7 @@ codedock-tunnel/
 - [ ] Add unit tests for protocol encoding, authentication, routing, and limits.
 - [ ] Add integration tests using real local HTTP and TCP targets.
 - [ ] Add reconnect, timeout, backpressure, and graceful-shutdown tests.
-- [ ] Add cross-platform agent tests.
+- [ ] Add cross-platform CLI tunnel tests.
 - [ ] Add fuzz tests for protocol frames and hostname routing.
 - [ ] Add dependency and container vulnerability scanning.
 - [ ] Add reproducible release builds and signed artifacts.

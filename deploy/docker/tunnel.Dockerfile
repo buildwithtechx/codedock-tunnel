@@ -1,0 +1,27 @@
+# syntax=docker/dockerfile:1
+
+# Build the public tunnel relay and data plane.
+FROM golang:1.25-alpine AS build
+
+WORKDIR /workspace
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+ARG VERSION=dev
+RUN CGO_ENABLED=0 go build -ldflags="-s -w -X main.version=${VERSION}" -o /out/tunnel ./cmd/tunnel
+
+# Run as a non-root user.
+FROM alpine:3.22
+
+RUN addgroup -S codedock && adduser -S -G codedock codedock
+
+WORKDIR /app
+COPY --from=build /out/tunnel /app/tunnel
+
+USER codedock
+
+EXPOSE 8080
+STOPSIGNAL SIGTERM
+ENTRYPOINT ["/app/tunnel"]

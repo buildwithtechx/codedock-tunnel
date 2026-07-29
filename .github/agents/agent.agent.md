@@ -15,15 +15,15 @@ Codedock is an optional external integration under `integrations/codedock/`. Do 
 
 ## Architecture
 
-- `cmd/server/` contains the relay and control-plane binary.
-- `cmd/agent/` contains the outbound local-network agent.
+- `cmd/server/` contains the control-plane API binary.
+- `cmd/tunnel/` contains the public relay and data-plane binary.
 - `cmd/cli/` contains the standalone CLI.
 - `cmd/cron/` contains retryable background jobs.
 - `cmd/check/` contains custom-domain and edge verification.
 - `internal/api/` contains HTTP API handlers, routes, and middleware.
 - `internal/engine/` contains HTTP, TCP, UDP, and WebSocket proxy engines.
 - `internal/relay/` contains multiplexing and data-plane forwarding.
-- `internal/sessions/` contains agent and tunnel session state.
+- `internal/sessions/` contains CLI and tunnel session state.
 - `internal/storage/` contains database persistence.
 - `protocol/` contains language-neutral schemas and generated bindings.
 - `apps/web/` contains the independent web dashboard.
