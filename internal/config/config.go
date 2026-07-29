@@ -51,7 +51,7 @@ type AppConfig struct {
 	ShutdownTimeout time.Duration `env:"SHUTDOWN_TIMEOUT" envDefault:"10s"`
 	AllowedOrigins  string        `env:"ALLOWED_ORIGINS" envDefault:"http://localhost:3000,http://localhost:3001"`
 	CORSOrigin      string        `env:"CORS_ORIGIN" envDefault:"http://localhost:3000"`
-	PublicAPIURL    string        `env:"PUBLIC_API_URL" envDefault:"https://api.codedock-tunnel.dev"`
+	PublicAPIURL    string        `env:"PUBLIC_API_URL" envDefault:"http://localhost:8080"`
 }
 
 type AuthConfig struct {

@@ -122,7 +122,7 @@ codedock-tunnel/
 
 - [ ] Create `apps/web/` for the standalone React dashboard.
 - [ ] Create `apps/desktop/` for the Tauri desktop application and `src-tauri/` Rust shell.
-- [ ] Create `cmd/server/` for the control-plane API server.
+- [x] Create `cmd/server/` for the control-plane API server.
 - [x] Create `cmd/tunnel/` for the public tunnel relay and data plane.
 - [ ] Create `cmd/cli/` for the standalone CLI.
 - [ ] Create `cmd/cron/` for cleanup, expiry, analytics rollups, certificate jobs, and scheduled maintenance.
@@ -130,8 +130,8 @@ codedock-tunnel/
 - [x] Organize domain models and DTOs under `internal/models/`.
 - [x] Organize PostgreSQL persistence and repository interfaces under `internal/repositories/`.
 - [x] Organize business logic and provider-neutral use cases under `internal/services/`.
-- [ ] Organize Fiber HTTP controllers under `internal/handlers/`.
-- [ ] Organize Fiber server setup, routes, middleware, and WebSocket wiring under `internal/http/`.
+- [x] Organize Fiber HTTP controllers under `internal/handlers/`.
+- [x] Organize Fiber server setup, routes, middleware, and readiness wiring under `internal/http/`.
 - [x] Organize relay, HTTP, TCP, UDP, and WebSocket engine primitives under `internal/engine/`.
 - [x] Organize authentication and authorization helpers under `internal/auth/`.
 - [x] Organize environment and runtime configuration under `internal/config/`.
