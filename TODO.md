@@ -428,7 +428,7 @@ codedock-tunnel/
 - [ ] Add reconnect, timeout, backpressure, and graceful-shutdown tests.
 - [ ] Add cross-platform CLI tunnel tests.
 - [ ] Add fuzz tests for protocol frames and hostname routing.
-- [ ] Add dependency and container vulnerability scanning.
+- [x] Add dependency and container vulnerability scanning.
 - [ ] Add reproducible release builds and signed artifacts.
 - [ ] Add compatibility tests before changing the protocol version.
 - [ ] Document local development, staging, production, and incident-response workflows.
