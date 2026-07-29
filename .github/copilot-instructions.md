@@ -12,7 +12,7 @@ The tunnel core must not depend on Codedock. Codedock support is an optional ada
 - Private Go code lives in `internal/`.
 - Reusable Go packages live in `pkg/`.
 - Protocol schemas and generated bindings live in `protocol/`.
-- The standalone dashboard lives in `apps/dashboard/`.
+- The standalone dashboard lives in `apps/web/`.
 - The Tauri desktop shell lives in `apps/desktop/`.
 - TypeScript SDKs live in `packages/`.
 - Migrations, tests, deployment files, and documentation live in their top-level directories.
@@ -28,7 +28,7 @@ The tunnel core must not depend on Codedock. Codedock support is an optional ada
 
 ## Dashboard and desktop conventions
 
-- Use TanStack Router file conventions under `apps/dashboard/src/routes/`.
+- Use TanStack Router file conventions under `apps/web/src/routes/`.
 - Do not edit generated route trees manually.
 - Use Zustand, TanStack Query, Zod, Radix UI, and Tailwind utilities consistently.
 - Use kebab-case TypeScript filenames and named exports.

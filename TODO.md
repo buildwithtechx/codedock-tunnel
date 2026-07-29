@@ -102,7 +102,7 @@ codedock-tunnel/
 └── TODO.md
 ```
 
-- [ ] Create `apps/dashboard/` for the standalone React dashboard.
+- [ ] Create `apps/web/` for the standalone React dashboard.
 - [ ] Create `apps/desktop/` for the Tauri desktop application and `src-tauri/` Rust shell.
 - [ ] Create `cmd/tunnel-server/` for the public relay and control-plane server.
 - [ ] Create `cmd/tunnel-agent/` for the outbound local-network agent.

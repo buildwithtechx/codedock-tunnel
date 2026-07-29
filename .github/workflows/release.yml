@@ -21,7 +21,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npm run build:dashboard
+      - run: npm run build:web
       - name: Build Go artifacts
         env:
           VERSION: ${{ github.ref_name }}

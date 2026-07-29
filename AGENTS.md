@@ -31,10 +31,10 @@ Codedock integration belongs under `integrations/codedock/` and communicates thr
 
 ## Dashboard and desktop
 
-- Dashboard routes live in `apps/dashboard/src/routes/`.
-- Dashboard components live in `apps/dashboard/src/components/` and domain feature folders.
-- Dashboard hooks live in `apps/dashboard/src/hooks/`.
-- Dashboard utilities live in `apps/dashboard/src/lib/`.
+- Dashboard routes live in `apps/web/src/routes/`.
+- Dashboard components live in `apps/web/src/components/` and domain feature folders.
+- Dashboard hooks live in `apps/web/src/hooks/`.
+- Dashboard utilities live in `apps/web/src/lib/`.
 - Do not edit generated route files by hand.
 - Keep Tauri native code in `apps/desktop/src-tauri/`.
 - Keep tunnel networking and data-plane logic in Go rather than duplicating it in Tauri or TypeScript.

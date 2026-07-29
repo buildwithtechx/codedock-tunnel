@@ -26,7 +26,7 @@ Codedock is an optional external integration under `integrations/codedock/`. Do 
 - `internal/sessions/` contains agent and tunnel session state.
 - `internal/storage/` contains database persistence.
 - `protocol/` contains language-neutral schemas and generated bindings.
-- `apps/dashboard/` contains the independent web dashboard.
+- `apps/web/` contains the independent web dashboard.
 - `apps/desktop/` contains the Tauri desktop shell.
 
 ## Engineering rules

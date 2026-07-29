@@ -21,7 +21,7 @@ It is designed to work without Codedock. Codedock is an optional integration tha
 - `cmd/codedock-tunnel` provides the standalone CLI.
 - `internal` contains private server, relay, routing, storage, and authentication code.
 - `protocol` contains language-neutral protocol schemas and generated bindings.
-- `apps/dashboard` contains the standalone web interface.
+- `apps/web` contains the standalone web interface.
 - `apps/desktop` contains the Tauri desktop shell.
 - `integrations/codedock` contains the optional Codedock adapter.
 

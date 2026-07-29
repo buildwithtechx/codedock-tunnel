@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "identifier": "run.codedock.tunnel.desktop",
   "build": {
-    "beforeDevCommand": "npm run dev --workspace apps/dashboard",
+    "beforeDevCommand": "npm run dev --workspace apps/web",
     "devUrl": "http://localhost:3000",
-    "beforeBuildCommand": "npm run build:dashboard",
-    "frontendDist": "../../dashboard/dist"
+    "beforeBuildCommand": "npm run build:web",
+    "frontendDist": "../../web/dist"
   },
   "app": {
     "windows": [
