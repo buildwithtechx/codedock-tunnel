@@ -17,7 +17,7 @@
 
 - [ ] Build a standalone tunnel dashboard with its own authentication and organization model.
 - [ ] Build a standalone CLI that can create and manage tunnels without Codedock.
-- [ ] Publish a reusable client SDK for Node.js, TypeScript, and Go integrations.
+- [ ] Publish one reusable `sdk-ts` package for Node.js, TypeScript, browser, and framework integrations.
 - [ ] Keep the Tauri desktop application usable with standalone tunnel servers.
 - [ ] Support configuration of a custom server URL for local, self-hosted, and enterprise deployments.
 - [ ] Define stable public API and protocol versioning independent of any Codedock release.
@@ -75,9 +75,30 @@ codedock-tunnel/
 │       ├── go/
 │       └── typescript/
 ├── packages/
+│   ├── protocol-ts/
+│   │   ├── src/
+│   │   └── package.json
 │   ├── sdk-ts/
-│   ├── cli-ui/
-│   └── codedock-adapter/
+│   │   ├── src/
+│   │   └── package.json
+│   ├── react/
+│   │   ├── src/
+│   │   └── package.json
+│   ├── vite-plugin/
+│   │   ├── src/
+│   │   └── package.json
+│   ├── next/
+│   │   ├── src/
+│   │   └── package.json
+│   ├── nest/
+│   │   ├── src/
+│   │   └── package.json
+│   ├── express/
+│   │   ├── src/
+│   │   └── package.json
+│   └── tauri-bridge/
+│       ├── src/
+│       └── package.json
 ├── integrations/
 │   └── codedock/
 ├── migrations/
@@ -114,7 +135,18 @@ codedock-tunnel/
 - [ ] Create `pkg/protocol/` for public Go protocol types and helpers.
 - [ ] Create `protocol/schema/` for language-neutral protocol definitions.
 - [ ] Generate protocol bindings under `protocol/generated/go/` and `protocol/generated/typescript/`.
-- [ ] Create `packages/sdk-ts/` for reusable TypeScript and Node.js clients.
+- [ ] Create `packages/protocol-ts/` for generated and hand-written TypeScript protocol types.
+- [ ] Create `packages/sdk-ts/` as the framework-neutral Node.js and browser client.
+- [ ] Create `packages/react/` as a thin React hooks and provider layer over `sdk-ts`.
+- [ ] Create `packages/vite-plugin/` for local development tunnel integration with Vite.
+- [ ] Create `packages/next/` for Next.js server, route, and development integration.
+- [ ] Create `packages/nest/` for NestJS modules, providers, and tunnel lifecycle integration.
+- [ ] Create `packages/express/` for Express middleware and tunnel lifecycle integration.
+- [ ] Create `packages/tauri-bridge/` for desktop commands and Go agent communication.
+- [ ] Keep framework integrations as thin adapters over the same protocol and SDK lifecycle.
+- [ ] Use peer dependencies for optional frameworks so the base SDK stays lightweight.
+- [ ] Add package export maps, type declarations, and tree-shakable entrypoints.
+- [ ] Keep framework adapters independently versioned while preserving compatibility with the core SDK.
 - [ ] Keep `integrations/codedock/` as an optional external adapter.
 - [ ] Keep database migrations in `migrations/` and integration tests in `tests/`.
 - [ ] Add `deploy/` for Docker, systemd, and self-hosted deployment configurations.

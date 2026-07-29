@@ -1,0 +1,25 @@
+{
+  "name": "@codedock-tunnel/react",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "description": "React hooks and providers for Codedock Tunnel",
+  "files": ["dist"],
+  "dependencies": {
+    "@codedock-tunnel/sdk-ts": "0.1.0"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  }
+}
