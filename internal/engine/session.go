@@ -3,6 +3,7 @@ package engine
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -23,10 +24,11 @@ type Session struct {
 type SessionRegistry struct {
 	mu       sync.RWMutex
 	sessions map[string]Session
+	aliases  map[string]string
 }
 
 func NewSessionRegistry() *SessionRegistry {
-	return &SessionRegistry{sessions: make(map[string]Session)}
+	return &SessionRegistry{sessions: make(map[string]Session), aliases: make(map[string]string)}
 }
 
 func (r *SessionRegistry) Reserve(session Session, takeover bool) error {
@@ -82,8 +84,42 @@ func (r *SessionRegistry) Remove(tunnelID string, sessionID string) bool {
 		return false
 	}
 	delete(r.sessions, tunnelID)
+	for alias, target := range r.aliases {
+		if target == tunnelID {
+			delete(r.aliases, alias)
+		}
+	}
 	r.mu.Unlock()
 	return true
+}
+
+func (r *SessionRegistry) BindAlias(alias, tunnelID string) error {
+	alias = normalizeAlias(alias)
+	if alias == "" || tunnelID == "" {
+		return fmt.Errorf("alias and tunnel id are required")
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if _, ok := r.sessions[tunnelID]; !ok {
+		return fmt.Errorf("tunnel %q is not connected", tunnelID)
+	}
+	if previous, ok := r.aliases[alias]; ok && previous != tunnelID {
+		return fmt.Errorf("route alias %q is already assigned", alias)
+	}
+	r.aliases[alias] = tunnelID
+	return nil
+}
+
+func (r *SessionRegistry) Resolve(route string) (string, bool) {
+	route = normalizeAlias(route)
+	r.mu.RLock()
+	tunnelID, ok := r.aliases[route]
+	if !ok {
+		_, ok = r.sessions[route]
+		tunnelID = route
+	}
+	r.mu.RUnlock()
+	return tunnelID, ok
 }
 
 func (r *SessionRegistry) Snapshot() []Session {
@@ -94,4 +130,8 @@ func (r *SessionRegistry) Snapshot() []Session {
 	}
 	r.mu.RUnlock()
 	return result
+}
+
+func normalizeAlias(value string) string {
+	return strings.ToLower(strings.TrimSpace(value))
 }

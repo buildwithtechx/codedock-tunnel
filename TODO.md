@@ -271,7 +271,7 @@ codedock-tunnel/
 - [ ] Add grace periods, downgrade behavior, failed-payment handling, and free-plan fallback rules.
 - [ ] Add billing history, invoices, receipts, and customer self-service portal links.
 - [ ] Keep billing optional for self-hosted deployments while preserving local plan configuration.
-- [ ] Use Zepto Mail as the only transactional email provider.
+- [x] Use Zepto Mail as the only transactional email provider.
 
 ## Usage, analytics, and operations data
 
@@ -311,7 +311,7 @@ codedock-tunnel/
 
 - [x] Create the `codedock-tunnel-server` binary.
 - [x] Implement CLI tunnel registration and authenticated session management.
-- [ ] Implement persistent connections, heartbeats, reconnects, and graceful shutdown.
+- [x] Implement persistent connections, heartbeats, reconnects, and graceful shutdown.
 - [x] Add a concurrency-safe session registry with takeover protection.
 - [x] Add a request broker with request IDs, timeouts, cancellation, and response routing.
 - [x] Add reusable HTTP, TCP, and UDP protocol payloads.
@@ -323,11 +323,11 @@ codedock-tunnel/
 - [x] Add TCP connection and UDP packet state registries with cleanup operations.
 - [x] Implement multiplexed stream handling.
 - [x] Implement HTTP, TCP, and UDP forwarding.
-- [ ] Implement tunnel routing by tunnel ID and hostname.
-- [ ] Implement connection and stream cleanup after disconnects.
-- [ ] Add bounded memory buffers and backpressure.
-- [ ] Add configurable connection, bandwidth, and tunnel limits.
-- [ ] Add structured logs, metrics, and health endpoints.
+- [x] Implement tunnel routing by tunnel ID and hostname.
+- [x] Implement connection and stream cleanup after disconnects.
+- [x] Add bounded memory buffers and backpressure.
+- [x] Add configurable connection, bandwidth, and tunnel limits.
+- [x] Add structured logs, metrics, and health endpoints.
 
 ## Background jobs and verification
 

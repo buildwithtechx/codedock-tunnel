@@ -15,6 +15,7 @@ type UDPManager struct {
 	mu        sync.Mutex
 	listeners map[string]*net.UDPConn
 	packets   map[string]udpPacket
+	max       int
 }
 
 type udpPacket struct {
@@ -23,7 +24,16 @@ type udpPacket struct {
 }
 
 func NewUDPManager() *UDPManager {
-	return &UDPManager{listeners: make(map[string]*net.UDPConn), packets: make(map[string]udpPacket)}
+	return &UDPManager{listeners: make(map[string]*net.UDPConn), packets: make(map[string]udpPacket), max: 1000}
+}
+
+func (m *UDPManager) SetMaxPackets(max int) {
+	if max < 1 {
+		return
+	}
+	m.mu.Lock()
+	m.max = max
+	m.mu.Unlock()
 }
 
 func (m *UDPManager) Open(tunnelID string, send func(context.Context, protocol.Envelope) error) (int, error) {
@@ -47,6 +57,10 @@ func (m *UDPManager) read(tunnelID string, listener *net.UDPConn, send func(cont
 		}
 		packetID := uuid.NewString()
 		m.mu.Lock()
+		if len(m.packets) >= m.max {
+			m.mu.Unlock()
+			continue
+		}
 		m.packets[packetID] = udpPacket{address: address, listener: listener}
 		m.mu.Unlock()
 		payload, encodeErr := protocol.EncodePayload(protocol.MessageTypeUDPData, "", protocol.UDPData{PacketID: packetID, SourceAddress: address.IP.String(), SourcePort: address.Port, Data: base64.StdEncoding.EncodeToString(buffer[:count])})

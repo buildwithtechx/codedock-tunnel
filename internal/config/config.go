@@ -84,17 +84,23 @@ type RedisConfig struct {
 }
 
 type MailConfig struct {
-	FromAddress string `env:"MAIL_FROM"`
+	FromAddress string `env:"MAIL_FROM" envDefault:"noreply@localhost"`
 	ZeptoAPIKey string `env:"ZEPTO_API_KEY"`
+	ZeptoURL    string `env:"ZEPTO_URL" envDefault:"https://api.zeptomail.com/v1.1/email"`
 }
 
 type TunnelConfig struct {
 	Domain          string        `env:"TUNNEL_DOMAIN" envDefault:"tunnel.codedock-tunnel.dev"`
 	TokenTTL        time.Duration `env:"TUNNEL_TOKEN_TTL" envDefault:"24h"`
 	MaxConnections  int           `env:"TUNNEL_MAX_CONNECTIONS" envDefault:"1000"`
+	MaxTunnels      int           `env:"TUNNEL_MAX_TUNNELS" envDefault:"1000"`
 	MaxBytes        int64         `env:"TUNNEL_MAX_BYTES" envDefault:"0"`
+	MaxBandwidth    int64         `env:"TUNNEL_MAX_BANDWIDTH_BYTES" envDefault:"0"`
 	RequireTLS      bool          `env:"TUNNEL_REQUIRE_TLS" envDefault:"false"`
 	AgentInactivity time.Duration `env:"AGENT_INACTIVITY_TIMEOUT" envDefault:"90s"`
+	Heartbeat       time.Duration `env:"TUNNEL_HEARTBEAT_INTERVAL" envDefault:"20s"`
+	ReadTimeout     time.Duration `env:"TUNNEL_READ_TIMEOUT" envDefault:"90s"`
+	MaxFrameBytes   int64         `env:"TUNNEL_MAX_FRAME_BYTES" envDefault:"16777216"`
 }
 
 type BillingConfig struct {

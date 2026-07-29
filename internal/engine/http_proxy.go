@@ -42,7 +42,7 @@ func NewHTTPProxy(baseDomain string, router *RequestRouter, maxBodyBytes int64) 
 }
 
 func (p *HTTPProxy) ServeHTTP(response http.ResponseWriter, request *http.Request) {
-	tunnelID, ok := resolveTunnelID(request.Host, p.baseDomain)
+	route, ok := resolveRouteKey(request.Host, p.baseDomain)
 	if !ok {
 		http.Error(response, "tunnel not found", http.StatusNotFound)
 		return
@@ -56,19 +56,19 @@ func (p *HTTPProxy) ServeHTTP(response http.ResponseWriter, request *http.Reques
 		http.Error(response, "unable to read request body", http.StatusBadRequest)
 		return
 	}
-	forwarded, err := p.router.ForwardHTTP(request.Context(), tunnelID, protocol.HTTPRequest{
+	forwarded, err := p.router.ForwardHTTP(request.Context(), route, protocol.HTTPRequest{
 		Method:  request.Method,
 		Path:    request.URL.RequestURI(),
 		Headers: requestHeaders(request.Header),
 		Body:    body,
 	})
 	if err != nil {
-		p.record(request, tunnelID, "error", 0)
+		p.record(request, route, "error", 0)
 		http.Error(response, "tunnel unavailable", http.StatusBadGateway)
 		return
 	}
 	if forwarded.Error != "" {
-		p.record(request, tunnelID, "error", 0)
+		p.record(request, route, "error", 0)
 		http.Error(response, forwarded.Error, http.StatusBadGateway)
 		return
 	}
@@ -83,10 +83,10 @@ func (p *HTTPProxy) ServeHTTP(response http.ResponseWriter, request *http.Reques
 	}
 	decoded, err := base64.StdEncoding.DecodeString(forwarded.Body)
 	if err != nil {
-		p.record(request, tunnelID, "error", 0)
+		p.record(request, route, "error", 0)
 		return
 	}
-	p.record(request, tunnelID, "request", int64(len(decoded)))
+	p.record(request, route, "request", int64(len(decoded)))
 	_, _ = response.Write(decoded)
 }
 
@@ -140,6 +140,25 @@ func resolveTunnelID(host string, baseDomain string) (string, bool) {
 		return "", false
 	}
 	return prefix, true
+}
+
+func resolveRouteKey(host string, baseDomain string) (string, bool) {
+	cleanHost := strings.ToLower(strings.TrimSuffix(host, "."))
+	if parsedHost, _, err := net.SplitHostPort(cleanHost); err == nil {
+		cleanHost = parsedHost
+	}
+	baseDomain = strings.ToLower(strings.TrimSuffix(baseDomain, "."))
+	prefix, found := strings.CutSuffix(cleanHost, "."+baseDomain)
+	if found {
+		if prefix == "" || strings.Contains(prefix, ".") || prefix == "www" {
+			return "", false
+		}
+		return prefix, true
+	}
+	if cleanHost == "" || strings.Contains(cleanHost, " ") || strings.Contains(cleanHost, "..") || cleanHost == "www" {
+		return "", false
+	}
+	return cleanHost, true
 }
 
 func requestHeaders(headers http.Header) map[string][]string {

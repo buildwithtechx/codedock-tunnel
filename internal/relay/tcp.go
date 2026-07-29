@@ -17,10 +17,20 @@ type TCPManager struct {
 	listeners   map[string]net.Listener
 	connections map[string]net.Conn
 	tunnels     map[string]map[string]struct{}
+	max         int
 }
 
 func NewTCPManager() *TCPManager {
-	return &TCPManager{listeners: make(map[string]net.Listener), connections: make(map[string]net.Conn), tunnels: make(map[string]map[string]struct{})}
+	return &TCPManager{listeners: make(map[string]net.Listener), connections: make(map[string]net.Conn), tunnels: make(map[string]map[string]struct{}), max: 1000}
+}
+
+func (m *TCPManager) SetMaxConnections(max int) {
+	if max < 1 {
+		return
+	}
+	m.mu.Lock()
+	m.max = max
+	m.mu.Unlock()
 }
 
 func (m *TCPManager) Open(tunnelID string, send func(context.Context, protocol.Envelope) error) (int, error) {
@@ -41,6 +51,13 @@ func (m *TCPManager) accept(tunnelID string, listener net.Listener, send func(co
 		connection, err := listener.Accept()
 		if err != nil {
 			return
+		}
+		m.mu.Lock()
+		atCapacity := len(m.connections) >= m.max
+		m.mu.Unlock()
+		if atCapacity {
+			_ = connection.Close()
+			continue
 		}
 		connectionID := uuid.NewString()
 		m.mu.Lock()

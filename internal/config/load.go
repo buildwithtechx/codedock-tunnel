@@ -82,6 +82,12 @@ func validateRelay(cfg RelayConfig) error {
 	if cfg.Tunnel.MaxConnections < 1 {
 		return fmt.Errorf("tunnel max connections must be positive")
 	}
+	if cfg.Tunnel.MaxTunnels < 1 || cfg.Tunnel.MaxFrameBytes < 1 {
+		return fmt.Errorf("tunnel limits must be positive")
+	}
+	if cfg.Tunnel.Heartbeat <= 0 || cfg.Tunnel.ReadTimeout <= cfg.Tunnel.Heartbeat {
+		return fmt.Errorf("tunnel heartbeat and read timeout are invalid")
+	}
 	return nil
 }
 

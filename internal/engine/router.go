@@ -34,6 +34,11 @@ func NewRequestRouter(sessions *SessionRegistry, timeout time.Duration) (*Reques
 }
 
 func (r *RequestRouter) ForwardHTTP(ctx context.Context, tunnelID string, request protocol.HTTPRequest) (protocol.HTTPResponse, error) {
+	resolved, ok := r.sessions.Resolve(tunnelID)
+	if !ok {
+		return protocol.HTTPResponse{}, fmt.Errorf("tunnel %q is not connected", tunnelID)
+	}
+	tunnelID = resolved
 	session, ok := r.sessions.Get(tunnelID)
 	if !ok {
 		return protocol.HTTPResponse{}, fmt.Errorf("tunnel %q is not connected", tunnelID)
@@ -98,6 +103,11 @@ func (r *RequestRouter) RemoveTunnel(tunnelID string) {
 }
 
 func (r *RequestRouter) OrganizationID(tunnelID string) (string, bool) {
+	resolved, ok := r.sessions.Resolve(tunnelID)
+	if !ok {
+		return "", false
+	}
+	tunnelID = resolved
 	session, ok := r.sessions.Get(tunnelID)
 	if !ok {
 		return "", false

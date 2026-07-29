@@ -59,31 +59,56 @@ func openTunnel(cfg config.CLIConfig) {
 	_ = flags.Parse(os.Args[2:])
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	connection, err := client.OpenRelay(ctx, client.RelayConfig{URL: cfg.RelayURL, Token: cfg.AgentToken}, protocol.OpenTunnel{LocalPort: *port, Protocol: *protocolName, Subdomain: *subdomain})
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer connection.Close()
-	if connection.PublicPort > 0 {
-		fmt.Printf("tunnel %s %s:%d\n", connection.TunnelID, connection.PublicURL, connection.PublicPort)
-	} else {
-		fmt.Printf("tunnel %s %s\n", connection.TunnelID, connection.PublicURL)
-	}
-	ticker := time.NewTicker(20 * time.Second)
-	defer ticker.Stop()
-	go func() {
-		for range ticker.C {
-			if err := connection.SendHeartbeat(); err != nil {
-				return
-			}
-		}
-	}()
 	target := "http://127.0.0.1:" + fmt.Sprint(*port)
-	if *protocolName == "tcp" {
+	if *protocolName == "tcp" || *protocolName == "udp" {
 		target = "127.0.0.1:" + fmt.Sprint(*port)
 	}
-	if err := connection.ServeLocal(ctx, target); err != nil && ctx.Err() == nil {
-		log.Fatal(err)
+	delay := 2 * time.Second
+	for ctx.Err() == nil {
+		connection, err := client.OpenRelay(ctx, client.RelayConfig{URL: cfg.RelayURL, Token: cfg.AgentToken}, protocol.OpenTunnel{LocalPort: *port, Protocol: *protocolName, Subdomain: *subdomain})
+		if err != nil {
+			if ctx.Err() != nil {
+				return
+			}
+			log.Printf("relay connection failed: %v; retrying in %s", err, delay)
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(delay):
+			}
+			if delay < 30*time.Second {
+				delay *= 2
+			}
+			continue
+		}
+		delay = 2 * time.Second
+		if connection.PublicPort > 0 {
+			fmt.Printf("tunnel %s %s:%d\n", connection.TunnelID, connection.PublicURL, connection.PublicPort)
+		} else {
+			fmt.Printf("tunnel %s %s\n", connection.TunnelID, connection.PublicURL)
+		}
+		ticker := time.NewTicker(20 * time.Second)
+		done := make(chan struct{})
+		go func() {
+			defer close(done)
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-ticker.C:
+					if err := connection.SendHeartbeat(); err != nil {
+						return
+					}
+				}
+			}
+		}()
+		serveErr := connection.ServeLocal(ctx, target)
+		ticker.Stop()
+		connection.Close()
+		<-done
+		if serveErr != nil && ctx.Err() == nil {
+			log.Printf("relay connection closed: %v; reconnecting", serveErr)
+		}
 	}
 }
 

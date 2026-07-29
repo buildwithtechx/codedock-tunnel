@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -37,6 +38,7 @@ func main() {
 	}
 	tcpManager := relay.NewTCPManager()
 	udpManager := relay.NewUDPManager()
+	metrics := relay.NewMetrics()
 	httpProxy, err := engine.NewHTTPProxy(cfg.Tunnel.Domain, requestRouter, cfg.Tunnel.MaxBytes)
 	if err != nil {
 		log.Fatal(err)
@@ -45,7 +47,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	relayHandler, err := relay.NewHandler(authenticator, sessions, requestRouter, tcpManager, udpManager, cfg.Tunnel.MaxConnections)
+	relayHandler, err := relay.NewHandlerWithOptions(authenticator, sessions, requestRouter, tcpManager, udpManager, relay.HandlerOptions{MaxConnections: cfg.Tunnel.MaxConnections, MaxTunnels: cfg.Tunnel.MaxTunnels, MaxBandwidth: cfg.Tunnel.MaxBandwidth, Heartbeat: cfg.Tunnel.Heartbeat, ReadTimeout: cfg.Tunnel.ReadTimeout, MaxFrameBytes: cfg.Tunnel.MaxFrameBytes, Logger: slog.Default(), Metrics: metrics})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -53,7 +55,11 @@ func main() {
 	app.Use(recover.New())
 	app.Get("/v1/connect", relayHandler.Upgrade)
 	app.Get("/healthz", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{"status": "ok", "sessions": len(sessions.Snapshot())})
+		return c.JSON(fiber.Map{"status": "ok", "sessions": len(sessions.Snapshot()), "metrics": metrics.Snapshot()})
+	})
+	app.Get("/metrics", func(c *fiber.Ctx) error {
+		c.Type("text", "plain")
+		return c.SendString(metrics.Prometheus())
 	})
 	app.Get("/readyz", func(c *fiber.Ctx) error {
 		if err := redisClient.Raw().Ping(c.UserContext()).Err(); err != nil {
@@ -69,6 +75,7 @@ func main() {
 		}
 	}()
 	<-ctx.Done()
+	relayHandler.CloseAll()
 	if err := app.Shutdown(); err != nil {
 		log.Printf("shutdown relay: %v", err)
 	}
