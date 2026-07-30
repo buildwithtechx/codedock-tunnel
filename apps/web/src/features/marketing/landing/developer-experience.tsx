@@ -22,12 +22,12 @@ export function DeveloperExperience() {
     (offset % traffic.length) + 5,
   );
   return (
-    <section className="border-b border-white/10 py-24 sm:py-32">
+    <section className="py-24 sm:py-32">
       <MarketingContainer>
         <h2 className="max-w-2xl text-4xl font-semibold tracking-[-0.05em] sm:text-6xl">
-          First-class
+          Your workflow,
           <br />
-          developer experience
+          already connected
         </h2>
         <div className="mt-14 grid gap-6 lg:grid-cols-2">
           <div className="grid gap-6">

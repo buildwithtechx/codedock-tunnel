@@ -1,8 +1,10 @@
+import { Canvas } from '@react-three/fiber';
 import { Link } from '@tanstack/react-router';
 import { ArrowRight, Check, Copy } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { MarketingContainer } from '#/components/layout';
+import { BeamGroup } from './beam-group';
 
 const logs = [
   ['GET', '/api/health', '200'],
@@ -39,10 +41,16 @@ export function Hero() {
   }
 
   return (
-    <section className="relative min-h-[880px] overflow-hidden border-b border-white/10 pt-28 sm:pt-32">
+    <section className="relative min-h-[880px] overflow-hidden pt-28 sm:pt-32">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_22%,rgba(79,70,229,0.16),transparent_28%),radial-gradient(circle_at_12%_42%,rgba(8,145,178,0.12),transparent_24%)]" />
       <div className="absolute inset-x-[-20%] top-[31%] h-[390px] -rotate-[16deg] bg-[linear-gradient(105deg,transparent_5%,rgba(129,140,248,0.18)_32%,rgba(255,255,255,0.08)_53%,transparent_80%)] blur-[1px]" />
       <div className="absolute inset-0 opacity-40 [background-image:radial-gradient(circle_at_20%_40%,white_0_1px,transparent_1px),radial-gradient(circle_at_70%_25%,white_0_1px,transparent_1px),radial-gradient(circle_at_42%_68%,white_0_1px,transparent_1px)] [background-size:190px_170px,240px_220px,320px_260px]" />
+      <div className="pointer-events-none absolute inset-x-0 top-[24%] h-[420px] opacity-80">
+        <Canvas camera={{ position: [0, 0, 15], fov: 45 }}>
+          <color attach="background" args={['#080b14']} />
+          <BeamGroup />
+        </Canvas>
+      </div>
       <MarketingContainer className="relative flex flex-col items-center">
         <div className="mt-10 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/55">
           <span className="size-1.5 rounded-full bg-cyan-300" />

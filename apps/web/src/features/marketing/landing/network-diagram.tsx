@@ -31,12 +31,12 @@ const nodes = [
 
 export function NetworkDiagram() {
   return (
-    <section className="border-b border-white/10 py-28 sm:py-36">
+    <section className="py-28 sm:py-36">
       <MarketingContainer>
         <div className="text-center">
           <div className="relative inline-block">
             <h2 className="relative text-6xl font-semibold italic tracking-[-0.07em] text-transparent bg-gradient-to-b from-white via-white/90 to-white/40 bg-clip-text sm:text-8xl">
-              It just works
+              From localhost to everywhere
             </h2>
             <Sparkles className="absolute -right-10 -top-8 size-9 text-amber-200" />
           </div>

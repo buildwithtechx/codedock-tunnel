@@ -18,10 +18,10 @@ const mobileLinks = [
 ];
 
 const pluginLinks = [
-  { label: 'Vite', icon: SiVite },
-  { label: 'Next.js', icon: SiNextdotjs },
-  { label: 'Express', icon: SiExpress },
-  { label: 'NestJS', icon: SiNestjs },
+  { label: 'Vite', id: 'vite', icon: SiVite },
+  { label: 'Next.js', id: 'next', icon: SiNextdotjs },
+  { label: 'Express', id: 'express', icon: SiExpress },
+  { label: 'NestJS', id: 'nest', icon: SiNestjs },
 ];
 
 export function MarketingHeader() {
@@ -30,8 +30,8 @@ export function MarketingHeader() {
   const [helpOpen, setHelpOpen] = useState(false);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-black/75 backdrop-blur-xl">
-      <MarketingContainer className="flex h-18 items-center justify-between">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-indigo-200/10 bg-[#0d1220]/88 shadow-[0_10px_35px_rgba(7,9,16,0.32)] backdrop-blur-xl">
+      <MarketingContainer className="relative flex h-18 items-center justify-between">
         <Link
           to="/"
           className="flex items-center gap-3"
@@ -43,16 +43,17 @@ export function MarketingHeader() {
           </span>
         </Link>
         <nav
-          className="hidden items-center gap-8 md:flex"
+          className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-8 md:flex"
           aria-label="Main navigation"
         >
           <DropdownButton
             label="Docs"
             open={docsOpen}
-            onClick={() => {
-              setDocsOpen((value) => !value);
+            onOpen={() => {
+              setDocsOpen(true);
               setHelpOpen(false);
             }}
+            onClose={() => setDocsOpen(false)}
           >
             <div className="grid grid-cols-[150px_1fr] gap-6">
               <div className="flex flex-col gap-1 border-r border-white/10 pr-5">
@@ -74,14 +75,15 @@ export function MarketingHeader() {
                   to="/plugins"
                   className="rounded-lg px-3 py-2 text-sm text-white/70 hover:bg-white/5 hover:text-white"
                 >
-                  Plugins
+                  All integrations
                 </Link>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                {pluginLinks.map(({ label, icon: Icon }) => (
+                {pluginLinks.map(({ label, id, icon: Icon }) => (
                   <Link
                     key={label}
-                    to="/plugins"
+                    to="/plugins/$pluginId"
+                    params={{ pluginId: id }}
                     className="flex size-16 items-center justify-center rounded-xl bg-white/[0.05] text-2xl text-white/60 transition-colors hover:bg-indigo-300/15 hover:text-white"
                     title={label}
                   >
@@ -106,10 +108,11 @@ export function MarketingHeader() {
           <DropdownButton
             label="Help"
             open={helpOpen}
-            onClick={() => {
-              setHelpOpen((value) => !value);
+            onOpen={() => {
+              setHelpOpen(true);
               setDocsOpen(false);
             }}
+            onClose={() => setHelpOpen(false)}
           >
             <div className="grid gap-1">
               <Link
@@ -144,7 +147,7 @@ export function MarketingHeader() {
             </div>
           </DropdownButton>
         </nav>
-        <div className="hidden items-center gap-4 md:flex">
+        <div className="hidden items-center gap-3 md:flex">
           <a
             href="https://github.com/codedock"
             target="_blank"
@@ -153,14 +156,17 @@ export function MarketingHeader() {
           >
             <SiGithub className="size-4" /> Star on GitHub
           </a>
-          <Link to="/login" className="text-sm text-white/60 hover:text-white">
-            Log in
+          <Link
+            to="/login"
+            className="rounded-full border border-white/10 px-4 py-2.5 text-sm font-medium text-white/70 transition-colors hover:border-white/25 hover:bg-white/[0.06] hover:text-white"
+          >
+            Sign in
           </Link>
           <Link
             to="/signup"
-            className="rounded-full border border-white/20 bg-white/[0.08] px-5 py-2.5 text-sm font-medium text-white hover:bg-white/15"
+            className="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-[#080b14] shadow-[0_0_24px_rgba(255,255,255,0.12)] transition-transform hover:-translate-y-0.5"
           >
-            Get started
+            Start building
           </Link>
         </div>
         <button
@@ -174,7 +180,7 @@ export function MarketingHeader() {
         </button>
       </MarketingContainer>
       {open && (
-        <div className="border-t border-white/10 bg-black px-6 py-5 md:hidden">
+        <div className="border-t border-indigo-200/10 bg-[#0d1220] px-6 py-5 md:hidden">
           <nav
             className="mx-auto flex max-w-7xl flex-col gap-1"
             aria-label="Mobile navigation"
@@ -203,14 +209,14 @@ export function MarketingHeader() {
                 onClick={() => setOpen(false)}
                 className="rounded-full border border-white/15 px-4 py-3 text-center text-sm text-white"
               >
-                Log in
+                Sign in
               </Link>
               <Link
                 to="/signup"
                 onClick={() => setOpen(false)}
                 className="rounded-full bg-white px-4 py-3 text-center text-sm font-semibold text-[#080b14]"
               >
-                Get started
+                Start building
               </Link>
             </div>
           </nav>
@@ -223,19 +229,29 @@ export function MarketingHeader() {
 function DropdownButton({
   label,
   open,
-  onClick,
+  onOpen,
+  onClose,
   children,
 }: {
   label: string;
   open: boolean;
-  onClick: () => void;
+  onOpen: () => void;
+  onClose: () => void;
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative">
+    <nav
+      className="relative"
+      onMouseEnter={onOpen}
+      onMouseLeave={onClose}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) onClose();
+      }}
+    >
       <button
         type="button"
-        onClick={onClick}
+        onClick={onOpen}
+        onFocus={onOpen}
         className="inline-flex items-center gap-1 text-sm text-white/60 transition-colors hover:text-white"
       >
         {label}
@@ -245,11 +261,11 @@ function DropdownButton({
       </button>
       {open && (
         <div className="absolute left-1/2 top-full w-[420px] -translate-x-1/2 pt-5">
-          <div className="rounded-2xl border border-white/10 bg-[#0b0b0c] p-5 shadow-2xl">
+          <div className="rounded-2xl border border-indigo-200/10 bg-[#10182b] p-5 shadow-2xl shadow-indigo-950/30">
             {children}
           </div>
         </div>
       )}
-    </div>
+    </nav>
   );
 }

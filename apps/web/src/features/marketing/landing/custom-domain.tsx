@@ -3,13 +3,12 @@ import { MarketingContainer } from '#/components/layout';
 
 export function CustomDomainSection() {
   return (
-    <section className="border-b border-white/10 py-24 sm:py-32">
+    <section className="py-24 sm:py-32">
       <MarketingContainer className="grid items-center gap-14 lg:grid-cols-2">
         <div>
           <h2 className="text-4xl font-semibold tracking-[-0.05em] sm:text-6xl">
-            Bring your
-            <br />
-            own domain
+            Give every endpoint
+            <br />a familiar name
           </h2>
           <p className="mt-6 max-w-xl text-lg leading-8 text-white/45">
             Use a memorable endpoint for demos, webhooks, and shared previews.

@@ -24,7 +24,7 @@ const features = [
 
 export function LocalAccessSection() {
   return (
-    <section className="border-b border-white/10 py-24 sm:py-32">
+    <section className="py-24 sm:py-32">
       <MarketingContainer>
         <div className="mx-auto max-w-3xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-sm text-cyan-200">

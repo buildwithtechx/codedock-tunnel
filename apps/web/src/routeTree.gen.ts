@@ -43,6 +43,8 @@ import { Route as OrgSlugSettingsOrganizationRouteImport } from './routes/$orgSl
 import { Route as OrgSlugSettingsProfileRouteImport } from './routes/$orgSlug/settings/profile'
 import { Route as OrgSlugTunnelsIndexRouteImport } from './routes/$orgSlug/tunnels/index'
 import { Route as OrgSlugTunnelsTunnelIdRouteImport } from './routes/$orgSlug/tunnels/$tunnelId'
+import { Route as MarketingPluginsIndexRouteImport } from './routes/_marketing/plugins/index'
+import { Route as MarketingPluginsPluginIdRouteImport } from './routes/_marketing/plugins/$pluginId'
 import { Route as AdminOrganizationsIndexRouteImport } from './routes/admin/organizations/index'
 import { Route as AdminOrganizationsOrganizationIDRouteImport } from './routes/admin/organizations/$organizationID'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
@@ -218,6 +220,17 @@ const OrgSlugTunnelsTunnelIdRoute = OrgSlugTunnelsTunnelIdRouteImport.update({
   path: '/$orgSlug/tunnels/$tunnelId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MarketingPluginsIndexRoute = MarketingPluginsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MarketingPluginsRoute,
+} as any)
+const MarketingPluginsPluginIdRoute =
+  MarketingPluginsPluginIdRouteImport.update({
+    id: '/$pluginId',
+    path: '/$pluginId',
+    getParentRoute: () => MarketingPluginsRoute,
+  } as any)
 const AdminOrganizationsIndexRoute = AdminOrganizationsIndexRouteImport.update({
   id: '/organizations/',
   path: '/organizations/',
@@ -254,7 +267,7 @@ export interface FileRoutesByFullPath {
   '/$orgSlug/usage': typeof OrgSlugUsageRoute
   '/changelog': typeof MarketingChangelogRoute
   '/contact': typeof MarketingContactRoute
-  '/plugins': typeof MarketingPluginsRoute
+  '/plugins': typeof MarketingPluginsRouteWithChildren
   '/pricing': typeof MarketingPricingRoute
   '/privacy': typeof MarketingPrivacyRoute
   '/terms': typeof MarketingTermsRoute
@@ -272,10 +285,12 @@ export interface FileRoutesByFullPath {
   '/$orgSlug/settings/organization': typeof OrgSlugSettingsOrganizationRoute
   '/$orgSlug/settings/profile': typeof OrgSlugSettingsProfileRoute
   '/$orgSlug/tunnels/$tunnelId': typeof OrgSlugTunnelsTunnelIdRoute
+  '/plugins/$pluginId': typeof MarketingPluginsPluginIdRoute
   '/admin/organizations/$organizationID': typeof AdminOrganizationsOrganizationIDRoute
   '/admin/users/$userId': typeof AdminUsersUserIdRoute
   '/$orgSlug/settings/': typeof OrgSlugSettingsIndexRoute
   '/$orgSlug/tunnels/': typeof OrgSlugTunnelsIndexRoute
+  '/plugins/': typeof MarketingPluginsIndexRoute
   '/admin/organizations/': typeof AdminOrganizationsIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
 }
@@ -291,7 +306,6 @@ export interface FileRoutesByTo {
   '/$orgSlug/usage': typeof OrgSlugUsageRoute
   '/changelog': typeof MarketingChangelogRoute
   '/contact': typeof MarketingContactRoute
-  '/plugins': typeof MarketingPluginsRoute
   '/pricing': typeof MarketingPricingRoute
   '/privacy': typeof MarketingPrivacyRoute
   '/terms': typeof MarketingTermsRoute
@@ -310,10 +324,12 @@ export interface FileRoutesByTo {
   '/$orgSlug/settings/organization': typeof OrgSlugSettingsOrganizationRoute
   '/$orgSlug/settings/profile': typeof OrgSlugSettingsProfileRoute
   '/$orgSlug/tunnels/$tunnelId': typeof OrgSlugTunnelsTunnelIdRoute
+  '/plugins/$pluginId': typeof MarketingPluginsPluginIdRoute
   '/admin/organizations/$organizationID': typeof AdminOrganizationsOrganizationIDRoute
   '/admin/users/$userId': typeof AdminUsersUserIdRoute
   '/$orgSlug/settings': typeof OrgSlugSettingsIndexRoute
   '/$orgSlug/tunnels': typeof OrgSlugTunnelsIndexRoute
+  '/plugins': typeof MarketingPluginsIndexRoute
   '/admin/organizations': typeof AdminOrganizationsIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
 }
@@ -332,7 +348,7 @@ export interface FileRoutesById {
   '/$orgSlug/usage': typeof OrgSlugUsageRoute
   '/_marketing/changelog': typeof MarketingChangelogRoute
   '/_marketing/contact': typeof MarketingContactRoute
-  '/_marketing/plugins': typeof MarketingPluginsRoute
+  '/_marketing/plugins': typeof MarketingPluginsRouteWithChildren
   '/_marketing/pricing': typeof MarketingPricingRoute
   '/_marketing/privacy': typeof MarketingPrivacyRoute
   '/_marketing/terms': typeof MarketingTermsRoute
@@ -351,10 +367,12 @@ export interface FileRoutesById {
   '/$orgSlug/settings/organization': typeof OrgSlugSettingsOrganizationRoute
   '/$orgSlug/settings/profile': typeof OrgSlugSettingsProfileRoute
   '/$orgSlug/tunnels/$tunnelId': typeof OrgSlugTunnelsTunnelIdRoute
+  '/_marketing/plugins/$pluginId': typeof MarketingPluginsPluginIdRoute
   '/admin/organizations/$organizationID': typeof AdminOrganizationsOrganizationIDRoute
   '/admin/users/$userId': typeof AdminUsersUserIdRoute
   '/$orgSlug/settings/': typeof OrgSlugSettingsIndexRoute
   '/$orgSlug/tunnels/': typeof OrgSlugTunnelsIndexRoute
+  '/_marketing/plugins/': typeof MarketingPluginsIndexRoute
   '/admin/organizations/': typeof AdminOrganizationsIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
 }
@@ -392,10 +410,12 @@ export interface FileRouteTypes {
     | '/$orgSlug/settings/organization'
     | '/$orgSlug/settings/profile'
     | '/$orgSlug/tunnels/$tunnelId'
+    | '/plugins/$pluginId'
     | '/admin/organizations/$organizationID'
     | '/admin/users/$userId'
     | '/$orgSlug/settings/'
     | '/$orgSlug/tunnels/'
+    | '/plugins/'
     | '/admin/organizations/'
     | '/admin/users/'
   fileRoutesByTo: FileRoutesByTo
@@ -411,7 +431,6 @@ export interface FileRouteTypes {
     | '/$orgSlug/usage'
     | '/changelog'
     | '/contact'
-    | '/plugins'
     | '/pricing'
     | '/privacy'
     | '/terms'
@@ -430,10 +449,12 @@ export interface FileRouteTypes {
     | '/$orgSlug/settings/organization'
     | '/$orgSlug/settings/profile'
     | '/$orgSlug/tunnels/$tunnelId'
+    | '/plugins/$pluginId'
     | '/admin/organizations/$organizationID'
     | '/admin/users/$userId'
     | '/$orgSlug/settings'
     | '/$orgSlug/tunnels'
+    | '/plugins'
     | '/admin/organizations'
     | '/admin/users'
   id:
@@ -470,10 +491,12 @@ export interface FileRouteTypes {
     | '/$orgSlug/settings/organization'
     | '/$orgSlug/settings/profile'
     | '/$orgSlug/tunnels/$tunnelId'
+    | '/_marketing/plugins/$pluginId'
     | '/admin/organizations/$organizationID'
     | '/admin/users/$userId'
     | '/$orgSlug/settings/'
     | '/$orgSlug/tunnels/'
+    | '/_marketing/plugins/'
     | '/admin/organizations/'
     | '/admin/users/'
   fileRoutesById: FileRoutesById
@@ -741,6 +764,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrgSlugTunnelsTunnelIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_marketing/plugins/': {
+      id: '/_marketing/plugins/'
+      path: '/'
+      fullPath: '/plugins/'
+      preLoaderRoute: typeof MarketingPluginsIndexRouteImport
+      parentRoute: typeof MarketingPluginsRoute
+    }
+    '/_marketing/plugins/$pluginId': {
+      id: '/_marketing/plugins/$pluginId'
+      path: '/$pluginId'
+      fullPath: '/plugins/$pluginId'
+      preLoaderRoute: typeof MarketingPluginsPluginIdRouteImport
+      parentRoute: typeof MarketingPluginsRoute
+    }
     '/admin/organizations/': {
       id: '/admin/organizations/'
       path: '/organizations'
@@ -772,10 +809,23 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface MarketingPluginsRouteChildren {
+  MarketingPluginsPluginIdRoute: typeof MarketingPluginsPluginIdRoute
+  MarketingPluginsIndexRoute: typeof MarketingPluginsIndexRoute
+}
+
+const MarketingPluginsRouteChildren: MarketingPluginsRouteChildren = {
+  MarketingPluginsPluginIdRoute: MarketingPluginsPluginIdRoute,
+  MarketingPluginsIndexRoute: MarketingPluginsIndexRoute,
+}
+
+const MarketingPluginsRouteWithChildren =
+  MarketingPluginsRoute._addFileChildren(MarketingPluginsRouteChildren)
+
 interface MarketingRouteChildren {
   MarketingChangelogRoute: typeof MarketingChangelogRoute
   MarketingContactRoute: typeof MarketingContactRoute
-  MarketingPluginsRoute: typeof MarketingPluginsRoute
+  MarketingPluginsRoute: typeof MarketingPluginsRouteWithChildren
   MarketingPricingRoute: typeof MarketingPricingRoute
   MarketingPrivacyRoute: typeof MarketingPrivacyRoute
   MarketingTermsRoute: typeof MarketingTermsRoute
@@ -785,7 +835,7 @@ interface MarketingRouteChildren {
 const MarketingRouteChildren: MarketingRouteChildren = {
   MarketingChangelogRoute: MarketingChangelogRoute,
   MarketingContactRoute: MarketingContactRoute,
-  MarketingPluginsRoute: MarketingPluginsRoute,
+  MarketingPluginsRoute: MarketingPluginsRouteWithChildren,
   MarketingPricingRoute: MarketingPricingRoute,
   MarketingPrivacyRoute: MarketingPrivacyRoute,
   MarketingTermsRoute: MarketingTermsRoute,
