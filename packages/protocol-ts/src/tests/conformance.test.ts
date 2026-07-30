@@ -5,7 +5,7 @@ import {
   decodeMessage,
   minSupportedVersion,
   negotiateVersion,
-} from './index.js';
+} from '../index.js';
 
 type FixtureItem = {
   name: string;
@@ -21,7 +21,7 @@ describe('Protocol Conformance', () => {
   it('passes all language-neutral fixtures', () => {
     const fixturePath = resolve(
       __dirname,
-      '../../../protocol/fixtures/conformance_fixtures.json',
+      '../../../../protocol/fixtures/conformance_fixtures.json',
     );
     const content = readFileSync(fixturePath, 'utf-8');
     const file = JSON.parse(content) as FixturesFile;
