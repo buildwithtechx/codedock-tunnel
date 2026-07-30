@@ -8,7 +8,6 @@ import (
 	"codedock.run/codedock-tunnel/internal/config"
 	"codedock.run/codedock-tunnel/internal/infra/billing"
 	"codedock.run/codedock-tunnel/internal/infra/certificates"
-	"codedock.run/codedock-tunnel/internal/infra/dns"
 	"codedock.run/codedock-tunnel/internal/infra/mail"
 	"codedock.run/codedock-tunnel/internal/repositories"
 	"codedock.run/codedock-tunnel/internal/services"
@@ -141,14 +140,6 @@ func NewDatabaseDependencies(db *gorm.DB, cfg config.APIConfig) (Dependencies, e
 	if err != nil {
 		return Dependencies{}, err
 	}
-	if cfg.DNS.Provider == "cloudflare" && cfg.DNS.ZoneID != "" && cfg.DNS.APIToken != "" {
-		provider, providerErr := dns.NewCloudflare(dns.CloudflareConfig{BaseURL: cfg.DNS.BaseURL, ZoneID: cfg.DNS.ZoneID, APIToken: cfg.DNS.APIToken})
-		if providerErr != nil {
-			return Dependencies{}, providerErr
-		}
-		domainService.SetDNSProvider(provider)
-	}
-	domainService.SetDNSTTL(cfg.DNS.TTL)
 	if cfg.App.ACMEEmail != "" {
 		issuer, issuerErr := certificates.NewACMEIssuer(certificates.ACMEConfig{Email: cfg.App.ACMEEmail, Directory: cfg.App.ACMEDirectory, CacheDir: cfg.App.CertificateCache, AllowedHost: func(host string) bool {
 			return strings.Contains(host, ".") && !strings.Contains(host, "..")
