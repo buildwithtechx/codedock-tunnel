@@ -30,7 +30,7 @@ export function MarketingHeader() {
   const [helpOpen, setHelpOpen] = useState(false);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-indigo-200/10 bg-[#0d1220]/88 shadow-[0_10px_35px_rgba(7,9,16,0.32)] backdrop-blur-xl">
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-black/35 shadow-[0_10px_35px_rgba(7,9,16,0.32)] backdrop-blur-xl">
       <MarketingContainer className="relative flex h-18 items-center justify-between">
         <Link
           to="/"
@@ -180,7 +180,7 @@ export function MarketingHeader() {
         </button>
       </MarketingContainer>
       {open && (
-        <div className="border-t border-indigo-200/10 bg-[#0d1220] px-6 py-5 md:hidden">
+        <div className="border-t border-indigo-200/10 bg-black px-6 py-5 md:hidden">
           <nav
             className="mx-auto flex max-w-7xl flex-col gap-1"
             aria-label="Mobile navigation"

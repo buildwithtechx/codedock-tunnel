@@ -1,5 +1,12 @@
 import { Link } from '@tanstack/react-router';
 import { GitBranch, Mail } from 'lucide-react';
+import {
+  SiExpress,
+  SiNestjs,
+  SiNextdotjs,
+  SiReact,
+  SiVite,
+} from 'react-icons/si';
 import { MarketingContainer } from './marketing-container';
 
 export function MarketingFooter() {
@@ -43,9 +50,21 @@ export function MarketingFooter() {
             </Link>
           </FooterGroup>
           <FooterGroup title="Integrations">
-            <FooterLink to="/plugins">React</FooterLink>
-            <FooterLink to="/plugins">Vite</FooterLink>
-            <FooterLink to="/plugins">Next.js</FooterLink>
+            <FooterPlugin to="/plugins/react" icon={SiReact}>
+              React
+            </FooterPlugin>
+            <FooterPlugin to="/plugins/vite" icon={SiVite}>
+              Vite
+            </FooterPlugin>
+            <FooterPlugin to="/plugins/next" icon={SiNextdotjs}>
+              Next.js
+            </FooterPlugin>
+            <FooterPlugin to="/plugins/nest" icon={SiNestjs}>
+              NestJS
+            </FooterPlugin>
+            <FooterPlugin to="/plugins/express" icon={SiExpress}>
+              Express
+            </FooterPlugin>
           </FooterGroup>
           <FooterGroup title="Legal">
             <FooterLink to="/terms">Terms</FooterLink>
@@ -102,6 +121,25 @@ function FooterLink({ children, ...props }: React.ComponentProps<typeof Link>) {
       {...props}
       className="text-sm text-white/45 transition-colors hover:text-white"
     >
+      {children}
+    </Link>
+  );
+}
+
+function FooterPlugin({
+  children,
+  icon: Icon,
+  ...props
+}: Omit<React.ComponentProps<typeof Link>, 'children'> & {
+  children: React.ReactNode;
+  icon: React.ComponentType<{ className?: string }>;
+}) {
+  return (
+    <Link
+      {...props}
+      className="inline-flex items-center gap-2 text-sm text-white/45 transition-colors hover:text-white"
+    >
+      <Icon className="size-3.5" />
       {children}
     </Link>
   );

@@ -12,6 +12,7 @@ import {
   SiPrisma,
   SiReact,
   SiRedis,
+  SiRemix,
   SiSocketdotio,
   SiSolid,
   SiStripe,
@@ -42,6 +43,10 @@ export type PluginDefinition = {
   icon: React.ComponentType<{ className?: string }>;
   features: string[];
   useCases: string[];
+  stackHeading: string;
+  stackDescription: string;
+  integrationHeading: string;
+  integrationDescription: string;
   technologies: {
     label: string;
     icon: React.ComponentType<{ className?: string }>;
@@ -56,7 +61,7 @@ export const pluginDefinitions: PluginDefinition[] = [
     name: 'TypeScript SDK',
     packageName: '@codedock/sdk',
     eyebrow: 'Framework-neutral foundation',
-    headline: 'Put tunnel lifecycle inside your application.',
+    headline: 'Bring public access\nto any TypeScript service.',
     description:
       'A small browser and Node.js client for applications that need direct control over authentication, tunnel creation, status, and shutdown.',
     docsSlug: 'sdk',
@@ -76,6 +81,12 @@ export const pluginDefinitions: PluginDefinition[] = [
       'Custom developer tooling',
       'CI pipeline jobs',
     ],
+    stackHeading: 'Runs wherever TypeScript runs.',
+    stackDescription:
+      'Use the same typed tunnel lifecycle in a browser, Node.js service, or your own developer tool.',
+    integrationHeading: 'Embed a tunnel in any\nTypeScript service.',
+    integrationDescription:
+      'Use the framework-neutral client when your runtime owns the server, the workflow, or the developer experience around it.',
     technologies: [typescript, { label: 'Node.js', icon: SiNodedotjs }],
   },
   {
@@ -83,7 +94,7 @@ export const pluginDefinitions: PluginDefinition[] = [
     name: 'React',
     packageName: '@codedock/react',
     eyebrow: 'React integration',
-    headline: 'Tunnel state that feels native to React.',
+    headline: 'Share React previews\nwith your team.',
     description:
       'Provider and hooks for showing connection state, public URLs, and tunnel controls directly in your React application.',
     docsSlug: 'react',
@@ -103,6 +114,12 @@ export const pluginDefinitions: PluginDefinition[] = [
       'Internal developer portals',
       'Live connection controls',
     ],
+    stackHeading: 'Works with the React ecosystem.',
+    stackDescription:
+      'Keep tunnel state close to the UI, whether your app uses a client router, server framework, or custom provider.',
+    integrationHeading: 'Make tunnel state part of your\nReact app.',
+    integrationDescription:
+      'Wrap your application once, then use typed hooks for status, public URLs, reconnects, and lifecycle actions wherever the UI needs them.',
     technologies: [
       { label: 'React', icon: SiReact },
       typescript,
@@ -114,7 +131,7 @@ export const pluginDefinitions: PluginDefinition[] = [
     name: 'Vite',
     packageName: '@codedock/vite-plugin',
     eyebrow: 'Vite integration',
-    headline: 'Turn every Vite preview into a shareable URL.',
+    headline: 'Share your Vite app\nwithout extra config.',
     description:
       'The development server integration opens a tunnel when Vite is ready and keeps the local target aligned with the running server.',
     docsSlug: 'vite',
@@ -130,12 +147,19 @@ export const pluginDefinitions: PluginDefinition[] = [
       'React, Vue, Svelte, and Solid',
     ],
     useCases: ['Design reviews', 'Webhook callbacks', 'Remote QA sessions'],
+    stackHeading: 'Works with your favorite framework.',
+    stackDescription:
+      'React, Vue, Svelte, Solid, Astro, and more can share the same Vite development workflow.',
+    integrationHeading: 'Integrate with any\nVite application.',
+    integrationDescription:
+      'Whether you are building with React, Vue, Svelte, Solid, or Astro, the plugin starts with your dev server and keeps the public endpoint aligned.',
     technologies: [
       { label: 'React', icon: SiReact },
       { label: 'Vue', icon: SiVuedotjs },
       { label: 'Svelte', icon: SiSvelte },
       { label: 'Solid', icon: SiSolid },
       { label: 'Astro', icon: SiAstro },
+      { label: 'Remix', icon: SiRemix },
     ],
   },
   {
@@ -143,7 +167,7 @@ export const pluginDefinitions: PluginDefinition[] = [
     name: 'Next.js',
     packageName: '@codedock/next',
     eyebrow: 'Next.js integration',
-    headline: 'Give your Next.js app an edge it can reach.',
+    headline: 'Put your Next.js app\nwithin reach.',
     description:
       'A lifecycle wrapper for Next.js development and server workflows, with the same tunnel controls as the CLI and SDK.',
     docsSlug: 'next',
@@ -159,6 +183,12 @@ export const pluginDefinitions: PluginDefinition[] = [
       'Typed configuration',
     ],
     useCases: ['Preview deployments', 'OAuth callback testing', 'Client demos'],
+    stackHeading: 'Plays well with your Next.js stack.',
+    stackDescription:
+      'Keep your framework, data layer, styling system, and deployment workflow exactly where they are.',
+    integrationHeading: 'Give every Next.js preview\na public edge.',
+    integrationDescription:
+      'Add the wrapper to your existing Next.js configuration and share local pages, API routes, and OAuth callbacks without extra proxy setup.',
     technologies: [
       { label: 'Vercel', icon: SiVercel },
       { label: 'Prisma', icon: SiPrisma },
@@ -173,7 +203,7 @@ export const pluginDefinitions: PluginDefinition[] = [
     name: 'NestJS',
     packageName: '@codedock/nest',
     eyebrow: 'NestJS integration',
-    headline: 'Expose your Nest application without extra plumbing.',
+    headline: 'Expose your NestJS API\nin one call.',
     description:
       'A Nest module and service that make tunnel lifecycle part of your application bootstrap and shutdown flow.',
     docsSlug: 'nest',
@@ -189,11 +219,18 @@ export const pluginDefinitions: PluginDefinition[] = [
       'TypeScript-first API',
     ],
     useCases: ['Webhook development', 'Team API previews', 'Staging callbacks'],
+    stackHeading: 'Built for your backend toolkit.',
+    stackDescription:
+      'Pair NestJS with the databases, APIs, observability, and billing tools your service already depends on.',
+    integrationHeading: 'One module. A reachable\nNestJS server.',
+    integrationDescription:
+      'Start your Nest application normally, then attach the tunnel to its lifecycle so local APIs and webhooks are available to the people testing them.',
     technologies: [
       { label: 'PostgreSQL', icon: SiPostgresql },
       { label: 'MongoDB', icon: SiMongodb },
       { label: 'Redis', icon: SiRedis },
       { label: 'GraphQL', icon: SiGraphql },
+      { label: 'Stripe', icon: SiStripe },
       { label: 'Swagger', icon: SiSwagger },
     ],
   },
@@ -202,7 +239,7 @@ export const pluginDefinitions: PluginDefinition[] = [
     name: 'Express',
     packageName: '@codedock/express',
     eyebrow: 'Express integration',
-    headline: 'Make an Express server reachable in one middleware.',
+    headline: 'Put your Express server\non a public URL.',
     description:
       'A lightweight lifecycle wrapper for Express servers, designed for APIs, webhooks, and services that already own their HTTP process.',
     docsSlug: 'express',
@@ -222,6 +259,12 @@ export const pluginDefinitions: PluginDefinition[] = [
       'Partner API demos',
       'Local service sharing',
     ],
+    stackHeading: 'Connects to the tools around Express.',
+    stackDescription:
+      'Expose an existing Express process without replacing your middleware, data, or production conventions.',
+    integrationHeading: 'Expose an Express server\nwithout rewiring it.',
+    integrationDescription:
+      'Keep your routes, middleware, and local process intact while Codedock provides the public URL and connection lifecycle around it.',
     technologies: [
       { label: 'MongoDB', icon: SiMongodb },
       { label: 'PostgreSQL', icon: SiPostgresql },
