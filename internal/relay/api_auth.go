@@ -14,6 +14,12 @@ type InternalAgentAuthenticator struct {
 	client  *http.Client
 }
 
+type InternalTunnelResolver struct {
+	baseURL string
+	secret  string
+	client  *http.Client
+}
+
 func NewInternalAgentAuthenticator(baseURL, secret string, client *http.Client) (*InternalAgentAuthenticator, error) {
 	if strings.TrimSpace(baseURL) == "" || strings.TrimSpace(secret) == "" {
 		return nil, fmt.Errorf("internal api url and secret are required")
@@ -55,4 +61,43 @@ func (a *InternalAgentAuthenticator) Authenticate(ctx context.Context, token str
 		return AgentIdentity{}, fmt.Errorf("agent authentication response is incomplete")
 	}
 	return AgentIdentity{AgentID: body.AgentID, OrganizationID: body.OrganizationID, MaxTunnels: body.Limits.MaxTunnels, MaxConnections: body.Limits.MaxConnections, BandwidthBytes: body.Limits.BandwidthBytes}, nil
+}
+
+func NewInternalTunnelResolver(baseURL, secret string, client *http.Client) (*InternalTunnelResolver, error) {
+	if strings.TrimSpace(baseURL) == "" || strings.TrimSpace(secret) == "" {
+		return nil, fmt.Errorf("internal api url and secret are required")
+	}
+	if client == nil {
+		client = http.DefaultClient
+	}
+	return &InternalTunnelResolver{baseURL: strings.TrimRight(baseURL, "/"), secret: secret, client: client}, nil
+}
+
+func (r *InternalTunnelResolver) Resolve(ctx context.Context, tunnelID string) (ManagedTunnelPolicy, error) {
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, r.baseURL+"/internal/tunnels/"+tunnelID+"/policy", nil)
+	if err != nil {
+		return ManagedTunnelPolicy{}, fmt.Errorf("create tunnel policy request: %w", err)
+	}
+	request.Header.Set("X-Internal-Secret", r.secret)
+	response, err := r.client.Do(request)
+	if err != nil {
+		return ManagedTunnelPolicy{}, fmt.Errorf("resolve tunnel policy with api: %w", err)
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		return ManagedTunnelPolicy{}, fmt.Errorf("tunnel policy returned status %d", response.StatusCode)
+	}
+	var body struct {
+		OrganizationID string `json:"organizationId"`
+		PublicHostname string `json:"publicHostname"`
+		PasswordHash   string `json:"passwordHash"`
+		Status         string `json:"status"`
+	}
+	if err := json.NewDecoder(response.Body).Decode(&body); err != nil {
+		return ManagedTunnelPolicy{}, fmt.Errorf("decode tunnel policy response: %w", err)
+	}
+	if body.OrganizationID == "" {
+		return ManagedTunnelPolicy{}, fmt.Errorf("tunnel policy response is incomplete")
+	}
+	return ManagedTunnelPolicy{OrganizationID: body.OrganizationID, PublicHostname: body.PublicHostname, PasswordHash: body.PasswordHash, Status: body.Status}, nil
 }

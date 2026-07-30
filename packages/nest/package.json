@@ -17,6 +17,7 @@
     "dist"
   ],
   "dependencies": {
+    "@codedock/protocol-ts": "0.1.0",
     "@codedock/sdk": "0.1.0"
   },
   "peerDependencies": {

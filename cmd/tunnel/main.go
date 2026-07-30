@@ -58,7 +58,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	relayHandler, err := relay.NewHandlerWithOptions(authenticator, sessions, requestRouter, tcpManager, udpManager, relay.HandlerOptions{MaxConnections: cfg.Tunnel.MaxConnections, MaxTunnels: cfg.Tunnel.MaxTunnels, MaxBandwidth: cfg.Tunnel.MaxBandwidth, Heartbeat: cfg.Tunnel.Heartbeat, ReadTimeout: cfg.Tunnel.ReadTimeout, DrainTimeout: cfg.Tunnel.DrainTimeout, MaxFrameBytes: cfg.Tunnel.MaxFrameBytes, Logger: slog.Default(), Metrics: metrics, UsageRecorder: usage, Affinity: affinity, RelayID: cfg.RelayID, AffinityTTL: cfg.Tunnel.AgentInactivity, AllowedOrigins: cfg.App.AllowedOrigins, PublicDomain: cfg.Tunnel.Domain})
+	managedTunnels, err := relay.NewInternalTunnelResolver(cfg.Service.InternalAPIURL, cfg.Service.InternalAPISecret, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	relayHandler, err := relay.NewHandlerWithOptions(authenticator, sessions, requestRouter, tcpManager, udpManager, relay.HandlerOptions{MaxConnections: cfg.Tunnel.MaxConnections, MaxTunnels: cfg.Tunnel.MaxTunnels, MaxBandwidth: cfg.Tunnel.MaxBandwidth, Heartbeat: cfg.Tunnel.Heartbeat, ReadTimeout: cfg.Tunnel.ReadTimeout, DrainTimeout: cfg.Tunnel.DrainTimeout, MaxFrameBytes: cfg.Tunnel.MaxFrameBytes, Logger: slog.Default(), Metrics: metrics, UsageRecorder: usage, Affinity: affinity, ManagedTunnels: managedTunnels, RelayID: cfg.RelayID, AffinityTTL: cfg.Tunnel.AgentInactivity, AllowedOrigins: cfg.App.AllowedOrigins, PublicDomain: cfg.Tunnel.Domain})
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -91,6 +92,13 @@ func openTunnel(cfg config.CLIConfig, cmdName string, args []string) {
 	}
 	delay := 2 * time.Second
 	tunnelID := *tunnelIDFlag
+	if tunnelID != "" {
+		resolvedSubdomain, err := resolveManagedTunnel(ctx, cfg, tunnelID, *subdomain)
+		if err != nil {
+			log.Fatal(err)
+		}
+		*subdomain = resolvedSubdomain
+	}
 	for ctx.Err() == nil {
 		connection, err := client.OpenRelay(ctx, client.RelayConfig{URL: cfg.RelayURL, Token: *agentToken}, protocol.OpenTunnel{TunnelID: tunnelID, LocalPort: *port, Protocol: *protocolName, Subdomain: *subdomain, Password: *password})
 		if err != nil {
@@ -138,6 +146,34 @@ func openTunnel(cfg config.CLIConfig, cmdName string, args []string) {
 			log.Printf("relay connection closed: %v; reconnecting", serveErr)
 		}
 	}
+}
+
+func resolveManagedTunnel(ctx context.Context, cfg config.CLIConfig, tunnelID, requestedSubdomain string) (string, error) {
+	if strings.TrimSpace(cfg.APIKey) == "" {
+		return "", fmt.Errorf("--tunnel-id requires CODEDOCK_TUNNEL_API_KEY to validate the managed tunnel")
+	}
+	apiClient, err := client.New(client.Config{BaseURL: cfg.APIURL, APIKey: cfg.APIKey})
+	if err != nil {
+		return "", fmt.Errorf("initialize tunnel API client: %w", err)
+	}
+	var tunnel TunnelDTO
+	if err := apiClient.Do(ctx, http.MethodGet, "/api/v1/tunnels/"+tunnelID, nil, &tunnel); err != nil {
+		return "", fmt.Errorf("validate managed tunnel: %w", err)
+	}
+	if tunnel.ID != tunnelID || tunnel.Status == "revoked" {
+		return "", fmt.Errorf("managed tunnel %q is not available", tunnelID)
+	}
+	if strings.TrimSpace(requestedSubdomain) != "" {
+		return requestedSubdomain, nil
+	}
+	hostname := strings.TrimSpace(tunnel.PublicHostname)
+	if hostname == "" {
+		return "", fmt.Errorf("managed tunnel %q has no public hostname", tunnelID)
+	}
+	if dot := strings.IndexByte(hostname, '.'); dot > 0 {
+		return hostname[:dot], nil
+	}
+	return hostname, nil
 }
 
 func printUsage() {

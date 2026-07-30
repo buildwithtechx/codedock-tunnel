@@ -109,6 +109,21 @@ func apiKeyScopeAllowed(credential services.APIKeyCredential, required models.Me
 	return false
 }
 
+func apiKeyScopeRequired(scope string) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		credential, ok := c.Locals("apiKeyCredential").(services.APIKeyCredential)
+		if !ok {
+			return c.Next()
+		}
+		for _, granted := range credential.Scopes {
+			if granted == "*" || granted == scope {
+				return c.Next()
+			}
+		}
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "API key scope is insufficient"})
+	}
+}
+
 func platformAdminRequired(auth *services.AuthService) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		session, ok := c.Locals("session").(models.Session)

@@ -20,13 +20,15 @@ function Home() {
           </p>
           <div className="mt-10 flex flex-wrap gap-3">
             <Link
-              to="/docs/installation"
+              to="/docs/$"
+              params={{ _splat: 'installation' }}
               className="rounded-lg bg-fd-primary px-5 py-3 font-medium text-fd-primary-foreground transition-opacity hover:opacity-90"
             >
               Get started
             </Link>
             <Link
-              to="/docs"
+              to="/docs/$"
+              params={{ _splat: '' }}
               className="rounded-lg border border-fd-border px-5 py-3 font-medium transition-colors hover:bg-fd-accent"
             >
               Read the docs

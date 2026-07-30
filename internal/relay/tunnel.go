@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"codedock.run/codedock-tunnel/internal/engine"
+	"codedock.run/codedock-tunnel/internal/models"
 	"codedock.run/codedock-tunnel/internal/security"
 	"codedock.run/codedock-tunnel/pkg/protocol"
 	"github.com/gofiber/contrib/websocket"
@@ -34,7 +35,7 @@ func (h *Handler) openTunnel(ctx context.Context, connection *websocket.Conn, id
 	if err := h.claimTunnel(ctx, tunnelID); err != nil {
 		return err
 	}
-	passwordHash, err := hashRelayPassword(open.Password)
+	passwordHash, err := h.resolveManagedPolicy(ctx, identity, &open)
 	if err != nil {
 		return err
 	}
@@ -64,6 +65,30 @@ func (h *Handler) openTunnel(ctx context.Context, connection *websocket.Conn, id
 		return err
 	}
 	return h.writeMessage(connection, websocket.TextMessage, payload)
+}
+
+func (h *Handler) resolveManagedPolicy(ctx context.Context, identity AgentIdentity, open *protocol.OpenTunnel) (string, error) {
+	if open.TunnelID != "" && h.managedTunnels != nil {
+		policy, err := h.managedTunnels.Resolve(ctx, open.TunnelID)
+		if err != nil {
+			return "", fmt.Errorf("resolve managed tunnel: %w", err)
+		}
+		if policy.OrganizationID != identity.OrganizationID || policy.Status == string(models.TunnelStatusRevoked) {
+			return "", fmt.Errorf("managed tunnel is not available")
+		}
+		if open.Subdomain == "" && open.CustomDomain == "" {
+			if suffix := "." + h.publicDomain; strings.HasSuffix(policy.PublicHostname, suffix) {
+				open.Subdomain = strings.TrimSuffix(policy.PublicHostname, suffix)
+			} else {
+				open.CustomDomain = policy.PublicHostname
+			}
+		}
+		if policy.PasswordHash != "" && !security.VerifyPassword(open.Password, policy.PasswordHash) {
+			return "", fmt.Errorf("invalid managed tunnel password")
+		}
+		return policy.PasswordHash, nil
+	}
+	return hashRelayPassword(open.Password)
 }
 
 func (h *Handler) checkTunnelCapacity(identity AgentIdentity, exists bool) error {

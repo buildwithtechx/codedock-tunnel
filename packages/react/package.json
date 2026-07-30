@@ -15,6 +15,7 @@
   "description": "React hooks and providers for Codedock Tunnel",
   "files": ["dist"],
   "dependencies": {
+    "@codedock/protocol-ts": "0.1.0",
     "@codedock/sdk": "0.1.0"
   },
   "peerDependencies": {

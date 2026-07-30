@@ -38,14 +38,19 @@ async function startTunnel(
   const localPort = resolveLocalPort(server, options);
   const connection = new RelayConnection({ ...options, localPort });
   assign(connection);
-  const tunnel = await connection.openTunnel({
-    local_port: localPort,
-    protocol: 'http',
-    subdomain: options.subdomain,
-    password: options.password,
-  });
-  server.config.logger.info(`Codedock Tunnel: ${tunnel.public_url}`);
-  server.httpServer?.once('close', () => connection.close());
+  try {
+    const tunnel = await connection.openTunnel({
+      local_port: localPort,
+      protocol: 'http',
+      subdomain: options.subdomain,
+      password: options.password,
+    });
+    server.config.logger.info(`Codedock Tunnel: ${tunnel.public_url}`);
+    server.httpServer?.once('close', () => connection.close());
+  } catch (error) {
+    connection.close();
+    throw error;
+  }
 }
 
 function resolveLocalPort(

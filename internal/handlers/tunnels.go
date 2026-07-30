@@ -63,6 +63,14 @@ func (h *TunnelHandler) Inspect(c *fiber.Ctx) error {
 	return c.JSON(tunnel)
 }
 
+func (h *TunnelHandler) Policy(c *fiber.Ctx) error {
+	tunnel, err := h.tunnels.Policy(c.UserContext(), strings.TrimSpace(c.Params("tunnelID")))
+	if err != nil {
+		return writeError(c, fiber.StatusNotFound, err)
+	}
+	return c.JSON(fiber.Map{"organizationId": tunnel.OrganizationID, "publicHostname": tunnel.PublicHostname, "passwordHash": tunnel.PasswordHash, "status": tunnel.Status})
+}
+
 func (h *TunnelHandler) SetStatus(c *fiber.Ctx) error {
 	var input UpdateTunnelStatusRequest
 	if err := c.BodyParser(&input); err != nil {

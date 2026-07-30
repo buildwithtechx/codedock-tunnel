@@ -257,7 +257,9 @@ export class RelayConnection extends RelayConnectionBase {
         {
           method: request.method,
           headers,
-          body: request.body ? decodeBase64(request.body) : undefined,
+          body: request.body
+            ? (decodeBase64(request.body).buffer as ArrayBuffer)
+            : undefined,
         },
       );
       const responseHeaders: Record<string, string[]> = {};

@@ -31,6 +31,17 @@ type RelayAffinity interface {
 	Release(context.Context, string, string) error
 }
 
+type ManagedTunnelResolver interface {
+	Resolve(context.Context, string) (ManagedTunnelPolicy, error)
+}
+
+type ManagedTunnelPolicy struct {
+	OrganizationID string
+	PublicHostname string
+	PasswordHash   string
+	Status         string
+}
+
 type connectionState struct {
 	negotiated    bool
 	authenticated bool
@@ -57,6 +68,7 @@ type Handler struct {
 	allowedOrigins []string
 	publicDomain   string
 	affinity       RelayAffinity
+	managedTunnels ManagedTunnelResolver
 	relayID        string
 	affinityTTL    time.Duration
 	mu             sync.Mutex
@@ -82,6 +94,7 @@ type HandlerOptions struct {
 	Affinity       RelayAffinity
 	RelayID        string
 	AffinityTTL    time.Duration
+	ManagedTunnels ManagedTunnelResolver
 }
 
 func NewHandler(authenticator AgentAuthenticator, sessions *engine.SessionRegistry, router *engine.RequestRouter, tcp *TCPManager, udp *UDPManager, maxSessions int) (*Handler, error) {
@@ -112,7 +125,7 @@ func NewHandlerWithOptions(authenticator AgentAuthenticator, sessions *engine.Se
 	}
 	tcp.SetMaxConnections(options.MaxConnections)
 	udp.SetMaxPackets(options.MaxConnections)
-	handler := &Handler{authenticator: authenticator, sessions: sessions, router: router, tcp: tcp, udp: udp, maxSessions: options.MaxConnections, maxTunnels: options.MaxTunnels, maxBandwidth: options.MaxBandwidth, heartbeat: options.Heartbeat, readTimeout: options.ReadTimeout, maxFrameBytes: options.MaxFrameBytes, drainTimeout: options.DrainTimeout, logger: options.Logger, metrics: options.Metrics, usage: options.UsageRecorder, affinity: options.Affinity, relayID: options.RelayID, affinityTTL: options.AffinityTTL, allowedOrigins: splitOrigins(options.AllowedOrigins), publicDomain: strings.TrimSuffix(strings.TrimSpace(options.PublicDomain), "."), bandwidth: engine.NewBandwidthLimiter(), orgLimits: make(map[string]int), orgConnections: make(map[string]int)}
+	handler := &Handler{authenticator: authenticator, sessions: sessions, router: router, tcp: tcp, udp: udp, maxSessions: options.MaxConnections, maxTunnels: options.MaxTunnels, maxBandwidth: options.MaxBandwidth, heartbeat: options.Heartbeat, readTimeout: options.ReadTimeout, maxFrameBytes: options.MaxFrameBytes, drainTimeout: options.DrainTimeout, logger: options.Logger, metrics: options.Metrics, usage: options.UsageRecorder, affinity: options.Affinity, managedTunnels: options.ManagedTunnels, relayID: options.RelayID, affinityTTL: options.AffinityTTL, allowedOrigins: splitOrigins(options.AllowedOrigins), publicDomain: strings.TrimSuffix(strings.TrimSpace(options.PublicDomain), "."), bandwidth: engine.NewBandwidthLimiter(), orgLimits: make(map[string]int), orgConnections: make(map[string]int)}
 	tcp.SetAdmissionHook(handler.allowConnection)
 	tcp.SetUsageHook(func(tunnelID, eventType string, connections int) {
 		organizationID, ok := router.OrganizationID(tunnelID)

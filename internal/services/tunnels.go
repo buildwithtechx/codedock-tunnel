@@ -44,6 +44,10 @@ func (s *TunnelService) Find(ctx context.Context, id string) (models.Tunnel, err
 	return tunnel, nil
 }
 
+func (s *TunnelService) Policy(ctx context.Context, id string) (models.Tunnel, error) {
+	return s.Find(ctx, id)
+}
+
 func (s *TunnelService) List(ctx context.Context, organizationID string) ([]models.Tunnel, error) {
 	if organizationID == "" {
 		return nil, fmt.Errorf("organization id is required")
