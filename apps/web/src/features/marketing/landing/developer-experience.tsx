@@ -1,7 +1,7 @@
-import { Link } from '@tanstack/react-router';
 import { Activity, Code2, Terminal } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { MarketingContainer } from '#/components/layout';
+import { PluginTabs } from './plugin-tabs';
 
 const traffic = [
   ['200 OK', 'GET', '/api/users', '12ms'],
@@ -59,22 +59,7 @@ export function DeveloperExperience() {
                 Use a thin adapter in Vite, Next.js, NestJS, Express, or React
                 while the same SDK handles the tunnel lifecycle.
               </p>
-              <div className="mt-8 grid grid-cols-2 gap-2 font-mono text-xs sm:grid-cols-4">
-                {[
-                  '@codedock/react',
-                  '@codedock/vite-plugin',
-                  '@codedock/next',
-                  '@codedock/express',
-                ].map((name) => (
-                  <Link
-                    key={name}
-                    to="/plugins"
-                    className="rounded-lg border border-white/10 bg-black/25 p-3 text-white/55 transition-colors hover:border-cyan-300/35 hover:text-white"
-                  >
-                    {name}
-                  </Link>
-                ))}
-              </div>
+              <PluginTabs />
             </article>
           </div>
           <article className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] p-8 transition-colors hover:border-white/10">
