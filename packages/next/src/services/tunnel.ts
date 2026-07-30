@@ -20,7 +20,7 @@ export function createNextTunnel(options: NextTunnelOptions): NextTunnel {
     };
   });
   connection.on('disconnected', () => {
-    if (current.status === 'active') current = { status: 'closed' };
+    return;
   });
   connection.on('error', (error) => {
     if (current.status !== 'closed') current = { status: 'error', error };
@@ -53,7 +53,9 @@ export function createNextTunnel(options: NextTunnelOptions): NextTunnel {
           return current;
         })
         .catch((value) => {
-          current = { status: 'error', error: normalizeError(value) };
+          if (startGeneration === generation) {
+            current = { status: 'error', error: normalizeError(value) };
+          }
           throw value;
         })
         .finally(() => {

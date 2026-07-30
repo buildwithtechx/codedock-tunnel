@@ -36,6 +36,7 @@ type CheckConfig struct {
 type CLIConfig struct {
 	APIURL     string `env:"CODEDOCK_TUNNEL_API_URL" envDefault:"http://localhost:8080"`
 	RelayURL   string `env:"CODEDOCK_TUNNEL_RELAY_URL" envDefault:"ws://localhost:8081"`
+	PublicDomain string `env:"CODEDOCK_TUNNEL_DOMAIN" envDefault:"tunnel.codedock-tunnel.dev"`
 	APIKey     string `env:"CODEDOCK_TUNNEL_API_KEY"`
 	AgentToken string `env:"CODEDOCK_TUNNEL_AGENT_TOKEN"`
 	Password   string `env:"CODEDOCK_TUNNEL_PASSWORD"`

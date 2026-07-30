@@ -18,15 +18,12 @@ impl TunnelState {
         let Some(mut child) = child_slot.take() else {
             return Ok(None);
         };
-        if child
-            .try_wait()
-            .map_err(|error| error.to_string())?
-            .is_none()
-        {
-            child
-                .kill()
-                .map_err(|error| format!("stop tunnel CLI: {error}"))?;
+        if let Some(status) = child.try_wait().map_err(|error| error.to_string())? {
+            return Ok(status.code());
         }
+        child
+            .kill()
+            .map_err(|error| format!("stop tunnel CLI: {error}"))?;
         let status = child
             .wait()
             .map_err(|error| format!("wait for tunnel CLI: {error}"))?;

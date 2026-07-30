@@ -1,16 +1,23 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"codedock.run/codedock-tunnel/internal/models"
 	"codedock.run/codedock-tunnel/internal/services"
 	"codedock.run/codedock-tunnel/internal/validation"
+	"codedock.run/codedock-tunnel/internal/security"
 	"github.com/gofiber/fiber/v2"
 )
 
 type TunnelHandler struct{ tunnels *services.TunnelService }
+
+func (h *TunnelHandler) OrganizationID(ctx context.Context, id string) (string, error) {
+	tunnel, err := h.tunnels.Find(ctx, id)
+	return tunnel.OrganizationID, err
+}
 
 type CreateTunnelRequest struct {
 	Name           string                `json:"name" validate:"required,max=120"`
@@ -68,7 +75,19 @@ func (h *TunnelHandler) Policy(c *fiber.Ctx) error {
 	if err != nil {
 		return writeError(c, fiber.StatusNotFound, err)
 	}
-	return c.JSON(fiber.Map{"organizationId": tunnel.OrganizationID, "publicHostname": tunnel.PublicHostname, "passwordHash": tunnel.PasswordHash, "status": tunnel.Status})
+	return c.JSON(fiber.Map{"organizationId": tunnel.OrganizationID, "publicHostname": tunnel.PublicHostname, "status": tunnel.Status, "passwordProtected": tunnel.PasswordHash != ""})
+}
+
+func (h *TunnelHandler) VerifyPassword(c *fiber.Ctx) error {
+	var input struct { Password string `json:"password"` }
+	if err := c.BodyParser(&input); err != nil {
+		return writeError(c, fiber.StatusBadRequest, fmt.Errorf("decode tunnel password request: %w", err))
+	}
+	tunnel, err := h.tunnels.Policy(c.UserContext(), strings.TrimSpace(c.Params("tunnelID")))
+	if err != nil {
+		return writeError(c, fiber.StatusNotFound, err)
+	}
+	return c.JSON(fiber.Map{"valid": tunnel.PasswordHash != "" && security.VerifyPassword(input.Password, tunnel.PasswordHash)})
 }
 
 func (h *TunnelHandler) SetStatus(c *fiber.Ctx) error {

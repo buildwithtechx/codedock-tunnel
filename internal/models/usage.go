@@ -26,6 +26,6 @@ type UsageEvent struct {
 	StatusCode     int       `json:"statusCode,omitempty" gorm:"default:0"`
 	DurationMillis int64     `json:"durationMillis,omitempty" gorm:"default:0"`
 	ResponseBytes  int64     `json:"responseBytes,omitempty" gorm:"default:0"`
-	ClientIP       string    `json:"clientIp,omitempty" gorm:"type:inet"`
+	ClientIP       *string   `json:"clientIp,omitempty" gorm:"type:inet"`
 	OccurredAt     time.Time `json:"occurredAt" gorm:"not null;index"`
 }

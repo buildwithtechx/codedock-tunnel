@@ -48,7 +48,7 @@ func (s *InvitationService) Invite(ctx context.Context, inviterID, organizationI
 		return models.OrganizationInvitation{}, fmt.Errorf("invitation delivery is unavailable")
 	}
 	if err := s.organizations.Authorize(ctx, organizationID, inviterID, models.MemberRoleAdmin); err != nil {
-		return models.OrganizationInvitation{}, utils.NewAuthorizationError(err)
+		return models.OrganizationInvitation{}, err
 	}
 	organization, err := s.organizations.organizations.FindByID(ctx, organizationID)
 	if err != nil {
@@ -76,7 +76,9 @@ func (s *InvitationService) Invite(ctx context.Context, inviterID, organizationI
 	}
 	link := s.dashboardURL + "/invitations/accept?token=" + url.QueryEscape(rawToken)
 	if err := s.mailer.SendOrganizationInvite(ctx, email, inviter.Name, organization.Name, string(role), link); err != nil {
-		if deleteErr := s.invitations.DeleteInvitation(ctx, invitation.ID); deleteErr != nil {
+		cleanupCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if deleteErr := s.invitations.DeleteInvitation(cleanupCtx, invitation.ID); deleteErr != nil {
 			return models.OrganizationInvitation{}, fmt.Errorf("send organization invitation: %w; clean up invitation: %v", err, deleteErr)
 		}
 		return models.OrganizationInvitation{}, fmt.Errorf("send organization invitation: %w", err)

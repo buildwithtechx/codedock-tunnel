@@ -22,9 +22,7 @@ export function createExpressTunnel(
     };
   });
   connection.on('disconnected', () => {
-    if (current.status === 'active') {
-      current = { status: 'closed' };
-    }
+    return;
   });
   connection.on('error', (error) => {
     if (current.status !== 'closed') {
@@ -65,7 +63,9 @@ export function createExpressTunnel(
           return current;
         })
         .catch((value) => {
+        if (startGeneration === generation) {
           current = { status: 'error', error: normalizeError(value) };
+        }
           throw value;
         })
         .finally(() => {

@@ -33,6 +33,17 @@ func (s *AuthService) IsPlatformAdmin(ctx context.Context, userID string) (bool,
 	return s.admins.IsPlatformAdmin(ctx, userID)
 }
 
+func (s *AuthService) EnsureUserActive(ctx context.Context, userID string) error {
+	user, err := s.users.FindByID(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("find authenticated user: %w", err)
+	}
+	if user.Status == models.UserStatusDisabled || user.DeletedAt != nil {
+		return fmt.Errorf("user account is disabled")
+	}
+	return nil
+}
+
 func NewAuthService(users repositories.UserRepository, identities repositories.OAuthIdentityRepository, sessions repositories.SessionRepository, admins platformAdminAuthorizer, sessionTTL time.Duration) (*AuthService, error) {
 	if users == nil || identities == nil || sessions == nil || admins == nil {
 		return nil, fmt.Errorf("auth repositories are required")

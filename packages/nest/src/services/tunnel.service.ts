@@ -23,7 +23,7 @@ export class CodedockTunnelService implements OnModuleInit, OnModuleDestroy {
       this.tunnel = tunnel;
     });
     this.connection.on('disconnected', () => {
-      this.tunnel = undefined;
+      return;
     });
   }
 

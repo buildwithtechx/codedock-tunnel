@@ -83,8 +83,20 @@ func (h *Handler) resolveManagedPolicy(ctx context.Context, identity AgentIdenti
 				open.CustomDomain = policy.PublicHostname
 			}
 		}
-		if policy.PasswordHash != "" && !security.VerifyPassword(open.Password, policy.PasswordHash) {
-			return "", fmt.Errorf("invalid managed tunnel password")
+		if policy.PasswordProtected {
+			if verifier, ok := h.managedTunnels.(ManagedTunnelPasswordVerifier); ok {
+				valid, err := verifier.VerifyPassword(ctx, open.TunnelID, open.Password)
+				if err != nil {
+					return "", fmt.Errorf("verify managed tunnel password: %w", err)
+				}
+				if !valid {
+					return "", fmt.Errorf("invalid managed tunnel password")
+				}
+				return hashRelayPassword(open.Password)
+			}
+			if policy.PasswordHash == "" || !security.VerifyPassword(open.Password, policy.PasswordHash) {
+				return "", fmt.Errorf("invalid managed tunnel password")
+			}
 		}
 		return policy.PasswordHash, nil
 	}

@@ -5,6 +5,7 @@ mod state;
 
 use commands::{tunnel_start, tunnel_status, tunnel_stop, tunnel_version};
 use state::TunnelState;
+use tauri::Manager;
 
 fn main() {
     tauri::Builder::default()
@@ -20,7 +21,9 @@ fn main() {
         .run(|app, event| {
             if let tauri::RunEvent::Exit = event {
                 if let Ok(mut child) = app.state::<TunnelState>().child.lock() {
-                    let _ = TunnelState::stop_child(&mut child);
+                    if let Err(error) = TunnelState::stop_child(&mut child) {
+                        eprintln!("failed to stop tunnel CLI during shutdown: {error}");
+                    }
                 }
             }
         });

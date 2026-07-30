@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -74,7 +76,7 @@ func NewInternalTunnelResolver(baseURL, secret string, client *http.Client) (*In
 }
 
 func (r *InternalTunnelResolver) Resolve(ctx context.Context, tunnelID string) (ManagedTunnelPolicy, error) {
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, r.baseURL+"/internal/tunnels/"+tunnelID+"/policy", nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, r.baseURL+"/internal/tunnels/"+url.PathEscape(tunnelID)+"/policy", nil)
 	if err != nil {
 		return ManagedTunnelPolicy{}, fmt.Errorf("create tunnel policy request: %w", err)
 	}
@@ -90,7 +92,7 @@ func (r *InternalTunnelResolver) Resolve(ctx context.Context, tunnelID string) (
 	var body struct {
 		OrganizationID string `json:"organizationId"`
 		PublicHostname string `json:"publicHostname"`
-		PasswordHash   string `json:"passwordHash"`
+		PasswordProtected bool `json:"passwordProtected"`
 		Status         string `json:"status"`
 	}
 	if err := json.NewDecoder(response.Body).Decode(&body); err != nil {
@@ -99,5 +101,20 @@ func (r *InternalTunnelResolver) Resolve(ctx context.Context, tunnelID string) (
 	if body.OrganizationID == "" {
 		return ManagedTunnelPolicy{}, fmt.Errorf("tunnel policy response is incomplete")
 	}
-	return ManagedTunnelPolicy{OrganizationID: body.OrganizationID, PublicHostname: body.PublicHostname, PasswordHash: body.PasswordHash, Status: body.Status}, nil
+	return ManagedTunnelPolicy{OrganizationID: body.OrganizationID, PublicHostname: body.PublicHostname, PasswordProtected: body.PasswordProtected, Status: body.Status}, nil
+}
+
+func (r *InternalTunnelResolver) VerifyPassword(ctx context.Context, tunnelID, password string) (bool, error) {
+	payload := strings.NewReader(`{"password":` + strconv.Quote(password) + `}`)
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, r.baseURL+"/internal/tunnels/"+url.PathEscape(tunnelID)+"/password", payload)
+	if err != nil { return false, fmt.Errorf("create tunnel password request: %w", err) }
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("X-Internal-Secret", r.secret)
+	response, err := r.client.Do(request)
+	if err != nil { return false, fmt.Errorf("verify tunnel password with api: %w", err) }
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK { return false, fmt.Errorf("tunnel password verification returned status %d", response.StatusCode) }
+	var body struct { Valid bool `json:"valid"` }
+	if err := json.NewDecoder(response.Body).Decode(&body); err != nil { return false, fmt.Errorf("decode tunnel password response: %w", err) }
+	return body.Valid, nil
 }

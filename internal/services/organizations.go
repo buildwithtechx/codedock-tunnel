@@ -8,6 +8,7 @@ import (
 
 	"codedock.run/codedock-tunnel/internal/models"
 	"codedock.run/codedock-tunnel/internal/repositories"
+	"codedock.run/codedock-tunnel/pkg/utils"
 )
 
 var slugPattern = regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$`)
@@ -50,7 +51,20 @@ func (s *OrganizationService) AddMember(ctx context.Context, organizationID, use
 	if err := s.checkMemberCapacity(ctx, organizationID); err != nil {
 		return err
 	}
-	if err := s.organizations.AddMember(ctx, &models.OrganizationMember{OrganizationID: organizationID, UserID: userID, Role: role}); err != nil {
+	member := &models.OrganizationMember{OrganizationID: organizationID, UserID: userID, Role: role}
+	if limited, ok := s.organizations.(interface {
+		AddMemberWithLimit(context.Context, *models.OrganizationMember, int64) error
+	}); ok {
+		limit, err := s.memberLimit(ctx, organizationID)
+		if err != nil {
+			return err
+		}
+		if err := limited.AddMemberWithLimit(ctx, member, limit); err != nil {
+			return fmt.Errorf("add organization member: %w", err)
+		}
+		return nil
+	}
+	if err := s.organizations.AddMember(ctx, member); err != nil {
 		return fmt.Errorf("add organization member: %w", err)
 	}
 	return nil
@@ -90,7 +104,7 @@ func (s *OrganizationService) Authorize(ctx context.Context, organizationID, use
 		return fmt.Errorf("find organization membership: %w", err)
 	}
 	if memberRoleRank(member.Role) < memberRoleRank(required) {
-		return fmt.Errorf("insufficient organization role")
+		return utils.NewAuthorizationError(fmt.Errorf("insufficient organization role"))
 	}
 	return nil
 }

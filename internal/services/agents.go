@@ -28,6 +28,14 @@ func (s *AgentService) SetBilling(billing *BillingService) {
 	s.billing = billing
 }
 
+func (s *AgentService) Find(ctx context.Context, id string) (models.Agent, error) {
+	agent, err := s.agents.FindByID(ctx, id)
+	if err != nil {
+		return models.Agent{}, fmt.Errorf("find agent: %w", err)
+	}
+	return agent, nil
+}
+
 func (s *AgentService) Register(ctx context.Context, organizationID, name string) (string, models.Agent, error) {
 	if organizationID == "" || strings.TrimSpace(name) == "" {
 		return "", models.Agent{}, fmt.Errorf("organization and agent name are required")

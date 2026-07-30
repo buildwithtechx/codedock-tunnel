@@ -6,6 +6,7 @@ import (
 
 	"codedock.run/codedock-tunnel/internal/models"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type OrganizationRepository interface {
@@ -77,6 +78,28 @@ func (r *GormOrganizationRepository) AddMember(ctx context.Context, member *mode
 		return fmt.Errorf("organization member is required")
 	}
 	return wrap(r.db.WithContext(ctx).Create(member).Error, "add organization member")
+}
+
+func (r *GormOrganizationRepository) AddMemberWithLimit(ctx context.Context, member *models.OrganizationMember, limit int64) error {
+	if member == nil {
+		return fmt.Errorf("organization member is required")
+	}
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var organization models.Organization
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("id = ?", member.OrganizationID).First(&organization).Error; err != nil {
+			return mapError(err)
+		}
+		if limit > 0 {
+			var count int64
+			if err := tx.Model(&models.OrganizationMember{}).Where("organization_id = ?", member.OrganizationID).Count(&count).Error; err != nil {
+				return fmt.Errorf("count organization members: %w", err)
+			}
+			if count >= limit {
+				return fmt.Errorf("organization member limit reached")
+			}
+		}
+		return tx.Create(member).Error
+	})
 }
 
 func (r *GormOrganizationRepository) FindMember(ctx context.Context, organizationID, userID string) (models.OrganizationMember, error) {

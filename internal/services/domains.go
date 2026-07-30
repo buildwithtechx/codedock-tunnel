@@ -38,6 +38,14 @@ func (s *DomainService) SetDNSTTL(ttl int) {
 }
 func (s *DomainService) SetDNSProvider(provider DNSProvider) { s.dns = provider }
 
+func (s *DomainService) Find(ctx context.Context, id string) (models.Domain, error) {
+	domain, err := s.domains.FindByID(ctx, id)
+	if err != nil {
+		return models.Domain{}, fmt.Errorf("find domain: %w", err)
+	}
+	return domain, nil
+}
+
 func NewDomainService(domains repositories.DomainRepository) (*DomainService, error) {
 	if domains == nil {
 		return nil, fmt.Errorf("domain repository is required")

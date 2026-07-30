@@ -17,11 +17,26 @@ export function codedockTunnel(options: CodedockTunnelPluginOptions): Plugin {
           connection = nextConnection;
         });
       if (server.httpServer?.listening) {
-        return start();
+        void start().catch((error: unknown) => {
+          server.config.logger.error(
+            `Codedock Tunnel failed: ${String(error)}`,
+          );
+        });
+      } else if (server.httpServer) {
+        server.httpServer.once('listening', () => {
+          void start().catch((error: unknown) => {
+            server.config.logger.error(
+              `Codedock Tunnel failed: ${String(error)}`,
+            );
+          });
+        });
+      } else {
+        void start().catch((error: unknown) => {
+          server.config.logger.error(
+            `Codedock Tunnel failed: ${String(error)}`,
+          );
+        });
       }
-      server.httpServer?.once('listening', () => {
-        void start();
-      });
     },
     closeBundle() {
       connection?.close();
