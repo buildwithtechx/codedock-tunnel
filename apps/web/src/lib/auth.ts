@@ -1,5 +1,5 @@
-import type { AuthSession } from '../interfaces/auth';
-import { apiRequest } from './api-client';
+import type { AuthSession } from '#/interfaces/auth';
+import { apiRequest } from '#/lib/api-client';
 
 export function getSession() {
   return apiRequest<AuthSession>('/api/v1/auth/session');

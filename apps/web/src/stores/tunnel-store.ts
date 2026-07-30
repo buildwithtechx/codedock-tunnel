@@ -1,12 +1,33 @@
 import { create } from 'zustand';
-import type { Tunnel } from '../interfaces/tunnel';
+import type { Tunnel } from '#/interfaces/tunnel';
 
-type TunnelStore = {
+export type TunnelState = {
   tunnels: Tunnel[];
+  selectedTunnel: Tunnel | null;
   setTunnels: (tunnels: Tunnel[]) => void;
+  setSelectedTunnel: (tunnel: Tunnel | null) => void;
+  upsertTunnel: (tunnel: Tunnel) => void;
+  removeTunnel: (tunnelId: string) => void;
+  clear: () => void;
 };
 
-export const useTunnelStore = create<TunnelStore>((set) => ({
+export const useTunnelStore = create<TunnelState>((set) => ({
   tunnels: [],
+  selectedTunnel: null,
   setTunnels: (tunnels) => set({ tunnels }),
+  setSelectedTunnel: (selectedTunnel) => set({ selectedTunnel }),
+  upsertTunnel: (tunnel) =>
+    set((state) => ({
+      tunnels: [
+        ...state.tunnels.filter((item) => item.id !== tunnel.id),
+        tunnel,
+      ],
+    })),
+  removeTunnel: (tunnelId) =>
+    set((state) => ({
+      tunnels: state.tunnels.filter((tunnel) => tunnel.id !== tunnelId),
+      selectedTunnel:
+        state.selectedTunnel?.id === tunnelId ? null : state.selectedTunnel,
+    })),
+  clear: () => set({ tunnels: [], selectedTunnel: null }),
 }));

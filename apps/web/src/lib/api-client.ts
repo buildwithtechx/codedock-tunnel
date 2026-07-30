@@ -1,23 +1,112 @@
-import { env } from '../env';
-import type { ApiError } from '../interfaces/api';
+import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios';
+import { env } from '#/env';
+import type { ApiErrorResponse } from '#/interfaces/api';
 
-const apiBaseURL = env.VITE_CODEDOCK_API_BASE_URL ?? 'http://localhost:8080';
+export class ApiError extends Error {
+  readonly status: number;
+  readonly data: unknown;
 
-export async function apiRequest<T>(
-  path: string,
-  init?: RequestInit,
-): Promise<T> {
-  const response = await fetch(`${apiBaseURL}${path}`, {
-    ...init,
-    credentials: 'include',
-    headers: { Accept: 'application/json', ...init?.headers },
-  });
-  if (!response.ok) {
-    const body = (await response.json().catch(() => null)) as ApiError | null;
-    throw new Error(
-      body?.error ?? `API request failed with status ${response.status}`,
+  constructor(status: number, message: string, data?: unknown) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.data = data;
+  }
+}
+
+export function getApiBaseURL(): string {
+  if (typeof window !== 'undefined') {
+    const configured = window.localStorage.getItem('codedock_tunnel_api_url');
+    if (configured) return configured.replace(/\/+$/, '');
+  }
+  return (env.VITE_CODEDOCK_API_BASE_URL ?? 'http://localhost:8080').replace(
+    /\/+$/,
+    '',
+  );
+}
+
+export function setApiBaseURL(url: string): void {
+  const normalized = url.trim().replace(/\/+$/, '');
+  if (typeof window !== 'undefined') {
+    if (normalized)
+      window.localStorage.setItem('codedock_tunnel_api_url', normalized);
+    else window.localStorage.removeItem('codedock_tunnel_api_url');
+  }
+  axiosClient.defaults.baseURL = normalized || getApiBaseURL();
+}
+
+function normalizeError(error: unknown): ApiError {
+  if (error instanceof ApiError) return error;
+  if (axios.isAxiosError(error)) {
+    const data = error.response?.data as ApiErrorResponse | undefined;
+    return new ApiError(
+      error.response?.status ?? 0,
+      data?.error ?? data?.message ?? error.message,
+      data,
     );
   }
-  if (response.status === 204) return undefined as T;
-  return response.json() as Promise<T>;
+  return new ApiError(
+    0,
+    error instanceof Error ? error.message : 'Unexpected API error',
+  );
+}
+
+export function createApiClient(): AxiosInstance {
+  const client = axios.create({
+    baseURL: getApiBaseURL(),
+    withCredentials: true,
+    headers: { Accept: 'application/json' },
+  });
+  client.interceptors.response.use(
+    (response) => response,
+    (error: unknown) => Promise.reject(normalizeError(error)),
+  );
+  return client;
+}
+
+export const axiosClient = createApiClient();
+
+export const apiClient = {
+  request<T>(config: AxiosRequestConfig) {
+    return axiosClient.request<T>(config).then((response) => response.data);
+  },
+  get<T>(path: string, config?: AxiosRequestConfig) {
+    return apiClient.request<T>({ ...config, method: 'GET', url: path });
+  },
+  post<T>(path: string, data?: unknown, config?: AxiosRequestConfig) {
+    return apiClient.request<T>({ ...config, method: 'POST', url: path, data });
+  },
+  put<T>(path: string, data?: unknown, config?: AxiosRequestConfig) {
+    return apiClient.request<T>({ ...config, method: 'PUT', url: path, data });
+  },
+  patch<T>(path: string, data?: unknown, config?: AxiosRequestConfig) {
+    return apiClient.request<T>({
+      ...config,
+      method: 'PATCH',
+      url: path,
+      data,
+    });
+  },
+  delete<T>(path: string, config?: AxiosRequestConfig) {
+    return apiClient.request<T>({ ...config, method: 'DELETE', url: path });
+  },
+};
+
+export function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
+  const data = parseRequestBody(init?.body);
+  return apiClient.request<T>({
+    method: init?.method ?? 'GET',
+    url: path,
+    data,
+    headers: init?.headers as AxiosRequestConfig['headers'],
+  });
+}
+
+function parseRequestBody(body: BodyInit | null | undefined): unknown {
+  if (typeof body !== 'string') return body;
+  try {
+    return JSON.parse(body);
+  } catch {
+    return body;
+  }
 }
