@@ -1,15 +1,15 @@
-import type { MessageType, ProtocolEnvelope } from '@codedock/protocol-ts';
-import {
-  absoluteMaxFrameSize,
-  encodeMessage,
-  protocolVersion,
-} from '@codedock/protocol-ts';
 import type {
   PendingResponse,
   RelayConnectionOptions,
   RelayEvents,
   WebSocketLike,
 } from '../interfaces/relay';
+import type { MessageType, ProtocolEnvelope } from '../protocol';
+import {
+  absoluteMaxFrameSize,
+  encodeMessage,
+  protocolVersion,
+} from '../protocol';
 import { TunnelProtocolError, TunnelSDKError } from '../utils/errors';
 
 const websocketOpenState = 1;
@@ -22,6 +22,7 @@ export class RelayConnectionBase {
       | 'reconnect'
       | 'reconnectDelayMs'
       | 'maxReconnectAttempts'
+      | 'localRequestTimeoutMs'
     >
   > &
     RelayConnectionOptions;
@@ -48,6 +49,7 @@ export class RelayConnectionBase {
       reconnect: options.reconnect ?? true,
       reconnectDelayMs: options.reconnectDelayMs ?? 2_000,
       maxReconnectAttempts: options.maxReconnectAttempts ?? 10,
+      localRequestTimeoutMs: options.localRequestTimeoutMs ?? 30_000,
     };
     if (!this.options.relayUrl.trim() || !this.options.agentToken.trim()) {
       throw new TunnelSDKError('relay URL and agent token are required');

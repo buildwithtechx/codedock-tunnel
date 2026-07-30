@@ -19,7 +19,7 @@ func NewEngineUsageRecorder(usage *UsageService) (*EngineUsageRecorder, error) {
 }
 
 func (r *EngineUsageRecorder) Record(ctx context.Context, measurement engine.UsageMeasurement) error {
-	return r.usage.Record(ctx, &models.UsageEvent{OrganizationID: measurement.OrganizationID, TunnelID: stringPointer(measurement.TunnelID), EventType: measurement.EventType, Bytes: measurement.Bytes, Connections: measurement.Connections})
+	return r.usage.Record(ctx, &models.UsageEvent{OrganizationID: measurement.OrganizationID, TunnelID: stringPointer(measurement.TunnelID), EventType: measurement.EventType, Bytes: measurement.Bytes, Connections: measurement.Connections, Method: measurement.Method, Path: measurement.Path, StatusCode: measurement.StatusCode, DurationMillis: measurement.DurationMillis, ResponseBytes: measurement.ResponseBytes, ClientIP: measurement.ClientIP})
 }
 
 func stringPointer(value string) *string {

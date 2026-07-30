@@ -64,12 +64,12 @@ func RegisterRoutes(app *fiber.App, handlers Handlers, options RouterOptions) er
 	protected.Get("/organizations/:organizationID/billing/portal", organizationRoleRequired(handlers.organizationService, models.MemberRoleOwner), handlers.Billing.Portal)
 	protected.Post("/organizations/:organizationID/billing/cancel", organizationRoleRequired(handlers.organizationService, models.MemberRoleOwner), handlers.Billing.Cancel)
 	protected.Post("/organizations/:organizationID/billing/resume", organizationRoleRequired(handlers.organizationService, models.MemberRoleOwner), handlers.Billing.Resume)
-	protected.Patch("/tunnels/:tunnelID/status", apiKeyScopeRequired("tunnels:write"), handlers.Tunnels.SetStatus)
-	protected.Get("/tunnels/:tunnelID", apiKeyScopeRequired("tunnels:read"), handlers.Tunnels.Inspect)
-	protected.Delete("/tunnels/:tunnelID", apiKeyScopeRequired("tunnels:write"), handlers.Tunnels.Revoke)
-	protected.Post("/domains/:domainID/verify", apiKeyScopeRequired("domains:write"), handlers.Domains.Verify)
-	protected.Post("/agents/:agentID/heartbeat", apiKeyScopeRequired("agents:write"), handlers.Agents.Heartbeat)
-	protected.Delete("/agents/:agentID", apiKeyScopeRequired("agents:write"), handlers.Agents.Revoke)
+	protected.Patch("/tunnels/:tunnelID/status", apiKeyResourceScopeRequired(handlers.organizationService, "tunnels:write", "tunnelID", handlers.Tunnels.OrganizationID), handlers.Tunnels.SetStatus)
+	protected.Get("/tunnels/:tunnelID", apiKeyResourceScopeRequired(handlers.organizationService, "tunnels:read", "tunnelID", handlers.Tunnels.OrganizationID), handlers.Tunnels.Inspect)
+	protected.Delete("/tunnels/:tunnelID", apiKeyResourceScopeRequired(handlers.organizationService, "tunnels:write", "tunnelID", handlers.Tunnels.OrganizationID), handlers.Tunnels.Revoke)
+	protected.Post("/domains/:domainID/verify", apiKeyResourceScopeRequired(handlers.organizationService, "domains:write", "domainID", handlers.Domains.OrganizationID), handlers.Domains.Verify)
+	protected.Post("/agents/:agentID/heartbeat", apiKeyResourceScopeRequired(handlers.organizationService, "agents:write", "agentID", handlers.Agents.OrganizationID), handlers.Agents.Heartbeat)
+	protected.Delete("/agents/:agentID", apiKeyResourceScopeRequired(handlers.organizationService, "agents:write", "agentID", handlers.Agents.OrganizationID), handlers.Agents.Revoke)
 
 	admin := protected.Group("/admin", platformAdminRequired(handlers.authService))
 	admin.Get("/overview", handlers.Admin.Overview)
@@ -86,6 +86,7 @@ func RegisterRoutes(app *fiber.App, handlers Handlers, options RouterOptions) er
 		app.Get("/internal/health", internalSecretRequired(options.InternalAPISecret), handlers.Health.Readiness)
 		app.Get("/internal/agents/authenticate", internalSecretRequired(options.InternalAPISecret), handlers.Agents.Authenticate)
 		app.Get("/internal/tunnels/:tunnelID/policy", internalSecretRequired(options.InternalAPISecret), handlers.Tunnels.Policy)
+		app.Post("/internal/tunnels/:tunnelID/password", internalSecretRequired(options.InternalAPISecret), requestRateLimitBy(10, time.Minute, func(c *fiber.Ctx) string { return c.IP() + ":" + c.Params("tunnelID") }), handlers.Tunnels.VerifyPassword)
 		app.Post("/internal/usage", internalSecretRequired(options.InternalAPISecret), handlers.Usage.Ingest)
 	}
 	return nil

@@ -17,11 +17,32 @@ export function codedockTunnel(options: CodedockTunnelPluginOptions): Plugin {
           connection = nextConnection;
         });
       if (server.httpServer?.listening) {
-        return start();
+        void start().catch((error: unknown) => {
+          server.config.logger.error(
+            `Codedock Tunnel failed: ${String(error)}`,
+          );
+        });
+      } else if (server.httpServer) {
+        server.httpServer.once('listening', () => {
+          void start().catch((error: unknown) => {
+            server.config.logger.error(
+              `Codedock Tunnel failed: ${String(error)}`,
+            );
+          });
+        });
+      } else {
+        if (options.localPort) {
+          void start().catch((error: unknown) => {
+            server.config.logger.error(
+              `Codedock Tunnel failed: ${String(error)}`,
+            );
+          });
+        } else {
+          server.config.logger.warn(
+            'Codedock Tunnel requires localPort when Vite has no HTTP server',
+          );
+        }
       }
-      server.httpServer?.once('listening', () => {
-        void start();
-      });
     },
     closeBundle() {
       connection?.close();

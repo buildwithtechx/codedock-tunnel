@@ -6,7 +6,7 @@ import type {
   OpenTunnelAck,
   ProtocolEnvelope,
   VersionNegotiateAck,
-} from '@codedock/protocol-ts';
+} from '../protocol';
 
 export type WebSocketLike = {
   readonly readyState: number;
@@ -43,12 +43,14 @@ export type RelayConnectionOptions = {
   reconnect?: boolean;
   reconnectDelayMs?: number;
   maxReconnectAttempts?: number;
+  localRequestTimeoutMs?: number;
 };
 
 export type RelayEvents = {
   authenticated: AuthResponse;
   connected: VersionNegotiateAck;
   disconnected: CloseEvent | ErrorEvent | undefined;
+  reconnect_exhausted: undefined;
   error: Error;
   message: ProtocolEnvelope;
   tunnel_opened: OpenTunnelAck;

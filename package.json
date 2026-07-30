@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Standalone tunneling platform with Go relays, a TypeScript dashboard, and a Tauri desktop client",
-  "license": "Apache-2.0",
+  "license": "AGPL-3.0-or-later",
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -20,11 +20,13 @@
     "build:cron": "go build -ldflags='-s -w' -o bin/tunnel-cron ./cmd/cron",
     "build:check": "go build -ldflags='-s -w' -o bin/tunnel-check ./cmd/check",
     "build:cli": "go build -ldflags='-s -w' -o bin/codedock-tunnel ./cmd/cli",
+    "build:packages": "npm run build --workspace packages/sdk && npm run build --workspace packages/react && npm run build --workspace packages/vite-plugin && npm run build --workspace packages/next && npm run build --workspace packages/nest && npm run build --workspace packages/express",
     "generate-routes": "npm run generate-routes --workspace apps/web",
     "fmt": "go fmt ./... && npm run format:fix",
     "format:fix": "biome check --write apps packages",
     "format": "biome check apps packages",
     "typecheck": "npm run generate-routes && tsc --noEmit -p apps/web/tsconfig.json",
+    "typecheck:packages": "npm run build:types --workspace packages/sdk && npm run typecheck --workspace packages/sdk && npm run typecheck --workspace packages/react && npm run typecheck --workspace packages/vite-plugin && npm run typecheck --workspace packages/next && npm run typecheck --workspace packages/nest && npm run typecheck --workspace packages/express",
     "test": "go test ./... && npm run test --workspaces --if-present",
     "clean": "rm -rf bin apps/web/dist apps/desktop/src-tauri/target"
   },

@@ -8,10 +8,10 @@ import {
 } from '@tanstack/react-router';
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
 import { RootProvider } from 'fumadocs-ui/provider/tanstack';
-import PostHogProvider from '../integrations/posthog/provider';
-import TanStackQueryDevtools from '../integrations/tanstack-query/devtools';
-import { createSeo, siteName } from '../lib/seo';
-import appCss from '../styles.css?url';
+import PostHogProvider from '#/integrations/posthog/provider';
+import TanStackQueryDevtools from '#/integrations/tanstack-query/devtools';
+import { createSeo, siteName } from '#/lib/seo';
+import appCss from '#/styles.css?url';
 
 interface MyRouterContext {
   queryClient: QueryClient;

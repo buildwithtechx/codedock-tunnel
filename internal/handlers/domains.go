@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -9,6 +10,11 @@ import (
 )
 
 type DomainHandler struct{ domains *services.DomainService }
+
+func (h *DomainHandler) OrganizationID(ctx context.Context, id string) (string, error) {
+	domain, err := h.domains.Find(ctx, id)
+	return domain.OrganizationID, err
+}
 
 type CreateDomainRequest struct {
 	Hostname           string  `json:"hostname"`

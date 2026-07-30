@@ -28,3 +28,21 @@ func TestParseWebhookCapturesSubscriptionResetData(t *testing.T) {
 		t.Fatalf("unexpected reset transition: %+v", transition)
 	}
 }
+
+func TestParseWebhookDistinguishesUnknownAttempts(t *testing.T) {
+	withoutAttempts, _, _, err := parseWebhook(string(models.BillingProviderPaystack), []byte(`{"event":"charge.failed","data":{}}`))
+	if err != nil {
+		t.Fatalf("parse webhook without attempts: %v", err)
+	}
+	if withoutAttempts.AttemptsKnown {
+		t.Fatal("missing attempts should remain unknown")
+	}
+
+	withZero, _, _, err := parseWebhook(string(models.BillingProviderPaystack), []byte(`{"event":"charge.failed","data":{"attempts_remaining":0}}`))
+	if err != nil {
+		t.Fatalf("parse webhook with zero attempts: %v", err)
+	}
+	if !withZero.AttemptsKnown || withZero.AttemptsRemaining != 0 {
+		t.Fatalf("explicit zero attempts was not preserved: %+v", withZero)
+	}
+}

@@ -1,10 +1,10 @@
+import { describe, expect, it } from 'vitest';
+import type { WebSocketEvent, WebSocketLike } from '../interfaces/relay';
 import {
   decodeMessage,
   encodeMessage,
   type ProtocolEnvelope,
-} from '@codedock/protocol-ts';
-import { describe, expect, it } from 'vitest';
-import type { WebSocketEvent, WebSocketLike } from '../interfaces/relay';
+} from '../protocol';
 import { RelayConnection } from '../services/relay-connection';
 
 class FakeSocket implements WebSocketLike {

@@ -92,15 +92,28 @@ func openTunnel(cfg config.CLIConfig, cmdName string, args []string) {
 	}
 	delay := 2 * time.Second
 	tunnelID := *tunnelIDFlag
+	resolvedHostname := ""
 	if tunnelID != "" {
 		resolvedSubdomain, err := resolveManagedTunnel(ctx, cfg, tunnelID, *subdomain)
 		if err != nil {
 			log.Fatal(err)
 		}
-		*subdomain = resolvedSubdomain
+		resolvedHostname = resolvedSubdomain
+		if strings.TrimSpace(*subdomain) == "" {
+			publicDomain := strings.TrimSuffix(cfg.PublicDomain, ".")
+			if strings.HasSuffix(resolvedSubdomain, "."+publicDomain) || resolvedSubdomain == publicDomain {
+				*subdomain = strings.TrimSuffix(strings.TrimSuffix(resolvedSubdomain, "."+publicDomain), ".")
+			} else {
+				*subdomain = ""
+			}
+		}
 	}
 	for ctx.Err() == nil {
-		connection, err := client.OpenRelay(ctx, client.RelayConfig{URL: cfg.RelayURL, Token: *agentToken}, protocol.OpenTunnel{TunnelID: tunnelID, LocalPort: *port, Protocol: *protocolName, Subdomain: *subdomain, Password: *password})
+		open := protocol.OpenTunnel{TunnelID: tunnelID, LocalPort: *port, Protocol: *protocolName, Subdomain: *subdomain, Password: *password}
+		if *subdomain == "" && resolvedHostname != "" {
+			open.CustomDomain = resolvedHostname
+		}
+		connection, err := client.OpenRelay(ctx, client.RelayConfig{URL: cfg.RelayURL, Token: *agentToken}, open)
 		if err != nil {
 			if ctx.Err() != nil {
 				return
@@ -169,9 +182,6 @@ func resolveManagedTunnel(ctx context.Context, cfg config.CLIConfig, tunnelID, r
 	hostname := strings.TrimSpace(tunnel.PublicHostname)
 	if hostname == "" {
 		return "", fmt.Errorf("managed tunnel %q has no public hostname", tunnelID)
-	}
-	if dot := strings.IndexByte(hostname, '.'); dot > 0 {
-		return hostname[:dot], nil
 	}
 	return hostname, nil
 }

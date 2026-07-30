@@ -1,5 +1,4 @@
-import type { OpenTunnelAck } from '@codedock/protocol-ts';
-import { RelayConnection } from '@codedock/sdk';
+import { type OpenTunnelAck, RelayConnection } from '@codedock/sdk';
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { Inject, Injectable } from '@nestjs/common';
 import {
@@ -23,6 +22,9 @@ export class CodedockTunnelService implements OnModuleInit, OnModuleDestroy {
       this.tunnel = tunnel;
     });
     this.connection.on('disconnected', () => {
+      if (!this.options.reconnect) this.tunnel = undefined;
+    });
+    this.connection.on('reconnect_exhausted', () => {
       this.tunnel = undefined;
     });
   }

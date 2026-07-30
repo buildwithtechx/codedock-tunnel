@@ -32,7 +32,7 @@ type UsageMeasurement struct {
 	StatusCode     int
 	DurationMillis int64
 	ResponseBytes  int64
-	ClientIP       string
+	ClientIP       *string `json:"clientIp,omitempty"`
 }
 
 type UsageRecorder interface {
@@ -122,7 +122,12 @@ func (p *HTTPProxy) recordRequest(request *http.Request, tunnelID string, status
 	if !ok {
 		return
 	}
-	_ = p.recorder.Record(request.Context(), UsageMeasurement{OrganizationID: organizationID, TunnelID: tunnelID, EventType: "request", Bytes: responseBytes, Method: request.Method, Path: request.URL.Path, StatusCode: statusCode, DurationMillis: time.Since(started).Milliseconds(), ResponseBytes: responseBytes, ClientIP: clientIP(request)})
+	clientAddress := clientIP(request)
+	var clientAddressValue *string
+	if clientAddress != "" {
+		clientAddressValue = &clientAddress
+	}
+	_ = p.recorder.Record(request.Context(), UsageMeasurement{OrganizationID: organizationID, TunnelID: tunnelID, EventType: "request", Bytes: responseBytes, Method: request.Method, Path: request.URL.Path, StatusCode: statusCode, DurationMillis: time.Since(started).Milliseconds(), ResponseBytes: responseBytes, ClientIP: clientAddressValue})
 }
 
 func authorizedRequest(request *http.Request, passwordHash string) bool {

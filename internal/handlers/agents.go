@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -10,6 +11,11 @@ import (
 )
 
 type AgentHandler struct{ agents *services.AgentService }
+
+func (h *AgentHandler) OrganizationID(ctx context.Context, id string) (string, error) {
+	agent, err := h.agents.Find(ctx, id)
+	return agent.OrganizationID, err
+}
 
 type RegisterAgentRequest struct {
 	Name string `json:"name"`

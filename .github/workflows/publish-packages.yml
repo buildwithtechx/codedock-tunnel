@@ -28,14 +28,7 @@ jobs:
         run: npm ci
 
       - name: Build packages
-        run: |
-          npm run build --workspace packages/protocol-ts
-          npm run build --workspace packages/sdk
-          npm run build --workspace packages/react
-          npm run build --workspace packages/vite-plugin
-          npm run build --workspace packages/next
-          npm run build --workspace packages/nest
-          npm run build --workspace packages/express
+        run: npm run build:packages
 
       - name: Check package contents
         run: |

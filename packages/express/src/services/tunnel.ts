@@ -22,9 +22,12 @@ export function createExpressTunnel(
     };
   });
   connection.on('disconnected', () => {
-    if (current.status === 'active') {
+    if (!options.reconnect && current.status !== 'closed') {
       current = { status: 'closed' };
     }
+  });
+  connection.on('reconnect_exhausted', () => {
+    if (current.status !== 'closed') current = { status: 'closed' };
   });
   connection.on('error', (error) => {
     if (current.status !== 'closed') {
@@ -65,7 +68,9 @@ export function createExpressTunnel(
           return current;
         })
         .catch((value) => {
-          current = { status: 'error', error: normalizeError(value) };
+          if (startGeneration === generation) {
+            current = { status: 'error', error: normalizeError(value) };
+          }
           throw value;
         })
         .finally(() => {

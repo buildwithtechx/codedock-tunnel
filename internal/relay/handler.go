@@ -35,11 +35,16 @@ type ManagedTunnelResolver interface {
 	Resolve(context.Context, string) (ManagedTunnelPolicy, error)
 }
 
+type ManagedTunnelPasswordVerifier interface {
+	VerifyPassword(context.Context, string, string) (bool, error)
+}
+
 type ManagedTunnelPolicy struct {
-	OrganizationID string
-	PublicHostname string
-	PasswordHash   string
-	Status         string
+	OrganizationID    string
+	PublicHostname    string
+	PasswordHash      string
+	PasswordProtected bool
+	Status            string
 }
 
 type connectionState struct {
@@ -207,7 +212,7 @@ func (h *Handler) Connect(connection *websocket.Conn) {
 			go h.sendHeartbeats(connectionCtx, connection, state.identity.OrganizationID)
 			heartbeatStarted = true
 		}
-		h.recordMessageUsage(ctx, identity.OrganizationID, message)
+		h.recordMessageUsage(ctx, state.identity.OrganizationID, message)
 	}
 }
 

@@ -1,21 +1,22 @@
+import type { WebSocketEvent, WebSocketLike } from '../interfaces/relay';
 import {
   type AuthResponse,
   type CloseTunnel,
   decodeMessage,
   type ErrorMessage,
   type HTTPRequest,
-  type HTTPResponse,
   type MessageType,
   maxSupportedVersion,
   minSupportedVersion,
   type OpenTunnel,
   type OpenTunnelAck,
-  type ProtocolEnvelope,
   type VersionNegotiateAck,
-} from '@codedock/protocol-ts';
-import type { WebSocketEvent, WebSocketLike } from '../interfaces/relay';
+} from '../protocol';
 import { TunnelProtocolError, TunnelSDKError } from '../utils/errors';
 import { RelayConnectionBase } from './relay-base';
+import { forwardHttpRequest } from './relay-http';
+import { resolveRelayPending } from './relay-pending';
+import { createRelayRequest } from './relay-request';
 
 export class RelayConnection extends RelayConnectionBase {
   private readonly managedTunnels = new Map<
@@ -123,27 +124,16 @@ export class RelayConnection extends RelayConnectionBase {
     expected: MessageType,
   ): Promise<TPayload> {
     const requestId = `${Date.now().toString(36)}-${(++this.requestCounter).toString(36)}`;
-    return new Promise<TPayload>((resolve, reject) => {
-      const timer = setTimeout(() => {
-        this.pending.delete(requestId);
-        reject(new TunnelProtocolError(`timed out waiting for ${expected}`));
-      }, this.options.heartbeatIntervalMs);
-      this.pending.set(requestId, {
-        expected,
-        resolve: (message) => resolve(message.payload as TPayload),
-        reject,
-        timer,
-      });
-      try {
-        this.send(type, payload, requestId);
-      } catch (error) {
-        clearTimeout(timer);
-        this.pending.delete(requestId);
-        reject(
-          error instanceof Error ? error : new TunnelSDKError(String(error)),
-        );
-      }
-    });
+    return createRelayRequest(
+      type,
+      payload,
+      expected,
+      this.options.heartbeatIntervalMs,
+      requestId,
+      this.pending,
+      (messageType, messagePayload, id) =>
+        this.send(messageType, messagePayload, id),
+    );
   }
 
   private handleOpen = (): void => {
@@ -161,12 +151,16 @@ export class RelayConnection extends RelayConnectionBase {
       const message = decodeMessage(event.data);
       this.emit('message', message);
       if (message.request_id) {
-        this.resolvePending(message);
+        resolveRelayPending(message, this.pending);
       }
       if (message.type === 'http_request') {
-        void this.forwardHTTPRequest(
+        void forwardHttpRequest(
           message.payload as HTTPRequest,
           message.request_id,
+          this.options.localPort,
+          this.options.localRequestTimeoutMs,
+          (response) =>
+            this.send('http_response', response, message.request_id),
         );
       }
       if (message.type === 'error') {
@@ -198,7 +192,11 @@ export class RelayConnection extends RelayConnectionBase {
     }
     this.emit('disconnected', event as CloseEvent);
     if (!this.closedByUser && this.options.reconnect) {
-      this.scheduleReconnect();
+      if (this.reconnectAttempts >= this.options.maxReconnectAttempts) {
+        this.emit('reconnect_exhausted', undefined);
+      } else {
+        this.scheduleReconnect();
+      }
     }
   };
 
@@ -231,83 +229,12 @@ export class RelayConnection extends RelayConnectionBase {
         );
         this.emit('tunnel_opened', reopened);
       } catch (error) {
-        this.managedTunnels.delete(tunnelId);
         this.emit(
           'error',
           error instanceof Error ? error : new TunnelSDKError(String(error)),
         );
       }
     }
-  }
-
-  private async forwardHTTPRequest(
-    request: HTTPRequest,
-    requestId?: string,
-  ): Promise<void> {
-    if (!this.options.localPort || !requestId || typeof fetch !== 'function') {
-      return;
-    }
-    try {
-      const headers = new Headers();
-      for (const [name, values] of Object.entries(request.headers ?? {})) {
-        headers.set(name, values.join(', '));
-      }
-      const response = await fetch(
-        `http://127.0.0.1:${this.options.localPort}${request.path}`,
-        {
-          method: request.method,
-          headers,
-          body: request.body
-            ? (decodeBase64(request.body).buffer as ArrayBuffer)
-            : undefined,
-        },
-      );
-      const responseHeaders: Record<string, string[]> = {};
-      response.headers.forEach((value, name) => {
-        responseHeaders[name] = [value];
-      });
-      this.send(
-        'http_response',
-        {
-          status_code: response.status,
-          headers: responseHeaders,
-          body: encodeBase64(new Uint8Array(await response.arrayBuffer())),
-        } satisfies HTTPResponse,
-        requestId,
-      );
-    } catch (error) {
-      this.send(
-        'http_response',
-        {
-          status_code: 502,
-          headers: {},
-          error: error instanceof Error ? error.message : String(error),
-        } satisfies HTTPResponse,
-        requestId,
-      );
-    }
-  }
-
-  private resolvePending(message: ProtocolEnvelope): void {
-    const requestId = message.request_id;
-    if (!requestId) {
-      return;
-    }
-    const pending = this.pending.get(requestId);
-    if (!pending) {
-      return;
-    }
-    this.pending.delete(requestId);
-    clearTimeout(pending.timer);
-    if (message.type !== pending.expected) {
-      pending.reject(
-        new TunnelProtocolError(
-          `expected ${pending.expected}, received ${message.type}`,
-        ),
-      );
-      return;
-    }
-    pending.resolve(message);
   }
 
   private startHeartbeat(): void {
@@ -372,17 +299,4 @@ function defaultWebSocketFactory(url: string): WebSocketLike {
     );
   }
   return new WebSocket(url);
-}
-
-function decodeBase64(value: string): Uint8Array {
-  const binary = atob(value);
-  return Uint8Array.from(binary, (character) => character.charCodeAt(0));
-}
-
-function encodeBase64(value: Uint8Array): string {
-  let binary = '';
-  for (const byte of value) {
-    binary += String.fromCharCode(byte);
-  }
-  return btoa(binary);
 }

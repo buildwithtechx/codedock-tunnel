@@ -85,6 +85,8 @@ func migrations() []migration {
 		return db.AutoMigrate(&models.OrganizationInvitation{})
 	}}, {version: 8, name: "usage_event_request_metadata", up: func(db *gorm.DB) error {
 		return db.AutoMigrate(&models.UsageEvent{})
+	}}, {version: 9, name: "nullable_usage_client_ip", up: func(db *gorm.DB) error {
+		return db.AutoMigrate(&models.UsageEvent{})
 	}}}
 }
 

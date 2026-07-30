@@ -1,4 +1,4 @@
-import { env } from '../env';
+import { env } from '#/env';
 
 export const siteUrl =
   env.VITE_CODEDOCK_SITE_URL ?? 'https://codedock-tunnel.dev';

@@ -2,12 +2,14 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 
 	"codedock.run/codedock-tunnel/internal/models"
 	"codedock.run/codedock-tunnel/internal/repositories"
+	"codedock.run/codedock-tunnel/pkg/utils"
 )
 
 var slugPattern = regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$`)
@@ -47,28 +49,13 @@ func (s *OrganizationService) AddMember(ctx context.Context, organizationID, use
 	if organizationID == "" || userID == "" || !validMemberRole(role) {
 		return fmt.Errorf("organization, user, and valid role are required")
 	}
-	if err := s.checkMemberCapacity(ctx, organizationID); err != nil {
-		return err
-	}
-	if err := s.organizations.AddMember(ctx, &models.OrganizationMember{OrganizationID: organizationID, UserID: userID, Role: role}); err != nil {
-		return fmt.Errorf("add organization member: %w", err)
-	}
-	return nil
-}
-
-func (s *OrganizationService) checkMemberCapacity(ctx context.Context, organizationID string) error {
+	member := &models.OrganizationMember{OrganizationID: organizationID, UserID: userID, Role: role}
 	limit, err := s.memberLimit(ctx, organizationID)
 	if err != nil {
 		return err
 	}
-	if limit > 0 {
-		count, err := s.organizations.CountMembers(ctx, organizationID)
-		if err != nil {
-			return fmt.Errorf("count organization members: %w", err)
-		}
-		if count >= limit {
-			return fmt.Errorf("organization member limit reached")
-		}
+	if err := s.organizations.AddMemberWithLimit(ctx, member, limit); err != nil {
+		return fmt.Errorf("add organization member: %w", err)
 	}
 	return nil
 }
@@ -87,10 +74,13 @@ func (s *OrganizationService) memberLimit(ctx context.Context, organizationID st
 func (s *OrganizationService) Authorize(ctx context.Context, organizationID, userID string, required models.MemberRole) error {
 	member, err := s.organizations.FindMember(ctx, organizationID, userID)
 	if err != nil {
+		if errors.Is(err, repositories.ErrNotFound) {
+			return utils.NewAuthorizationError(fmt.Errorf("organization membership required"))
+		}
 		return fmt.Errorf("find organization membership: %w", err)
 	}
 	if memberRoleRank(member.Role) < memberRoleRank(required) {
-		return fmt.Errorf("insufficient organization role")
+		return utils.NewAuthorizationError(fmt.Errorf("insufficient organization role"))
 	}
 	return nil
 }

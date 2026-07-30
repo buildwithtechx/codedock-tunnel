@@ -20,6 +20,7 @@ pub fn tunnel_start(
     password: Option<String>,
 ) -> Result<TunnelProcess, String> {
     validate_protocol(&protocol)?;
+    let password = validate_password(password)?;
     let mut child_slot = state
         .child
         .lock()
@@ -44,8 +45,8 @@ pub fn tunnel_start(
     if let Some(value) = subdomain.filter(|value| !value.trim().is_empty()) {
         command.arg("--subdomain").arg(value);
     }
-    if let Some(value) = password.filter(|value| !value.trim().is_empty()) {
-        command.arg("--password").arg(value);
+    if let Some(value) = password {
+        command.env("CODEDOCK_TUNNEL_PASSWORD", value);
     }
     let child = command
         .spawn()
@@ -57,6 +58,20 @@ pub fn tunnel_start(
         status: "running".to_string(),
         exit_code: None,
     })
+}
+
+fn validate_password(password: Option<String>) -> Result<Option<String>, String> {
+    let Some(value) = password else {
+        return Ok(None);
+    };
+    if value.trim().is_empty() {
+        return Err("tunnel password cannot contain only whitespace".to_string());
+    }
+    let length = value.len();
+    if !(8..=256).contains(&length) {
+        return Err("tunnel password must be between 8 and 256 characters".to_string());
+    }
+    Ok(Some(value))
 }
 
 #[tauri::command]
