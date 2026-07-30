@@ -8,6 +8,8 @@ import {
   SiNextdotjs,
   SiVite,
 } from 'react-icons/si';
+import { useGitHubStars } from '#/hooks/use-github-stars';
+import { formatGitHubStarCount, githubRepositoryUrl } from '#/lib/github';
 import { MarketingContainer } from './marketing-container';
 
 const mobileLinks = [
@@ -29,6 +31,7 @@ export function MarketingHeader() {
   const [docsOpen, setDocsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { data: starCount } = useGitHubStars();
 
   useEffect(() => {
     const updateScrolled = () => setScrolled(window.scrollY > 50);
@@ -98,7 +101,7 @@ export function MarketingHeader() {
                     key={label}
                     to="/plugins/$pluginId"
                     params={{ pluginId: id }}
-                    className="flex size-16 items-center justify-center rounded-xl bg-white/[0.05] text-2xl text-white/60 transition-colors hover:bg-indigo-300/10 hover:text-indigo-300"
+                    className="flex size-16 items-center justify-center rounded-xl bg-white/5 text-2xl text-white/60 transition-colors hover:bg-indigo-300/10 hover:text-indigo-300"
                     title={label}
                   >
                     <Icon />
@@ -144,7 +147,7 @@ export function MarketingHeader() {
                 </span>
               </Link>
               <a
-                href="https://github.com/codedock"
+                href={githubRepositoryUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="group flex items-center gap-3 rounded-lg px-3 py-3 text-sm text-white/70 transition-colors hover:bg-indigo-300/10 hover:text-indigo-300"
@@ -163,12 +166,18 @@ export function MarketingHeader() {
         </nav>
         <div className="hidden items-center gap-3 md:flex">
           <a
-            href="https://github.com/codedock"
+            href={githubRepositoryUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-xs text-white/60 transition-colors hover:border-indigo-300/40 hover:text-indigo-300"
+            className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/4 px-3 py-2 text-xs text-white/60 transition-colors hover:border-indigo-300/40 hover:text-indigo-300"
           >
-            <SiGithub className="size-4" /> Star on GitHub
+            <SiGithub className="size-4" />
+            <span>Star</span>
+            {typeof starCount === 'number' && (
+              <span className="border-l border-white/10 pl-2 text-white/90">
+                ★ {formatGitHubStarCount(starCount)}
+              </span>
+            )}
           </a>
           <Link
             to="/login"
@@ -274,7 +283,7 @@ function DropdownButton({
         />
       </button>
       {open && (
-        <div className="absolute left-1/2 top-full w-[420px] -translate-x-1/2 pt-5">
+        <div className="absolute left-1/2 top-full w-105 -translate-x-1/2 pt-5">
           <div className="rounded-2xl border border-white/10 bg-[#0a0a0a] p-5 shadow-2xl shadow-black/60">
             {children}
           </div>

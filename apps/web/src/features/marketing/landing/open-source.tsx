@@ -1,5 +1,6 @@
 import { Heart, LockKeyhole, Users, Workflow } from 'lucide-react';
 import { MarketingContainer } from '#/components/layout';
+import { githubRepositoryUrl } from '#/lib/github';
 
 const values = [
   {
@@ -43,7 +44,7 @@ export function OpenSourceSection() {
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <a
-              href="https://github.com/codedock"
+              href={githubRepositoryUrl}
               target="_blank"
               rel="noreferrer"
               className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#080b14]"
