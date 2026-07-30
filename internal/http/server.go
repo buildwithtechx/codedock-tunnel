@@ -6,6 +6,7 @@ import (
 
 	"codedock.run/codedock-tunnel/internal/config"
 	"codedock.run/codedock-tunnel/internal/infra/billing"
+	"codedock.run/codedock-tunnel/internal/infra/certificates"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
@@ -54,7 +55,11 @@ func (s *Server) Listen(address string) error {
 		return fmt.Errorf("http server is not initialized")
 	}
 	if s.requireTLS {
-		return s.app.ListenTLS(address, s.certFile, s.keyFile)
+		listener, err := certificates.NewTLSListener(address, s.certFile, s.keyFile)
+		if err != nil {
+			return err
+		}
+		return s.app.Listener(listener)
 	}
 	return s.app.Listen(address)
 }

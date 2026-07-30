@@ -15,7 +15,7 @@ func bearerToken(value string) string {
 	return ""
 }
 
-func publicURL(open protocol.OpenTunnel, tunnelID string) string {
+func publicURL(open protocol.OpenTunnel, tunnelID, domain string) string {
 	if open.CustomDomain != "" {
 		return "https://" + strings.TrimSuffix(open.CustomDomain, ".")
 	}
@@ -23,5 +23,5 @@ func publicURL(open protocol.OpenTunnel, tunnelID string) string {
 	if name == "" {
 		name = strings.Split(tunnelID, "-")[0]
 	}
-	return "https://" + name + ".tunnel.codedock-tunnel.dev"
+	return "https://" + name + "." + strings.TrimSuffix(domain, ".")
 }

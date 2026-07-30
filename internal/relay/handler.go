@@ -56,6 +56,7 @@ type Handler struct {
 	bandwidth      *engine.BandwidthLimiter
 	usage          engine.UsageRecorder
 	allowedOrigins []string
+	publicDomain   string
 	affinity       RelayAffinity
 	relayID        string
 	affinityTTL    time.Duration
@@ -78,13 +79,14 @@ type HandlerOptions struct {
 	Metrics        *Metrics
 	UsageRecorder  engine.UsageRecorder
 	AllowedOrigins string
+	PublicDomain   string
 	Affinity       RelayAffinity
 	RelayID        string
 	AffinityTTL    time.Duration
 }
 
 func NewHandler(authenticator AgentAuthenticator, sessions *engine.SessionRegistry, router *engine.RequestRouter, tcp *TCPManager, udp *UDPManager, maxSessions int) (*Handler, error) {
-	return NewHandlerWithOptions(authenticator, sessions, router, tcp, udp, HandlerOptions{MaxConnections: maxSessions, MaxTunnels: maxSessions, Heartbeat: 20 * time.Second, ReadTimeout: 90 * time.Second, MaxFrameBytes: 16 << 20})
+	return NewHandlerWithOptions(authenticator, sessions, router, tcp, udp, HandlerOptions{MaxConnections: maxSessions, MaxTunnels: maxSessions, Heartbeat: 20 * time.Second, ReadTimeout: 90 * time.Second, MaxFrameBytes: 16 << 20, PublicDomain: "tunnel.codedock-tunnel.dev"})
 }
 
 func NewHandlerWithOptions(authenticator AgentAuthenticator, sessions *engine.SessionRegistry, router *engine.RequestRouter, tcp *TCPManager, udp *UDPManager, options HandlerOptions) (*Handler, error) {
@@ -106,9 +108,12 @@ func NewHandlerWithOptions(authenticator AgentAuthenticator, sessions *engine.Se
 	if options.Affinity != nil && (options.RelayID == "" || options.AffinityTTL <= 0) {
 		return nil, fmt.Errorf("relay affinity requires relay id and positive ttl")
 	}
+	if strings.TrimSpace(options.PublicDomain) == "" {
+		return nil, fmt.Errorf("public tunnel domain is required")
+	}
 	tcp.SetMaxConnections(options.MaxConnections)
 	udp.SetMaxPackets(options.MaxConnections)
-	handler := &Handler{authenticator: authenticator, sessions: sessions, router: router, tcp: tcp, udp: udp, maxSessions: options.MaxConnections, maxTunnels: options.MaxTunnels, maxBandwidth: options.MaxBandwidth, heartbeat: options.Heartbeat, readTimeout: options.ReadTimeout, maxFrameBytes: options.MaxFrameBytes, drainTimeout: options.DrainTimeout, logger: options.Logger, metrics: options.Metrics, usage: options.UsageRecorder, affinity: options.Affinity, relayID: options.RelayID, affinityTTL: options.AffinityTTL, allowedOrigins: splitOrigins(options.AllowedOrigins), bandwidth: engine.NewBandwidthLimiter(), orgLimits: make(map[string]int), orgConnections: make(map[string]int)}
+	handler := &Handler{authenticator: authenticator, sessions: sessions, router: router, tcp: tcp, udp: udp, maxSessions: options.MaxConnections, maxTunnels: options.MaxTunnels, maxBandwidth: options.MaxBandwidth, heartbeat: options.Heartbeat, readTimeout: options.ReadTimeout, maxFrameBytes: options.MaxFrameBytes, drainTimeout: options.DrainTimeout, logger: options.Logger, metrics: options.Metrics, usage: options.UsageRecorder, affinity: options.Affinity, relayID: options.RelayID, affinityTTL: options.AffinityTTL, allowedOrigins: splitOrigins(options.AllowedOrigins), publicDomain: strings.TrimSuffix(strings.TrimSpace(options.PublicDomain), "."), bandwidth: engine.NewBandwidthLimiter(), orgLimits: make(map[string]int), orgConnections: make(map[string]int)}
 	tcp.SetAdmissionHook(handler.allowConnection)
 	tcp.SetUsageHook(func(tunnelID, eventType string, connections int) {
 		organizationID, ok := router.OrganizationID(tunnelID)
@@ -439,7 +444,7 @@ func (h *Handler) handleMessage(ctx context.Context, connection *websocket.Conn,
 				return err
 			}
 		}
-		payload, err := protocol.EncodePayload(protocol.MessageTypeOpenTunnelAck, message.RequestID, protocol.OpenTunnelAck{TunnelID: tunnelID, PublicURL: publicURL(open, tunnelID), PublicPort: publicPort})
+		payload, err := protocol.EncodePayload(protocol.MessageTypeOpenTunnelAck, message.RequestID, protocol.OpenTunnelAck{TunnelID: tunnelID, PublicURL: publicURL(open, tunnelID, h.publicDomain), PublicPort: publicPort})
 		if err != nil {
 			h.sessions.Remove(tunnelID, session.ID)
 			delete(owned, tunnelID)

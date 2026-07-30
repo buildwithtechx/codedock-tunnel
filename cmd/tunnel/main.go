@@ -10,6 +10,7 @@ import (
 
 	"codedock.run/codedock-tunnel/internal/config"
 	"codedock.run/codedock-tunnel/internal/engine"
+	"codedock.run/codedock-tunnel/internal/infra/certificates"
 	"codedock.run/codedock-tunnel/internal/infra/redis"
 	"codedock.run/codedock-tunnel/internal/relay"
 	"github.com/gofiber/fiber/v2"
@@ -57,7 +58,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	relayHandler, err := relay.NewHandlerWithOptions(authenticator, sessions, requestRouter, tcpManager, udpManager, relay.HandlerOptions{MaxConnections: cfg.Tunnel.MaxConnections, MaxTunnels: cfg.Tunnel.MaxTunnels, MaxBandwidth: cfg.Tunnel.MaxBandwidth, Heartbeat: cfg.Tunnel.Heartbeat, ReadTimeout: cfg.Tunnel.ReadTimeout, DrainTimeout: cfg.Tunnel.DrainTimeout, MaxFrameBytes: cfg.Tunnel.MaxFrameBytes, Logger: slog.Default(), Metrics: metrics, UsageRecorder: usage, Affinity: affinity, RelayID: cfg.RelayID, AffinityTTL: cfg.Tunnel.AgentInactivity, AllowedOrigins: cfg.App.AllowedOrigins})
+	relayHandler, err := relay.NewHandlerWithOptions(authenticator, sessions, requestRouter, tcpManager, udpManager, relay.HandlerOptions{MaxConnections: cfg.Tunnel.MaxConnections, MaxTunnels: cfg.Tunnel.MaxTunnels, MaxBandwidth: cfg.Tunnel.MaxBandwidth, Heartbeat: cfg.Tunnel.Heartbeat, ReadTimeout: cfg.Tunnel.ReadTimeout, DrainTimeout: cfg.Tunnel.DrainTimeout, MaxFrameBytes: cfg.Tunnel.MaxFrameBytes, Logger: slog.Default(), Metrics: metrics, UsageRecorder: usage, Affinity: affinity, RelayID: cfg.RelayID, AffinityTTL: cfg.Tunnel.AgentInactivity, AllowedOrigins: cfg.App.AllowedOrigins, PublicDomain: cfg.Tunnel.Domain})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -81,7 +82,12 @@ func main() {
 	go func() {
 		var listenErr error
 		if cfg.App.RequireTLS {
-			listenErr = app.ListenTLS(cfg.App.ListenAddress(), cfg.App.TLSCertFile, cfg.App.TLSKeyFile)
+			listener, err := certificates.NewTLSListener(cfg.App.ListenAddress(), cfg.App.TLSCertFile, cfg.App.TLSKeyFile)
+			if err != nil {
+				listenErr = err
+			} else {
+				listenErr = app.Listener(listener)
+			}
 		} else {
 			listenErr = app.Listen(cfg.App.ListenAddress())
 		}

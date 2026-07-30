@@ -123,3 +123,5 @@ codedock-tunnel http 3000
 The tunnel core owns tunnel identity, credentials, sessions, routing, quotas, analytics, and audit history. It must not import Codedock models, routes, authentication, or database packages.
 
 Codedock integrations communicate with the public tunnel API and may be disabled without affecting standalone tunnel operation.
+
+Edge routing, wildcard DNS, certificate mounting, and optional DNS automation are documented in [docs/edge-routing.md](docs/edge-routing.md).
