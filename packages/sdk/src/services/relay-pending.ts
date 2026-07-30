@@ -1,5 +1,5 @@
-import type { ProtocolEnvelope } from '@codedock/protocol-ts';
 import type { PendingResponse } from '../interfaces/relay';
+import type { ProtocolEnvelope } from '../protocol';
 import { TunnelProtocolError } from '../utils/errors';
 
 export function resolveRelayPending(

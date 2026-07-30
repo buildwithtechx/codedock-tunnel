@@ -1,4 +1,4 @@
-import type { HTTPRequest, HTTPResponse } from '@codedock/protocol-ts';
+import type { HTTPRequest, HTTPResponse } from '../protocol';
 
 type ResponseSender = (response: HTTPResponse) => void;
 

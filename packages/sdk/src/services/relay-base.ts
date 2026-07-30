@@ -1,15 +1,15 @@
-import type { MessageType, ProtocolEnvelope } from '@codedock/protocol-ts';
-import {
-  absoluteMaxFrameSize,
-  encodeMessage,
-  protocolVersion,
-} from '@codedock/protocol-ts';
 import type {
   PendingResponse,
   RelayConnectionOptions,
   RelayEvents,
   WebSocketLike,
 } from '../interfaces/relay';
+import type { MessageType, ProtocolEnvelope } from '../protocol';
+import {
+  absoluteMaxFrameSize,
+  encodeMessage,
+  protocolVersion,
+} from '../protocol';
 import { TunnelProtocolError, TunnelSDKError } from '../utils/errors';
 
 const websocketOpenState = 1;

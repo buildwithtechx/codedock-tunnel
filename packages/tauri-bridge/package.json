@@ -18,6 +18,8 @@
   "peerDependencies": {
     "@tauri-apps/api": ">=2"
   },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

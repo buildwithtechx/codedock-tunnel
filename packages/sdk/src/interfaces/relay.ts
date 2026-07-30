@@ -6,7 +6,7 @@ import type {
   OpenTunnelAck,
   ProtocolEnvelope,
   VersionNegotiateAck,
-} from '@codedock/protocol-ts';
+} from '../protocol';
 
 export type WebSocketLike = {
   readonly readyState: number;

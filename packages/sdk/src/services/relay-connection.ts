@@ -1,3 +1,4 @@
+import type { WebSocketEvent, WebSocketLike } from '../interfaces/relay';
 import {
   type AuthResponse,
   type CloseTunnel,
@@ -10,8 +11,7 @@ import {
   type OpenTunnel,
   type OpenTunnelAck,
   type VersionNegotiateAck,
-} from '@codedock/protocol-ts';
-import type { WebSocketEvent, WebSocketLike } from '../interfaces/relay';
+} from '../protocol';
 import { TunnelProtocolError, TunnelSDKError } from '../utils/errors';
 import { RelayConnectionBase } from './relay-base';
 import { forwardHttpRequest } from './relay-http';
