@@ -2,9 +2,7 @@ package client
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"strings"
@@ -58,36 +56,36 @@ func OpenRelay(ctx context.Context, cfg RelayConfig, open protocol.OpenTunnel) (
 	open.Token = cfg.Token
 	message, err := protocol.EncodePayload(protocol.MessageTypeOpenTunnel, "", open)
 	if err != nil {
-		connection.Close()
+		_ = connection.Close()
 		return nil, err
 	}
 	if err := connection.WriteMessage(websocket.TextMessage, message); err != nil {
-		connection.Close()
+		_ = connection.Close()
 		return nil, fmt.Errorf("send tunnel open: %w", err)
 	}
 	_, response, err := connection.ReadMessage()
 	if err != nil {
-		connection.Close()
+		_ = connection.Close()
 		return nil, fmt.Errorf("read tunnel acknowledgement: %w", err)
 	}
 	envelope, err := protocol.Decode(response)
 	if err != nil {
-		connection.Close()
+		_ = connection.Close()
 		return nil, err
 	}
 	if envelope.Type == protocol.MessageTypeError {
 		var failure protocol.ErrorMessage
 		_ = protocol.DecodePayload(envelope, &failure)
-		connection.Close()
+		_ = connection.Close()
 		return nil, fmt.Errorf("relay rejected tunnel: %s", failure.Message)
 	}
 	if envelope.Type != protocol.MessageTypeOpenTunnelAck {
-		connection.Close()
+		_ = connection.Close()
 		return nil, fmt.Errorf("unexpected relay response %q", envelope.Type)
 	}
 	var ack protocol.OpenTunnelAck
 	if err := protocol.DecodePayload(envelope, &ack); err != nil {
-		connection.Close()
+		_ = connection.Close()
 		return nil, err
 	}
 	return &RelayConnection{conn: connection, TunnelID: ack.TunnelID, PublicURL: ack.PublicURL, PublicPort: ack.PublicPort, Protocol: open.Protocol, tcpConns: make(map[string]net.Conn)}, nil
@@ -203,165 +201,6 @@ func (c *RelayConnection) ServeLocal(ctx context.Context, targetURL string) erro
 			}
 		}
 	}
-}
-
-func (c *RelayConnection) handleUDPData(target string, message protocol.Envelope) error {
-	var data protocol.UDPData
-	if err := protocol.DecodePayload(message, &data); err != nil {
-		return err
-	}
-	decoded, err := base64.StdEncoding.DecodeString(data.Data)
-	if err != nil {
-		return err
-	}
-	c.udpMu.Lock()
-	created := c.udpConn == nil
-	if created {
-		address, resolveErr := net.ResolveUDPAddr("udp", target)
-		if resolveErr != nil {
-			c.udpMu.Unlock()
-			return resolveErr
-		}
-		c.udpConn, err = net.DialUDP("udp", nil, address)
-	}
-	if err == nil {
-		c.udpQueue = append(c.udpQueue, data.PacketID)
-	}
-	connection := c.udpConn
-	c.udpMu.Unlock()
-	if err != nil {
-		return err
-	}
-	if created {
-		go c.proxyUDP(connection)
-	}
-	_, err = connection.Write(decoded)
-	return err
-}
-
-func (c *RelayConnection) proxyUDP(connection *net.UDPConn) {
-	buffer := make([]byte, 64*1024)
-	for {
-		count, address, err := connection.ReadFromUDP(buffer)
-		if err != nil {
-			return
-		}
-		c.udpMu.Lock()
-		if len(c.udpQueue) == 0 {
-			c.udpMu.Unlock()
-			continue
-		}
-		packetID := c.udpQueue[0]
-		c.udpQueue = c.udpQueue[1:]
-		c.udpMu.Unlock()
-		payload, encodeErr := protocol.EncodePayload(protocol.MessageTypeUDPResponse, "", protocol.UDPResponse{TunnelID: c.TunnelID, PacketID: packetID, TargetAddress: address.IP.String(), TargetPort: address.Port, Data: base64.StdEncoding.EncodeToString(buffer[:count])})
-		if encodeErr != nil || c.write(payload) != nil {
-			return
-		}
-	}
-}
-
-func (c *RelayConnection) handleTCPData(target string, message protocol.Envelope) error {
-	var data protocol.TCPData
-	if err := protocol.DecodePayload(message, &data); err != nil {
-		return err
-	}
-	c.tcpMu.Lock()
-	connection := c.tcpConns[data.ConnectionID]
-	created := false
-	var err error
-	if connection == nil {
-		connection, err = net.Dial("tcp", target)
-		if err == nil {
-			c.tcpConns[data.ConnectionID] = connection
-			created = true
-		}
-	}
-	c.tcpMu.Unlock()
-	if connection == nil {
-		return c.sendTCPClose(data.ConnectionID, "connect local target failed")
-	}
-
-	decoded, err := base64.StdEncoding.DecodeString(data.Data)
-	if err != nil {
-		c.closeTCP(data.ConnectionID)
-		return err
-	}
-	if _, err := connection.Write(decoded); err != nil {
-		c.closeTCP(data.ConnectionID)
-		return err
-	}
-	if created {
-		go c.proxyTCP(data.ConnectionID, connection)
-	}
-	return nil
-}
-
-func (c *RelayConnection) proxyTCP(connectionID string, connection net.Conn) {
-	defer connection.Close()
-	buffer := make([]byte, 32*1024)
-	for {
-		count, err := connection.Read(buffer)
-		if count > 0 {
-			payload, encodeErr := protocol.EncodePayload(protocol.MessageTypeTCPData, "", protocol.TCPData{TunnelID: c.TunnelID, ConnectionID: connectionID, Data: base64.StdEncoding.EncodeToString(buffer[:count])})
-			if encodeErr != nil || c.write(payload) != nil {
-				return
-			}
-		}
-		if err != nil {
-			c.closeTCP(connectionID)
-			_ = c.sendTCPClose(connectionID, err.Error())
-			return
-		}
-	}
-}
-
-func (c *RelayConnection) closeTCP(connectionID string) {
-	c.tcpMu.Lock()
-	connection := c.tcpConns[connectionID]
-	delete(c.tcpConns, connectionID)
-	c.tcpMu.Unlock()
-	if connection != nil {
-		_ = connection.Close()
-	}
-}
-
-func (c *RelayConnection) sendTCPClose(connectionID, reason string) error {
-	payload, err := protocol.EncodePayload(protocol.MessageTypeTCPClose, "", protocol.TCPClose{TunnelID: c.TunnelID, ConnectionID: connectionID, Reason: reason})
-	if err != nil {
-		return err
-	}
-	return c.write(payload)
-}
-
-func (c *RelayConnection) forwardHTTP(ctx context.Context, targetURL string, incoming protocol.HTTPRequest) protocol.HTTPResponse {
-	body, err := base64.StdEncoding.DecodeString(incoming.Body)
-	if err != nil {
-		return protocol.HTTPResponse{Error: "invalid request body"}
-	}
-	request, err := http.NewRequestWithContext(ctx, incoming.Method, strings.TrimRight(targetURL, "/")+incoming.Path, strings.NewReader(string(body)))
-	if err != nil {
-		return protocol.HTTPResponse{Error: err.Error()}
-	}
-	for key, values := range incoming.Headers {
-		for _, value := range values {
-			request.Header.Add(key, value)
-		}
-	}
-	response, err := http.DefaultClient.Do(request)
-	if err != nil {
-		return protocol.HTTPResponse{Error: err.Error()}
-	}
-	defer response.Body.Close()
-	data, err := io.ReadAll(io.LimitReader(response.Body, 16<<20))
-	if err != nil {
-		return protocol.HTTPResponse{Error: err.Error()}
-	}
-	headers := make(map[string][]string, len(response.Header))
-	for key, values := range response.Header {
-		headers[key] = append([]string(nil), values...)
-	}
-	return protocol.HTTPResponse{StatusCode: response.StatusCode, Headers: headers, Body: base64.StdEncoding.EncodeToString(data)}
 }
 
 func (c *RelayConnection) write(data []byte) error {

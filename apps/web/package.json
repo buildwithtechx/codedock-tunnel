@@ -10,7 +10,9 @@
     "generate-routes": "tsr generate && fumadocs-mdx",
     "build": "fumadocs-mdx && vite build",
     "preview": "vite preview",
-    "deploy": "npm run build"
+    "deploy": "npm run build",
+    "typecheck": "fumadocs-mdx && tsc --noEmit",
+    "postinstall": "fumadocs-mdx"
   },
   "dependencies": {
     "@faker-js/faker": "^10.5.0",

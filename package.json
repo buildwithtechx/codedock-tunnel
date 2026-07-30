@@ -24,7 +24,7 @@
     "fmt": "go fmt ./... && npm run format:fix",
     "format:fix": "biome check --write apps packages",
     "format": "biome check apps packages",
-    "typecheck": "tsc --noEmit -p apps/web/tsconfig.json",
+    "typecheck": "npm run generate-routes && tsc --noEmit -p apps/web/tsconfig.json",
     "test": "go test ./... && npm run test --workspaces --if-present",
     "clean": "rm -rf bin apps/web/dist apps/desktop/src-tauri/target"
   },

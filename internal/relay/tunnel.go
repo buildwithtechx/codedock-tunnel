@@ -1,0 +1,184 @@
+package relay
+
+import (
+	"context"
+	"fmt"
+
+	"codedock.run/codedock-tunnel/internal/engine"
+	"codedock.run/codedock-tunnel/pkg/protocol"
+	"github.com/gofiber/contrib/websocket"
+	"github.com/google/uuid"
+)
+
+func (h *Handler) openTunnel(ctx context.Context, connection *websocket.Conn, identity AgentIdentity, message protocol.Envelope, owned map[string]string, state *connectionState) error {
+	if !state.negotiated || !state.authenticated {
+		return fmt.Errorf("protocol authentication and negotiation are required")
+	}
+	open, err := decodeOpenTunnel(message)
+	if err != nil {
+		return err
+	}
+	tunnelID := open.TunnelID
+	if tunnelID == "" {
+		tunnelID = uuid.NewString()
+	}
+	previous, exists := h.sessions.Get(tunnelID)
+	if exists && previous.OrganizationID != identity.OrganizationID {
+		return fmt.Errorf("tunnel belongs to another organization")
+	}
+	if err := h.checkTunnelCapacity(identity, exists); err != nil {
+		return err
+	}
+	if err := h.claimTunnel(ctx, tunnelID); err != nil {
+		return err
+	}
+	session := h.newSession(connection, identity, tunnelID)
+	if err := h.sessions.ReserveWithDrain(session, exists, h.drainTimeout); err != nil {
+		return err
+	}
+	owned[tunnelID] = session.ID
+	h.recordUsage(ctx, identity.OrganizationID, tunnelID, "tunnel_open", 0, 1)
+	if !exists {
+		h.metrics.AddTunnel(1)
+	}
+	if err := h.bindTunnelAlias(open, tunnelID, session.ID, owned, exists); err != nil {
+		return err
+	}
+	publicPort, err := h.openDataListener(open, tunnelID, session.Send, exists)
+	if err != nil {
+		h.rollbackTunnel(tunnelID, session.ID, owned, exists)
+		return err
+	}
+	payload, err := protocol.EncodePayload(protocol.MessageTypeOpenTunnelAck, message.RequestID, protocol.OpenTunnelAck{TunnelID: tunnelID, PublicURL: publicURL(open, tunnelID, h.publicDomain), PublicPort: publicPort})
+	if err != nil {
+		h.rollbackTunnel(tunnelID, session.ID, owned, exists)
+		return err
+	}
+	return h.writeMessage(connection, websocket.TextMessage, payload)
+}
+
+func (h *Handler) checkTunnelCapacity(identity AgentIdentity, exists bool) error {
+	if exists {
+		return nil
+	}
+	maxTunnels := identity.MaxTunnels
+	if maxTunnels == 0 {
+		maxTunnels = h.maxTunnels
+	}
+	organizationTunnels := 0
+	for _, active := range h.sessions.Snapshot() {
+		if active.OrganizationID == identity.OrganizationID {
+			organizationTunnels++
+		}
+	}
+	if len(h.sessions.Snapshot()) >= h.maxTunnels || (maxTunnels > 0 && organizationTunnels >= maxTunnels) {
+		return fmt.Errorf("tunnel capacity reached")
+	}
+	return nil
+}
+
+func (h *Handler) claimTunnel(ctx context.Context, tunnelID string) error {
+	if h.affinity == nil {
+		return nil
+	}
+	claimed, err := h.affinity.Claim(ctx, tunnelID, h.relayID, h.affinityTTL)
+	if err != nil {
+		return fmt.Errorf("claim relay affinity: %w", err)
+	}
+	if !claimed {
+		return fmt.Errorf("tunnel is connected through another relay")
+	}
+	return nil
+}
+
+func (h *Handler) newSession(connection *websocket.Conn, identity AgentIdentity, tunnelID string) engine.Session {
+	return engine.Session{ID: uuid.NewString(), OrganizationID: identity.OrganizationID, TunnelID: tunnelID, Send: func(sendCtx context.Context, outgoing protocol.Envelope) error {
+		if err := sendCtx.Err(); err != nil {
+			return err
+		}
+		limit := identity.BandwidthBytes
+		if limit == 0 {
+			limit = h.maxBandwidth
+		}
+		if limit > 0 && isDataMessage(outgoing.Type) {
+			if err := h.bandwidth.Consume(identity.OrganizationID, limit, int64(len(outgoing.Payload))); err != nil {
+				return err
+			}
+		}
+		h.recordMessageUsage(sendCtx, identity.OrganizationID, outgoing)
+		return h.writeJSON(connection, outgoing)
+	}, Close: func() { _ = connection.Close() }}
+}
+
+func (h *Handler) bindTunnelAlias(open protocol.OpenTunnel, tunnelID, sessionID string, owned map[string]string, exists bool) error {
+	alias := open.CustomDomain
+	if alias == "" {
+		alias = open.Subdomain
+	}
+	if alias == "" {
+		return nil
+	}
+	if err := h.sessions.BindAlias(alias, tunnelID); err != nil {
+		h.sessions.Remove(tunnelID, sessionID)
+		delete(owned, tunnelID)
+		if !exists {
+			h.metrics.AddTunnel(-1)
+		}
+		return err
+	}
+	return nil
+}
+
+func (h *Handler) openDataListener(open protocol.OpenTunnel, tunnelID string, send func(context.Context, protocol.Envelope) error, exists bool) (int, error) {
+	if open.Protocol == "tcp" {
+		if exists {
+			h.tcp.SetSender(tunnelID, send)
+			return h.tcp.Port(tunnelID), nil
+		}
+		return h.tcp.Open(tunnelID, send)
+	}
+	if open.Protocol == "udp" {
+		if exists {
+			h.udp.SetSender(tunnelID, send)
+			return h.udp.Port(tunnelID), nil
+		}
+		return h.udp.Open(tunnelID, send)
+	}
+	return 0, nil
+}
+
+func (h *Handler) rollbackTunnel(tunnelID, sessionID string, owned map[string]string, exists bool) {
+	h.sessions.Remove(tunnelID, sessionID)
+	delete(owned, tunnelID)
+	h.tcp.CloseTunnel(tunnelID)
+	h.udp.CloseTunnel(tunnelID)
+	if !exists {
+		h.metrics.AddTunnel(-1)
+	}
+}
+
+func (h *Handler) touchOrganizationSessions(organizationID string) error {
+	for _, session := range h.sessions.Snapshot() {
+		if session.OrganizationID == organizationID {
+			h.sessions.Touch(session.TunnelID)
+		}
+	}
+	return nil
+}
+
+func (h *Handler) closeTunnel(organizationID string, message protocol.Envelope, owned map[string]string) error {
+	var closeMessage protocol.CloseTunnel
+	if err := protocol.DecodePayload(message, &closeMessage); err != nil {
+		return err
+	}
+	session, ok := h.sessions.Get(closeMessage.TunnelID)
+	if !ok || session.OrganizationID != organizationID || !h.sessions.Remove(closeMessage.TunnelID, session.ID) {
+		return fmt.Errorf("tunnel not found")
+	}
+	delete(owned, closeMessage.TunnelID)
+	h.metrics.AddTunnel(-1)
+	h.router.RemoveTunnel(closeMessage.TunnelID)
+	h.tcp.CloseTunnel(closeMessage.TunnelID)
+	h.udp.CloseTunnel(closeMessage.TunnelID)
+	return nil
+}
