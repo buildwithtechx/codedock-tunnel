@@ -37,3 +37,12 @@ func (m *AccountMailer) SendWelcome(ctx context.Context, email, name string) err
 	}
 	return m.client.Send(ctx, Message{To: email, Subject: "Welcome to Codedock Tunnel", HTML: html})
 }
+
+func (m *AccountMailer) SendOrganizationInvite(ctx context.Context, email, inviterName, organizationName, role, invitationLink string) error {
+	html, err := m.renderer.render("organization-invite", OrganizationInviteData{InviterName: inviterName, OrganizationName: organizationName, Role: role, InvitationLink: invitationLink})
+	if err != nil {
+		return err
+	}
+	subject := "You’re invited to join " + organizationName + " on Codedock Tunnel"
+	return m.client.Send(ctx, Message{To: email, Subject: subject, HTML: html})
+}

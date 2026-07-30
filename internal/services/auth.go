@@ -12,49 +12,35 @@ import (
 )
 
 type AuthService struct {
-	users       repositories.UserRepository
-	identities  repositories.OAuthIdentityRepository
-	sessions    repositories.SessionRepository
-	now         func() time.Time
-	sessionTTL  time.Duration
-	protector   SecretProtector
-	adminEmails map[string]struct{}
+	users      repositories.UserRepository
+	identities repositories.OAuthIdentityRepository
+	sessions   repositories.SessionRepository
+	admins     platformAdminAuthorizer
+	now        func() time.Time
+	sessionTTL time.Duration
+	protector  SecretProtector
 }
 
 type SecretProtector interface{ Seal(string) (string, error) }
 
+type platformAdminAuthorizer interface {
+	IsPlatformAdmin(context.Context, string) (bool, error)
+}
+
 func (s *AuthService) SetSecretProtector(protector SecretProtector) { s.protector = protector }
 
-func (s *AuthService) SetAdminEmails(raw string) {
-	s.adminEmails = make(map[string]struct{})
-	for _, email := range strings.Split(raw, ",") {
-		email = strings.ToLower(strings.TrimSpace(email))
-		if email != "" {
-			s.adminEmails[email] = struct{}{}
-		}
-	}
-}
-
 func (s *AuthService) IsPlatformAdmin(ctx context.Context, userID string) (bool, error) {
-	user, err := s.users.FindByID(ctx, userID)
-	if err != nil {
-		return false, fmt.Errorf("find admin user: %w", err)
-	}
-	if user.PlatformAdmin {
-		return true, nil
-	}
-	_, allowed := s.adminEmails[strings.ToLower(strings.TrimSpace(user.Email))]
-	return allowed, nil
+	return s.admins.IsPlatformAdmin(ctx, userID)
 }
 
-func NewAuthService(users repositories.UserRepository, identities repositories.OAuthIdentityRepository, sessions repositories.SessionRepository, sessionTTL time.Duration) (*AuthService, error) {
-	if users == nil || identities == nil || sessions == nil {
+func NewAuthService(users repositories.UserRepository, identities repositories.OAuthIdentityRepository, sessions repositories.SessionRepository, admins platformAdminAuthorizer, sessionTTL time.Duration) (*AuthService, error) {
+	if users == nil || identities == nil || sessions == nil || admins == nil {
 		return nil, fmt.Errorf("auth repositories are required")
 	}
 	if sessionTTL <= 0 {
 		return nil, fmt.Errorf("session ttl must be positive")
 	}
-	return &AuthService{users: users, identities: identities, sessions: sessions, now: time.Now, sessionTTL: sessionTTL}, nil
+	return &AuthService{users: users, identities: identities, sessions: sessions, admins: admins, now: time.Now, sessionTTL: sessionTTL}, nil
 }
 
 func (s *AuthService) CreateSession(ctx context.Context, userID, userAgent, ipAddress string) (string, models.Session, error) {

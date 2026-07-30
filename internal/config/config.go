@@ -56,7 +56,6 @@ type AppConfig struct {
 	CORSOrigin       string        `env:"CORS_ORIGIN" envDefault:"http://localhost:3000"`
 	PublicAPIURL     string        `env:"PUBLIC_API_URL" envDefault:"http://localhost:8080"`
 	DashboardURL     string        `env:"DASHBOARD_URL" envDefault:"http://localhost:3000"`
-	AdminEmails      string        `env:"ADMIN_EMAILS"`
 	ACMEEmail        string        `env:"ACME_EMAIL"`
 	ACMEDirectory    string        `env:"ACME_DIRECTORY"`
 	CertificateCache string        `env:"CERTIFICATE_CACHE_DIR" envDefault:".data/acme"`
@@ -68,6 +67,7 @@ type AppConfig struct {
 type AuthConfig struct {
 	SessionTTL         time.Duration `env:"SESSION_TTL" envDefault:"720h"`
 	DeviceLoginTTL     time.Duration `env:"DEVICE_LOGIN_TTL" envDefault:"10m"`
+	InvitationTTL      time.Duration `env:"INVITATION_TTL" envDefault:"168h"`
 	OAuthStateTTL      time.Duration `env:"OAUTH_STATE_TTL" envDefault:"10m"`
 	CookieName         string        `env:"AUTH_COOKIE_NAME" envDefault:"codedock_session"`
 	CookieSecure       bool          `env:"AUTH_COOKIE_SECURE" envDefault:"false"`

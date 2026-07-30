@@ -34,3 +34,20 @@ func (m *BillingMailer) SendBillingUpdate(ctx context.Context, organizationID, s
 	}
 	return m.client.Send(ctx, Message{To: to, Subject: "Codedock Tunnel subscription update", HTML: html})
 }
+
+func (m *BillingMailer) SendPaymentFailed(ctx context.Context, email, name, planName, amount, billingURL string, attemptsRemaining int) error {
+	html, err := m.renderer.render("payment-failed", PaymentFailedData{Name: name, PlanName: planName, Amount: amount, BillingURL: billingURL, AttemptsRemaining: attemptsRemaining})
+	if err != nil {
+		return err
+	}
+	return m.client.Send(ctx, Message{To: email, Subject: "Action required: Codedock Tunnel payment failed", HTML: html})
+}
+
+func (m *BillingMailer) SendSubscriptionReset(ctx context.Context, email, name, organizationName, previousPlan, dashboardURL string) error {
+	html, err := m.renderer.render("subscription-reset", SubscriptionResetData{Name: name, OrganizationName: organizationName, PreviousPlan: previousPlan, DashboardURL: dashboardURL})
+	if err != nil {
+		return err
+	}
+	subject := "Your " + organizationName + " subscription changed"
+	return m.client.Send(ctx, Message{To: email, Subject: subject, HTML: html})
+}

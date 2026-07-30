@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -162,7 +163,7 @@ func parseWebhook(provider string, payload []byte) (services.BillingTransition, 
 	}
 	status := subscriptionStatus(eventType, stringValue(data, "status"))
 	periodEnd := timeValue(data, "current_period_end", "period_end")
-	transition := services.BillingTransition{Provider: models.BillingProvider(strings.ToLower(provider)), ProviderSubscription: stringValue(data, "subscription_id", "subscription_code", "id"), ProviderCustomer: stringValue(data, "customer_id", "customer_code"), ProviderProduct: stringValue(data, "product_id"), Status: status, CurrentPeriodEnd: periodEnd, CancelAtPeriodEnd: boolValue(data, "cancel_at_period_end", "cancelled")}
+	transition := services.BillingTransition{Provider: models.BillingProvider(strings.ToLower(provider)), ProviderSubscription: stringValue(data, "subscription_id", "subscription_code", "id"), ProviderCustomer: stringValue(data, "customer_id", "customer_code"), ProviderProduct: stringValue(data, "product_id"), Status: status, CurrentPeriodEnd: periodEnd, CancelAtPeriodEnd: boolValue(data, "cancel_at_period_end", "cancelled"), EventType: eventType, AmountMinor: int64Value(data, "amount", "amount_minor", "amountMinor"), Currency: stringValue(data, "currency"), AttemptsRemaining: intValue(data, "attempts_remaining", "attemptsRemaining", "retries_remaining"), PreviousPlan: stringValue(data, "previous_plan", "previousPlan")}
 	if metadata, ok := data["metadata"].(map[string]any); ok {
 		if transition.ProviderSubscription == "" {
 			transition.ProviderSubscription = stringValue(metadata, "subscription_id")
@@ -209,6 +210,40 @@ func boolValue(values map[string]any, keys ...string) bool {
 		}
 	}
 	return false
+}
+
+func intValue(values map[string]any, keys ...string) int {
+	for _, key := range keys {
+		switch value := values[key].(type) {
+		case float64:
+			return int(value)
+		case int:
+			return value
+		case string:
+			if parsed, err := strconv.Atoi(value); err == nil {
+				return parsed
+			}
+		}
+	}
+	return 0
+}
+
+func int64Value(values map[string]any, keys ...string) int64 {
+	for _, key := range keys {
+		switch value := values[key].(type) {
+		case float64:
+			return int64(value)
+		case int:
+			return int64(value)
+		case int64:
+			return value
+		case string:
+			if parsed, err := strconv.ParseInt(value, 10, 64); err == nil {
+				return parsed
+			}
+		}
+	}
+	return 0
 }
 
 func timeValue(values map[string]any, keys ...string) *time.Time {

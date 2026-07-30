@@ -3,6 +3,8 @@ package services
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"codedock.run/codedock-tunnel/internal/models"
@@ -17,11 +19,24 @@ type BillingService struct {
 	billingSecrets billingSecretProtector
 	gracePeriod    time.Duration
 	mailer         BillingMailer
+	notifications  BillingNotificationResolver
+	dashboardURL   string
 }
 
 type BillingMailer interface {
 	SendBillingUpdate(context.Context, string, string) error
+	SendPaymentFailed(context.Context, string, string, string, string, string, int) error
+	SendSubscriptionReset(context.Context, string, string, string, string, string) error
 }
+
+type BillingNotificationTarget struct {
+	Email            string
+	Name             string
+	OrganizationName string
+	BillingURL       string
+}
+
+type BillingNotificationResolver func(context.Context, string) (BillingNotificationTarget, error)
 
 type billingSecretProtector interface {
 	Seal(string) (string, error)
@@ -37,6 +52,11 @@ type BillingTransition struct {
 	CurrentPeriodEnd      *time.Time
 	CancelAtPeriodEnd     bool
 	ProviderAuthorization string
+	EventType             string
+	AmountMinor           int64
+	Currency              string
+	AttemptsRemaining     int
+	PreviousPlan          string
 }
 
 func (s *BillingService) ProcessWebhook(ctx context.Context, event *models.BillingEvent, transition *BillingTransition) (bool, error) {
@@ -49,10 +69,14 @@ func (s *BillingService) ProcessWebhook(ctx context.Context, event *models.Billi
 		return false, fmt.Errorf("check billing event: %w", err)
 	}
 	var subscription *models.Subscription
+	var previousPlan string
 	if transition != nil && transition.ProviderSubscription != "" && transition.Status != "" {
 		current, err := s.billing.FindSubscriptionByProvider(ctx, transition.Provider, transition.ProviderSubscription)
 		if err != nil {
 			return false, fmt.Errorf("find subscription transition: %w", err)
+		}
+		if plan, planErr := s.billing.FindPlan(ctx, current.PlanID); planErr == nil {
+			previousPlan = plan.Name
 		}
 		if err := s.applyTransition(&current, *transition); err != nil {
 			return false, err
@@ -62,8 +86,8 @@ func (s *BillingService) ProcessWebhook(ctx context.Context, event *models.Billi
 	if err := s.billing.ApplyBillingEvent(ctx, event, subscription); err != nil {
 		return false, fmt.Errorf("apply billing webhook transaction: %w", err)
 	}
-	if subscription != nil && s.mailer != nil {
-		_ = s.mailer.SendBillingUpdate(ctx, subscription.OrganizationID, string(subscription.Status))
+	if subscription != nil {
+		s.notifyTransition(ctx, event, subscription, transition, previousPlan)
 	}
 	return true, nil
 }
@@ -85,6 +109,10 @@ func (s *BillingService) SetGracePeriod(grace time.Duration) {
 	}
 }
 func (s *BillingService) SetMailer(mailer BillingMailer) { s.mailer = mailer }
+func (s *BillingService) SetNotificationResolver(resolver BillingNotificationResolver, dashboardURL string) {
+	s.notifications = resolver
+	s.dashboardURL = strings.TrimRight(dashboardURL, "/")
+}
 
 func (s *BillingService) ApplyTransition(ctx context.Context, transition BillingTransition) error {
 	if transition.Provider == "" || transition.ProviderSubscription == "" || transition.Status == "" {
@@ -100,10 +128,54 @@ func (s *BillingService) ApplyTransition(ctx context.Context, transition Billing
 	if err := s.billing.SaveSubscription(ctx, &subscription); err != nil {
 		return fmt.Errorf("save billing transition: %w", err)
 	}
-	if s.mailer != nil {
-		_ = s.mailer.SendBillingUpdate(ctx, subscription.OrganizationID, string(transition.Status))
+	previousPlan := ""
+	if plan, planErr := s.billing.FindPlan(ctx, subscription.PlanID); planErr == nil {
+		previousPlan = plan.Name
 	}
+	s.notifyTransition(ctx, &models.BillingEvent{EventType: transition.EventType}, &subscription, &transition, previousPlan)
 	return nil
+}
+
+func (s *BillingService) notifyTransition(ctx context.Context, event *models.BillingEvent, subscription *models.Subscription, transition *BillingTransition, previousPlan string) {
+	if s.mailer == nil || subscription == nil {
+		return
+	}
+	if event == nil || s.notifications == nil {
+		_ = s.mailer.SendBillingUpdate(ctx, subscription.OrganizationID, string(subscription.Status))
+		return
+	}
+	target, err := s.notifications(ctx, subscription.OrganizationID)
+	if err != nil {
+		return
+	}
+	eventType := strings.ToLower(event.EventType)
+	if (transition != nil && transition.Status == models.SubscriptionStatusPastDue) || strings.Contains(eventType, "fail") || strings.Contains(eventType, "past_due") {
+		planName := "Subscription"
+		amount := "0"
+		if subscription.PlanID != "" {
+			if plan, planErr := s.billing.FindPlan(ctx, subscription.PlanID); planErr == nil {
+				planName = plan.Name
+				amount = strconv.FormatInt(plan.PriceMinor, 10) + " " + plan.Currency
+			}
+		}
+		attempts := 0
+		if transition != nil {
+			attempts = transition.AttemptsRemaining
+			if transition.AmountMinor > 0 {
+				amount = strconv.FormatInt(transition.AmountMinor, 10) + " " + transition.Currency
+			}
+		}
+		_ = s.mailer.SendPaymentFailed(ctx, target.Email, target.Name, planName, amount, target.BillingURL, attempts)
+		return
+	}
+	if strings.Contains(eventType, "downgrade") || strings.Contains(eventType, "reset") || strings.Contains(eventType, "revoke") {
+		if transition != nil && transition.PreviousPlan != "" {
+			previousPlan = transition.PreviousPlan
+		}
+		_ = s.mailer.SendSubscriptionReset(ctx, target.Email, target.Name, target.OrganizationName, previousPlan, s.dashboardURL)
+		return
+	}
+	_ = s.mailer.SendBillingUpdate(ctx, subscription.OrganizationID, string(subscription.Status))
 }
 
 func (s *BillingService) applyTransition(subscription *models.Subscription, transition BillingTransition) error {

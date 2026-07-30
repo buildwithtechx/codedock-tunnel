@@ -88,6 +88,16 @@ Each independently deployed command has a focused environment example:
 | Check service | `cmd/check/.env.example` |
 | CLI | `cmd/cli/.env.example` |
 
+## Provisioning platform administrators
+
+Users authenticate with Google or GitHub before they can be granted platform-admin access. The server does not promote users automatically during signup. After the user has signed in once, provision an administrator explicitly:
+
+```sh
+codedockd bootstrap-admin --email owner@example.com
+```
+
+Use `--name` to set a separate admin display name. The command assigns the `owner` role in the `platform_admins` table.
+
 ## Runtime communication
 
 The API owns accounts, organizations, OAuth sessions, billing, and tunnel metadata. The tunnel relay owns public ingress and data-plane forwarding. The CLI calls the API for authentication and tunnel management, then opens the tunnel WebSocket to the relay. Cron shares backend storage and providers, while check exposes a private HTTP endpoint that an edge proxy can call before accepting a custom domain.

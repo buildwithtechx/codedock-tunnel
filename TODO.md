@@ -114,6 +114,8 @@ apps/web/src/
 - [ ] Keep route files focused on loaders, route metadata, and page composition.
 - [ ] Protect `/admin/*` with a separate platform-admin authorization guard.
 - [ ] Keep admin features and components isolated from organization-member features.
+- [x] Add `codedockd bootstrap-admin --email ...` to provision the first platform administrator explicitly.
+- [x] Add platform-admin roles without promoting users automatically during signup.
 - [ ] Keep domain behavior inside `features/`, not inside route files.
 - [ ] Keep shared visual primitives inside `components/ui/`.
 - [ ] Keep API contracts and frontend DTOs inside `interfaces/`.
@@ -181,6 +183,19 @@ The control-plane API should remain versioned under `/api/v1`:
 - [ ] Route wildcard public tunnel traffic through `*.tunnel.codedock-tunnel.dev`, not through control-plane handlers.
 
 - [ ] Keep `integrations/codedock/` as an optional external adapter.
+
+## Transactional email
+
+- [x] Use Zepto Mail as the only transactional email provider.
+- [x] Keep HTML email templates in the root `templates/` directory.
+- [x] Add welcome, account-update, billing-update, organization-invite, payment-failed, and subscription-reset templates.
+- [x] Escape user-controlled template values through Go's HTML template renderer.
+- [x] Send the welcome email after the first successful OAuth account creation.
+- [x] Send account-update email after account deletion.
+- [x] Send billing-update email after subscription state changes.
+- [x] Add organization invitation persistence, expiration, acceptance, and delivery workflow.
+- [x] Connect payment-failed events to retry-count and billing-page email data.
+- [x] Connect subscription downgrade/reset events to the subscription-reset email.
 
 ## Future SDKs
 

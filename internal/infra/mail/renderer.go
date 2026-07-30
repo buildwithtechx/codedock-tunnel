@@ -18,6 +18,28 @@ type WelcomeData struct {
 	DashboardURL string
 }
 
+type OrganizationInviteData struct {
+	InviterName      string
+	OrganizationName string
+	Role             string
+	InvitationLink   string
+}
+
+type PaymentFailedData struct {
+	Name              string
+	PlanName          string
+	Amount            string
+	BillingURL        string
+	AttemptsRemaining int
+}
+
+type SubscriptionResetData struct {
+	Name             string
+	OrganizationName string
+	PreviousPlan     string
+	DashboardURL     string
+}
+
 type BillingUpdateData struct {
 	Status       string
 	DashboardURL string

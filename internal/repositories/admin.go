@@ -9,6 +9,7 @@ import (
 )
 
 type AdminRepository interface {
+	PlatformAdminRepository
 	ListUsers(context.Context, int, int) ([]models.User, error)
 	CountUsers(context.Context) (int64, error)
 	SetUserStatus(context.Context, string, models.UserStatus) error
@@ -21,6 +22,12 @@ type AdminRepository interface {
 	ListAuditEvents(context.Context, int, int) ([]models.AuditEvent, error)
 	CountAuditEvents(context.Context) (int64, error)
 	Usage(context.Context) (AdminUsage, error)
+}
+
+type PlatformAdminRepository interface {
+	CountPlatformAdmins(context.Context) (int64, error)
+	CreatePlatformAdmin(context.Context, *models.PlatformAdmin) error
+	IsPlatformAdmin(context.Context, string) (bool, error)
 }
 
 type AdminUsage struct {
@@ -36,6 +43,26 @@ func NewAdminRepository(db *gorm.DB) (*GormAdminRepository, error) {
 		return nil, fmt.Errorf("database is required")
 	}
 	return &GormAdminRepository{db: db}, nil
+}
+
+func (r *GormAdminRepository) CountPlatformAdmins(ctx context.Context) (int64, error) {
+	return r.count(ctx, &models.PlatformAdmin{}, "active = true", "count platform admins")
+}
+
+func (r *GormAdminRepository) CreatePlatformAdmin(ctx context.Context, admin *models.PlatformAdmin) error {
+	if admin == nil || admin.UserID == "" {
+		return fmt.Errorf("platform admin user is required")
+	}
+	return wrap(r.db.WithContext(ctx).Create(admin).Error, "create platform admin")
+}
+
+func (r *GormAdminRepository) IsPlatformAdmin(ctx context.Context, userID string) (bool, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(&models.PlatformAdmin{}).Where("user_id = ? AND active = true", userID).Count(&count).Error
+	if err != nil {
+		return false, fmt.Errorf("check platform admin: %w", err)
+	}
+	return count == 1, nil
 }
 
 func (r *GormAdminRepository) ListUsers(ctx context.Context, limit, offset int) ([]models.User, error) {

@@ -12,6 +12,7 @@ type Dependencies struct {
 	Auth          *services.AuthService
 	DeviceLogin   *services.DeviceLoginService
 	Organizations *services.OrganizationService
+	Invitations   *services.InvitationService
 	Tunnels       *services.TunnelService
 	Agents        *services.AgentService
 	Domains       *services.DomainService
@@ -27,7 +28,7 @@ type Dependencies struct {
 }
 
 func (d Dependencies) Validate() error {
-	if d.Auth == nil || d.DeviceLogin == nil || d.Organizations == nil || d.Tunnels == nil || d.Agents == nil || d.Domains == nil || d.Usage == nil || d.Billing == nil || d.Account == nil || d.Admin == nil || d.Audit == nil {
+	if d.Auth == nil || d.DeviceLogin == nil || d.Organizations == nil || d.Invitations == nil || d.Tunnels == nil || d.Agents == nil || d.Domains == nil || d.Usage == nil || d.Billing == nil || d.Account == nil || d.Admin == nil || d.Audit == nil {
 		return fmt.Errorf("http service dependencies are incomplete")
 	}
 	return nil
@@ -37,6 +38,7 @@ type Handlers struct {
 	Health              *handlers.HealthHandler
 	Auth                *handlers.AuthHandler
 	Organizations       *handlers.OrganizationHandler
+	Invitations         *handlers.InvitationHandler
 	Tunnels             *handlers.TunnelHandler
 	Agents              *handlers.AgentHandler
 	Domains             *handlers.DomainHandler
@@ -59,6 +61,10 @@ func buildHandlers(deps Dependencies, cookieName string, cookieSecure bool) (Han
 		return Handlers{}, err
 	}
 	organizationHandler, err := handlers.NewOrganizationHandler(deps.Organizations)
+	if err != nil {
+		return Handlers{}, err
+	}
+	invitationHandler, err := handlers.NewInvitationHandler(deps.Invitations)
 	if err != nil {
 		return Handlers{}, err
 	}
@@ -97,5 +103,5 @@ func buildHandlers(deps Dependencies, cookieName string, cookieSecure bool) (Han
 	if err != nil {
 		return Handlers{}, err
 	}
-	return Handlers{Health: handlers.NewHealthHandler(deps.Ready), Auth: authHandler, Organizations: organizationHandler, Tunnels: tunnelHandler, Agents: agentHandler, Domains: domainHandler, Usage: usageHandler, Billing: billingHandler, OAuth: oauthHandler, Account: accountHandler, Admin: adminHandler, authService: deps.Auth, organizationService: deps.Organizations, auditService: deps.Audit}, nil
+	return Handlers{Health: handlers.NewHealthHandler(deps.Ready), Auth: authHandler, Organizations: organizationHandler, Invitations: invitationHandler, Tunnels: tunnelHandler, Agents: agentHandler, Domains: domainHandler, Usage: usageHandler, Billing: billingHandler, OAuth: oauthHandler, Account: accountHandler, Admin: adminHandler, authService: deps.Auth, organizationService: deps.Organizations, auditService: deps.Audit}, nil
 }

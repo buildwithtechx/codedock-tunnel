@@ -21,6 +21,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	if len(os.Args) > 1 && os.Args[1] == "bootstrap-admin" {
+		if err := runBootstrapAdmin(context.Background(), cfg, os.Args[2:]); err != nil {
+			log.Fatal(err)
+		}
+		return
+	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	db, err := postgres.Open(ctx, postgres.Config{DSN: cfg.Database.URL, MaxOpenConns: cfg.Database.MaxConns, MaxIdleConns: cfg.Database.MaxConns, ConnMaxLifetime: cfg.Database.MaxLifetime})
@@ -34,7 +40,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	deps.Auth.SetAdminEmails(cfg.App.AdminEmails)
 	if cfg.Auth.EncryptionKey != "" {
 		secretBox, err := storage.NewSecretBox([]byte(cfg.Auth.EncryptionKey))
 		if err != nil {
