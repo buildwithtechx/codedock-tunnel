@@ -22,15 +22,15 @@ export function DeveloperExperience() {
     (offset % traffic.length) + 5,
   );
   return (
-    <section className="bg-black py-20 sm:py-24">
+    <section className="bg-black py-14 sm:py-16">
       <MarketingContainer>
         <h2 className="mx-auto max-w-3xl text-center text-4xl font-bold tracking-[-0.05em] sm:text-6xl">
           Your workflow,
           <br />
           already connected
         </h2>
-        <div className="mt-16 grid gap-8 lg:grid-cols-2">
-          <div className="grid gap-8">
+        <div className="mt-10 grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-6">
             <article className="group flex flex-col rounded-3xl border border-white/5 bg-white/[0.02] p-8 transition-colors hover:border-white/10">
               <div className="flex items-center gap-4">
                 <span className="flex size-10 items-center justify-center rounded-full bg-indigo-300/10 transition-colors group-hover:bg-indigo-300/20">

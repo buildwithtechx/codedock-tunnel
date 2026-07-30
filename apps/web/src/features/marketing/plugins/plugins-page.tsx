@@ -5,17 +5,15 @@ import { pluginDefinitions } from './plugin-data';
 
 export function PluginsPage() {
   return (
-    <section className="pt-36 pb-24 sm:pt-44">
+    <section className="pb-16 pt-28 sm:pt-32">
       <MarketingContainer>
         <div className="mx-auto max-w-3xl text-center">
           <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-sm text-white/55">
             <PackageCheck className="size-4 text-cyan-300" />
             Official Codedock integrations
           </div>
-          <h1 className="mt-7 text-4xl font-semibold tracking-[-0.06em] sm:text-7xl">
-            Your stack.
-            <br />
-            <span className="text-indigo-300">One tunnel lifecycle.</span>
+          <h1 className="mt-7 text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">
+            One lifecycle for every stack.
           </h1>
           <p className="mt-6 text-lg leading-8 text-white/50">
             Install the package that matches your runtime. Each integration
@@ -23,7 +21,7 @@ export function PluginsPage() {
             Codedock protocol underneath.
           </p>
         </div>
-        <div className="mt-16 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {pluginDefinitions.map((plugin) => (
             <Link
               key={plugin.id}

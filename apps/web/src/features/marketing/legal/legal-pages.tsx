@@ -48,10 +48,10 @@ function LegalPage({
   sections: string[][];
 }) {
   return (
-    <section className="pt-36 pb-24 sm:pt-44">
+    <section className="pb-16 pt-28 sm:pt-32">
       <MarketingContainer className="max-w-4xl">
         <p className="text-sm text-cyan-300">Legal</p>
-        <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-6xl">
+        <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
           {title}
         </h1>
         <p className="mt-5 max-w-2xl text-lg leading-8 text-white/50">
@@ -60,7 +60,7 @@ function LegalPage({
         <p className="mt-6 text-sm text-white/35">
           Last updated: July 30, 2026
         </p>
-        <div className="mt-14 space-y-10 border-t border-white/10 pt-10">
+        <div className="mt-10 space-y-8 border-t border-white/10 pt-8">
           {sections.map(([heading, text]) => (
             <article key={heading}>
               <h2 className="text-xl font-semibold">{heading}</h2>

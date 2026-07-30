@@ -6,7 +6,7 @@ import type { PluginDefinition } from './plugin-data';
 
 export function PluginCta({ plugin }: { plugin: PluginDefinition }) {
   return (
-    <section className="py-28 sm:py-36">
+    <section className="py-16 sm:py-20">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}

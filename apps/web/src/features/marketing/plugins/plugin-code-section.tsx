@@ -6,7 +6,7 @@ import type { PluginDefinition } from './plugin-data';
 
 export function PluginCodeSection({ plugin }: { plugin: PluginDefinition }) {
   return (
-    <section className="py-24 sm:py-32">
+    <section className="py-16 sm:py-20">
       <MarketingContainer className="grid items-center gap-14 lg:grid-cols-[0.85fr_1.15fr]">
         <motion.div
           initial={{ opacity: 0, x: -20 }}

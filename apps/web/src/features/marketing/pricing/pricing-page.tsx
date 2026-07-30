@@ -54,14 +54,14 @@ const plans = [
 export function PricingPage() {
   const [yearly, setYearly] = useState(false);
   return (
-    <section className="border-b border-white/10 pt-36 pb-24 sm:pt-44">
+    <section className="border-b border-white/10 pb-16 pt-28 sm:pt-32">
       <MarketingContainer>
         <div className="mx-auto max-w-2xl text-center">
           <p className="text-sm font-medium text-cyan-300">
             Pricing that scales with your tunnels
           </p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-6xl">
-            Keep shipping. Pay for the traffic you need.
+          <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
+            Plans built for real traffic.
           </h1>
           <p className="mt-5 text-lg leading-8 text-white/50">
             Start with the essentials and add capacity when your previews,
@@ -84,7 +84,7 @@ export function PricingPage() {
             </button>
           </div>
         </div>
-        <div className="mt-16 grid gap-4 lg:grid-cols-4">
+        <div className="mt-12 grid gap-4 lg:grid-cols-4">
           {plans.map((plan) => (
             <article
               key={plan.name}

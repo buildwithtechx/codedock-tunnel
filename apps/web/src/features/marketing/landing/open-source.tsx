@@ -30,13 +30,11 @@ const values = [
 
 export function OpenSourceSection() {
   return (
-    <section className="py-24 sm:py-32">
+    <section className="py-16 sm:py-20">
       <MarketingContainer className="grid items-center gap-14 lg:grid-cols-2">
         <div>
-          <h2 className="text-4xl font-semibold tracking-[-0.05em] sm:text-6xl">
-            Open source
-            <br />
-            by design
+          <h2 className="text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
+            Open by design.
           </h2>
           <p className="mt-6 max-w-xl text-lg leading-8 text-white/50">
             Codedock Tunnel is built in the open so developers can understand

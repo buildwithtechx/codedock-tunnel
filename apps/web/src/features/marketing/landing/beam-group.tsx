@@ -81,7 +81,7 @@ function RelayBeam({ color }: { color: string }) {
 
 export function BeamGroup({ color = '#ffffff' }: { color?: string }) {
   return (
-    <group position={[-10, 0, 0]}>
+    <group position={[-10, -1.2, 0]} rotation={[0, 0, 0.18]}>
       <RelayBeam color={color} />
       <Dust />
     </group>

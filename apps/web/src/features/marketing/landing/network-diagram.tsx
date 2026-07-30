@@ -31,17 +31,17 @@ const nodes = [
 
 export function NetworkDiagram() {
   return (
-    <section className="py-28 sm:py-36">
+    <section className="py-16 sm:py-20">
       <MarketingContainer>
         <div className="text-center">
           <div className="relative inline-block">
-            <h2 className="relative text-6xl font-semibold italic tracking-[-0.07em] text-transparent bg-gradient-to-b from-white via-white/90 to-white/40 bg-clip-text sm:text-8xl">
-              From localhost to everywhere
+            <h2 className="relative whitespace-nowrap bg-gradient-to-b from-white via-white/90 to-white/40 bg-clip-text text-4xl font-semibold italic tracking-[-0.06em] text-transparent sm:text-6xl">
+              Local to public
             </h2>
             <Sparkles className="absolute -right-10 -top-8 size-9 text-amber-200" />
           </div>
         </div>
-        <div className="relative mt-24">
+        <div className="relative mt-14">
           <div className="absolute left-0 right-0 top-8 hidden h-px bg-gradient-to-r from-transparent via-white/25 to-transparent md:block" />
           <motion.div
             className="absolute left-0 top-8 hidden size-1 -translate-y-1/2 rounded-full bg-white shadow-[0_0_15px_5px_rgba(255,255,255,0.7)] md:block"

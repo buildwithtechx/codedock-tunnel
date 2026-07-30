@@ -24,26 +24,22 @@ const features = [
 
 export function LocalAccessSection() {
   return (
-    <section className="py-24 sm:py-32">
+    <section className="py-16 sm:py-20">
       <MarketingContainer>
         <div className="mx-auto max-w-3xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-sm text-cyan-200">
             <LaptopMinimal className="size-4" />
             Built around local development
           </div>
-          <h2 className="text-4xl font-semibold tracking-[-0.05em] sm:text-6xl">
-            Your local app,
-            <br />
-            <span className="bg-gradient-to-r from-blue-300 via-cyan-300 to-emerald-300 bg-clip-text text-transparent">
-              wherever it needs to go.
-            </span>
+          <h2 className="text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
+            Local apps, ready to share.
           </h2>
           <p className="mt-6 text-lg leading-8 text-white/50">
             Share a preview, receive a webhook, or test an OAuth provider
             without moving the service out of your workflow.
           </p>
         </div>
-        <div className="mt-16 grid gap-10 lg:grid-cols-2">
+        <div className="mt-12 grid gap-10 lg:grid-cols-2">
           <div className="space-y-7">
             {features.map(({ title, text, icon: Icon, color }) => (
               <div key={title} className="flex items-start gap-4">

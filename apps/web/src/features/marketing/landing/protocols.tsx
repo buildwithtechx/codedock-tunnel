@@ -30,20 +30,18 @@ const protocols = [
 
 export function ProtocolsSection() {
   return (
-    <section className="py-24 sm:py-32">
+    <section className="py-16 sm:py-20">
       <MarketingContainer>
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-4xl font-semibold tracking-[-0.05em] sm:text-6xl">
-            Web traffic or
-            <br />
-            <span className="text-white/35">wire traffic.</span>
+          <h2 className="text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
+            Every protocol. One workflow.
           </h2>
           <p className="mt-6 text-lg leading-8 text-white/50">
             Codedock Tunnel is not limited to browser traffic. Use one CLI and
             one account for HTTP, HTTPS, TCP, and UDP services.
           </p>
         </div>
-        <div className="mt-16 grid gap-5 md:grid-cols-3">
+        <div className="mt-12 grid gap-5 md:grid-cols-3">
           {protocols.map(
             ({ title, text, command, icon: Icon, cardClass, iconClass }) => (
               <article

@@ -24,11 +24,11 @@ const entries = [
 
 export function ChangelogPage() {
   return (
-    <section className="pt-36 pb-24 sm:pt-44">
+    <section className="pb-16 pt-28 sm:pt-32">
       <MarketingContainer className="max-w-5xl">
         <div className="max-w-2xl">
           <p className="text-sm font-medium text-cyan-300">What’s new</p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-6xl">
+          <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
             Small releases. Better tunnels.
           </h1>
           <p className="mt-5 text-lg leading-8 text-white/50">
@@ -36,7 +36,7 @@ export function ChangelogPage() {
             developer surfaces evolve.
           </p>
         </div>
-        <div className="mt-16 divide-y divide-white/10 border-y border-white/10">
+        <div className="mt-12 divide-y divide-white/10 border-y border-white/10">
           {entries.map((entry) => (
             <article
               key={entry.title}

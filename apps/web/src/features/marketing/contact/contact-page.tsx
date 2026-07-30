@@ -5,12 +5,12 @@ import { MarketingContainer } from '#/components/layout';
 export function ContactPage() {
   const [sent, setSent] = useState(false);
   return (
-    <section className="pt-36 pb-24 sm:pt-44">
+    <section className="pb-16 pt-28 sm:pt-32">
       <MarketingContainer className="grid max-w-6xl gap-14 lg:grid-cols-[0.75fr_1.25fr]">
         <div>
           <p className="text-sm font-medium text-cyan-300">Talk to us</p>
-          <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-6xl">
-            Questions, feedback, or a tunnel story?
+          <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
+            Questions or feedback?
           </h1>
           <p className="mt-5 leading-8 text-white/50">
             Tell us what you are building. We read every message and use your
