@@ -1,0 +1,22 @@
+---
+title: Integration overview
+description: Pick the client package that matches your application.
+icon: Blocks
+---
+
+All TypeScript integrations use the same framework-neutral SDK. Framework
+packages add lifecycle helpers without creating a second protocol or client.
+
+| Package | Use it for |
+| --- | --- |
+| `@codedock-tunnel/protocol-ts` | Shared message types and codecs |
+| `@codedock-tunnel/sdk-ts` | Node.js and browser client operations |
+| `@codedock-tunnel/react` | React provider and hooks |
+| `@codedock-tunnel/vite-plugin` | Vite development workflows |
+| `@codedock-tunnel/next` | Next.js server and route integration |
+| `@codedock-tunnel/nest` | NestJS module and service integration |
+| `@codedock-tunnel/express` | Express middleware integration |
+| `@codedock-tunnel/tauri-bridge` | Tauri desktop communication |
+
+Use the SDK directly when you need full control. Choose an adapter when your
+framework already owns application startup and shutdown.

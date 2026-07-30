@@ -1,0 +1,17 @@
+---
+title: Tunnel protocol
+description: The shared wire contract between clients and relays.
+icon: Brackets
+---
+
+Codedock Tunnel uses a versioned protocol shared by the Go client, relay, and
+TypeScript packages. The canonical schema lives in `protocol/schema`, with
+generated bindings under `protocol/generated` and `packages/protocol-ts`.
+
+The protocol provides messages for opening and closing a tunnel, forwarding
+data, heartbeats, acknowledgements, and errors. A session must negotiate its
+version before application traffic is accepted.
+
+Protocol consumers should use the generated package instead of recreating
+message shapes. This keeps the CLI, SDKs, and relay compatible as the protocol
+evolves.

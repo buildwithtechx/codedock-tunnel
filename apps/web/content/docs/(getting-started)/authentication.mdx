@@ -1,0 +1,31 @@
+---
+title: Authenticate a client
+description: Connect the CLI and SDKs to a Tunnel account securely.
+icon: KeyRound
+---
+
+The web application owns interactive sign-in. Clients use credentials issued
+by the Tunnel API and never handle a provider's OAuth secret.
+
+## CLI authentication
+
+Start the device login flow from the CLI:
+
+```sh
+codedock-tunnel login --server https://api.codedock-tunnel.dev
+```
+
+The CLI stores its token in its local configuration directory. Treat that
+file as a credential: do not commit it, print it in CI logs, or share it.
+
+## SDK authentication
+
+Use an API key or short-lived client token supplied by the API. Keep long-lived
+API keys on a server or CI secret store. Browser applications should use a
+short-lived token rather than embedding an API key in a bundle.
+
+## Organizations
+
+Every tunnel belongs to an organization. The API checks organization
+membership and plan entitlements before creating a tunnel or opening a relay
+session.

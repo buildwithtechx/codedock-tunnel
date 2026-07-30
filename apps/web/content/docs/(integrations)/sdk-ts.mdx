@@ -1,0 +1,19 @@
+---
+title: TypeScript SDK
+description: Manage tunnels from Node.js, browser clients, and CI tools.
+icon: Braces
+---
+
+Install the framework-neutral client:
+
+```sh
+npm install @codedock-tunnel/sdk-ts
+```
+
+The SDK provides API operations, relay connection lifecycle, reconnect
+handling, and the shared protocol types. It uses the platform `fetch` API, so
+it does not add Axios or another HTTP stack to applications.
+
+Keep API keys in server-side environment variables. For browser use, request
+a short-lived token from your application backend and construct the client
+with that token.

@@ -1,5 +1,34 @@
 ---
-title: Hello World
+title: Codedock Tunnel
+description: Secure public access for local and private services.
+icon: House
 ---
 
-Welcome to Codedock Tunnel Documentation.
+Codedock Tunnel creates an encrypted path between a local service and a public
+endpoint. It is an independent product: you can use the hosted service,
+self-host the server components, or build on the protocol and SDKs without
+using Codedock.
+
+## Product surfaces
+
+- The `codedock-tunnel` CLI opens and manages tunnels from a workstation or CI runner.
+- The web dashboard manages accounts, organizations, tunnels, domains, and usage.
+- The relay handles public ingress and forwards traffic to connected clients.
+- The TypeScript SDK and framework adapters integrate tunnel lifecycle into applications.
+- The desktop app provides a graphical client for tunnel management.
+
+## How a request travels
+
+1. A client authenticates with the Tunnel API.
+2. The client opens a protocol session with the relay.
+3. The relay associates the session with a tunnel and its organization.
+4. A request arriving at the public endpoint is forwarded through the session.
+5. The local client sends the request to the selected local target and streams the response back.
+
+## Start here
+
+- [Install the CLI](/docs/getting-started/installation)
+- [Open your first HTTP tunnel](/docs/getting-started/first-tunnel)
+- [Understand authentication](/docs/getting-started/authentication)
+- [Choose an integration](/docs/integrations/overview)
+- [Read the architecture overview](/docs/reference/architecture)

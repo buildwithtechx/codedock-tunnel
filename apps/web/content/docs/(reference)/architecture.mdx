@@ -1,0 +1,19 @@
+---
+title: Architecture
+description: How the API, relay, clients, and storage fit together.
+icon: Network
+---
+
+The control plane is a Go service backed by PostgreSQL for durable state and
+Redis for ephemeral presence, heartbeats, rate limits, and relay coordination.
+The relay is a separate Go process responsible for public ingress and live
+stream forwarding.
+
+```text
+CLI or SDK ── HTTPS ──> API ── control state ──> PostgreSQL
+     │                   │
+     └── WebSocket ───> Relay ── ephemeral state ──> Redis
+```
+
+The web and desktop applications are clients of the same public API. They do
+not bypass organization authorization or relay session authentication.

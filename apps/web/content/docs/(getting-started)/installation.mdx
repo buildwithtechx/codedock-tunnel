@@ -1,0 +1,33 @@
+---
+title: Install the CLI
+description: Install the standalone Codedock Tunnel client.
+icon: Download
+---
+
+The CLI runs on your workstation or CI runner. It is not a server daemon and
+does not need to be installed on the relay host.
+
+## Linux and macOS
+
+```sh
+curl -fsSL https://cli.codedock-tunnel.dev | bash
+```
+
+The installer places `codedock-tunnel` in `$HOME/.local/bin` by default. Make
+sure that directory is on your `PATH`.
+
+## Verify the installation
+
+```sh
+codedock-tunnel version
+codedock-tunnel health --api-url https://api.codedock-tunnel.dev
+```
+
+## Private or local installations
+
+Pass the API and relay endpoints through the CLI environment or command
+configuration. The client is designed to work with the hosted service and
+independent installations of the server.
+
+The CLI and desktop app are separate products. Installing the CLI does not
+install the desktop app.

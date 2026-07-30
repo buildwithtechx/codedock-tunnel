@@ -1,0 +1,17 @@
+---
+title: Configuration
+description: Configure local development and independent deployments.
+icon: Settings2
+---
+
+Each independently deployed command has a focused `.env.example` in its own
+`cmd` directory. Copy the example for the command you are running and replace
+local development values before deployment.
+
+The API requires PostgreSQL, Redis, OAuth provider credentials, billing
+provider credentials, and the Zepto Mail configuration used by the enabled
+account workflows. The relay requires its API connection, public endpoint,
+and connection limits.
+
+Keep secrets outside the repository. Never use production provider keys in a
+local `.env` file that can be uploaded or committed.
