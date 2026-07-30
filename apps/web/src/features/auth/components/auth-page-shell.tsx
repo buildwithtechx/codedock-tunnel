@@ -15,25 +15,21 @@ export function AuthPageShell({
   children,
 }: AuthPageShellProps) {
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#080b14] px-6 py-12 text-white">
-      <div className="absolute inset-x-0 top-0 h-80 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.18),transparent_70%)]" />
-      <Link
-        to="/"
-        className="absolute left-6 top-6 z-10 flex items-center gap-3 sm:left-10 sm:top-9"
-      >
-        <img src="/favicon.svg" alt="" className="size-9 rounded-xl" />
-        <span className="font-semibold tracking-tight">Codedock Tunnel</span>
-      </Link>
-      <section className="relative z-10 w-full max-w-md rounded-3xl border border-white/10 bg-black/35 p-7 shadow-2xl shadow-black/40 backdrop-blur sm:p-9">
-        <p className="text-sm font-medium text-indigo-300">Codedock Tunnel</p>
-        <h1 className="mt-4 text-3xl font-semibold tracking-[-0.04em]">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black px-6 py-12 text-white">
+      <div className="pointer-events-none absolute left-1/2 top-0 h-96 w-160 -translate-x-1/2 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.1),transparent_68%)]" />
+      <section className="relative z-10 w-full max-w-sm text-center">
+        <Link to="/" className="mx-auto inline-flex items-center gap-3">
+          <img src="/favicon.svg" alt="" className="size-11 rounded-2xl" />
+          <span className="text-lg font-semibold tracking-tight">
+            Codedock Tunnel
+          </span>
+        </Link>
+        <h1 className="mt-8 text-3xl font-semibold tracking-[-0.045em]">
           {title}
         </h1>
-        <p className="mt-3 leading-7 text-white/50">{description}</p>
-        <div className="mt-8">{children}</div>
-        <div className="mt-7 border-t border-white/10 pt-6 text-center text-sm text-white/45">
-          {footer}
-        </div>
+        <p className="mt-2 text-sm text-white/45">{description}</p>
+        <div className="mt-9">{children}</div>
+        <div className="mt-8 text-sm text-white/45">{footer}</div>
       </section>
     </main>
   );

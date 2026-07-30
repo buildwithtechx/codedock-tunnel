@@ -10,7 +10,7 @@ import { useOAuthSignIn } from '#/features/auth/hooks/use-oauth-sign-in';
 export function LoginPage() {
   const navigate = useNavigate();
   const notice = useAuthNotice();
-  const { isAuthenticated, isSessionUnavailable } = useAuthSession();
+  const { isAuthenticated } = useAuthSession();
   const { provider, signIn } = useOAuthSignIn();
 
   useEffect(() => {
@@ -34,20 +34,15 @@ export function LoginPage() {
       }
     >
       {notice && <AuthNotice>{notice}</AuthNotice>}
-      {isSessionUnavailable && !notice && (
-        <AuthNotice>
-          Unable to reach your session. You can still sign in below.
-        </AuthNotice>
-      )}
       <div className="space-y-3">
         <OAuthProviderButton
-          provider="google"
+          provider="github"
           label="Continue with"
           loading={provider !== null}
           onClick={signIn}
         />
         <OAuthProviderButton
-          provider="github"
+          provider="google"
           label="Continue with"
           loading={provider !== null}
           onClick={signIn}

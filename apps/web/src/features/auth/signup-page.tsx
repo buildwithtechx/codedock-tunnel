@@ -10,7 +10,7 @@ import { useOAuthSignIn } from '#/features/auth/hooks/use-oauth-sign-in';
 export function SignupPage() {
   const navigate = useNavigate();
   const notice = useAuthNotice();
-  const { isAuthenticated, isSessionUnavailable } = useAuthSession();
+  const { isAuthenticated } = useAuthSession();
   const { provider, signIn } = useOAuthSignIn();
 
   useEffect(() => {
@@ -19,8 +19,8 @@ export function SignupPage() {
 
   return (
     <AuthPageShell
-      title="Start building"
-      description="Create your account with Google or GitHub, then open your first tunnel."
+      title="Create an account"
+      description="Sign up to get started with Codedock Tunnel."
       footer={
         <>
           Already have an account?{' '}
@@ -34,20 +34,15 @@ export function SignupPage() {
       }
     >
       {notice && <AuthNotice>{notice}</AuthNotice>}
-      {isSessionUnavailable && !notice && (
-        <AuthNotice>
-          Unable to reach your session. You can still create an account below.
-        </AuthNotice>
-      )}
       <div className="space-y-3">
         <OAuthProviderButton
-          provider="google"
+          provider="github"
           label="Continue with"
           loading={provider !== null}
           onClick={signIn}
         />
         <OAuthProviderButton
-          provider="github"
+          provider="google"
           label="Continue with"
           loading={provider !== null}
           onClick={signIn}

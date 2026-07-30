@@ -22,7 +22,7 @@ export function OAuthProviderButton({
       type="button"
       disabled={loading}
       onClick={() => onClick(provider)}
-      className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] text-sm font-medium text-white transition-colors hover:border-indigo-300/45 hover:bg-indigo-300/10 disabled:opacity-60"
+      className="flex h-13 w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-[#111] text-sm font-medium text-white transition-colors hover:border-indigo-300/45 hover:bg-indigo-300/10 disabled:opacity-60"
     >
       <Icon className="size-4" />
       {loading ? `Connecting to ${providerName}…` : `${label} ${providerName}`}
