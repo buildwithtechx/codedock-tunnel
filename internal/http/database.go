@@ -22,6 +22,10 @@ func NewDatabaseDependencies(db *gorm.DB, cfg config.APIConfig) (Dependencies, e
 	if err != nil {
 		return Dependencies{}, err
 	}
+	adminRepository, err := repositories.NewAdminRepository(db)
+	if err != nil {
+		return Dependencies{}, err
+	}
 	identities, err := repositories.NewOAuthIdentityRepository(db)
 	if err != nil {
 		return Dependencies{}, err
@@ -70,6 +74,10 @@ func NewDatabaseDependencies(db *gorm.DB, cfg config.APIConfig) (Dependencies, e
 	if err != nil {
 		return Dependencies{}, err
 	}
+	adminService, err := services.NewAdminService(adminRepository)
+	if err != nil {
+		return Dependencies{}, err
+	}
 	tunnelService, err := services.NewTunnelService(tunnels)
 	if err != nil {
 		return Dependencies{}, err
@@ -110,6 +118,7 @@ func NewDatabaseDependencies(db *gorm.DB, cfg config.APIConfig) (Dependencies, e
 		}
 		billingService.SetGateway(gateway)
 	}
+	var welcomeMailer services.WelcomeMailer
 	if cfg.Mail.ZeptoAPIKey != "" {
 		zepto, mailErr := mail.NewZeptoClient(mail.Config{URL: cfg.Mail.ZeptoURL, APIKey: cfg.Mail.ZeptoAPIKey, FromAddress: cfg.Mail.FromAddress}, nil)
 		if mailErr != nil {
@@ -125,16 +134,17 @@ func NewDatabaseDependencies(db *gorm.DB, cfg config.APIConfig) (Dependencies, e
 				return "", findErr
 			}
 			return user.Email, nil
-		})
+		}, cfg.App.DashboardURL)
 		if mailErr != nil {
 			return Dependencies{}, mailErr
 		}
 		billingService.SetMailer(billingMailer)
-		accountMailer, mailErr := mail.NewAccountMailer(zepto)
+		accountMailer, mailErr := mail.NewAccountMailer(zepto, cfg.App.DashboardURL)
 		if mailErr != nil {
 			return Dependencies{}, mailErr
 		}
 		accountService.SetMailer(accountMailer)
+		welcomeMailer = accountMailer
 	}
 	domainService, err := services.NewDomainService(domains)
 	if err != nil {
@@ -178,7 +188,7 @@ func NewDatabaseDependencies(db *gorm.DB, cfg config.APIConfig) (Dependencies, e
 	if err != nil {
 		return Dependencies{}, err
 	}
-	return Dependencies{Auth: authService, DeviceLogin: deviceService, Organizations: organizationService, Tunnels: tunnelService, Agents: agentService, Domains: domainService, Usage: usageService, Billing: billingService, Account: accountService, Audit: auditService, Ready: func(ctx context.Context) error {
+	return Dependencies{Auth: authService, DeviceLogin: deviceService, Organizations: organizationService, Tunnels: tunnelService, Agents: agentService, Domains: domainService, Usage: usageService, Billing: billingService, Account: accountService, Admin: adminService, Audit: auditService, WelcomeMailer: welcomeMailer, Ready: func(ctx context.Context) error {
 		sqlDB, err := db.DB()
 		if err != nil {
 			return fmt.Errorf("get database connection: %w", err)

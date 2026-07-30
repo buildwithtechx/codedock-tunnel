@@ -175,7 +175,7 @@ The control-plane API should remain versioned under `/api/v1`:
 - [x] Keep liveness, readiness, and metrics outside the versioned API at `/healthz`, `/readyz`, and `/metrics`.
 - [x] Keep relay WebSocket transport separate at `wss://tunnel.codedock-tunnel.dev/v1/connect`.
 - [ ] Add organization detail, member listing/removal, profile, API-key, audit-log, request-log, and invoice routes.
-- [ ] Add platform-admin authorization and admin users, organizations, tunnels, subscriptions, usage, charts, and action routes.
+- [x] Add platform-admin authorization and admin users, organizations, tunnels, subscriptions, usage, audit, and action routes.
 - [ ] Move agent heartbeats away from browser-session authentication to agent or relay authentication.
 - [ ] Keep internal health, usage ingestion, relay handoff, and agent authentication routes private.
 - [ ] Route wildcard public tunnel traffic through `*.tunnel.codedock-tunnel.dev`, not through control-plane handlers.

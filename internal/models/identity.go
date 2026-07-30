@@ -7,6 +7,7 @@ type User struct {
 	Email           string     `json:"email" gorm:"uniqueIndex;not null"`
 	Name            string     `json:"name" gorm:"not null"`
 	Status          UserStatus `json:"status" gorm:"type:varchar(20);not null;default:'active'"`
+	PlatformAdmin   bool       `json:"-" gorm:"not null;default:false;index"`
 	EmailVerifiedAt *time.Time `json:"emailVerifiedAt,omitempty"`
 	LastLoginAt     *time.Time `json:"lastLoginAt,omitempty"`
 	DeletedAt       *time.Time `json:"-"`

@@ -17,6 +17,7 @@ type AccountService struct {
 
 type AccountMailer interface {
 	SendAccountUpdate(context.Context, string, string) error
+	SendWelcome(context.Context, string, string) error
 }
 
 func NewAccountService(users repositories.UserRepository, organizations repositories.OrganizationRepository) (*AccountService, error) {

@@ -55,6 +55,8 @@ type AppConfig struct {
 	AllowedOrigins   string        `env:"ALLOWED_ORIGINS" envDefault:"http://localhost:3000,http://localhost:3001"`
 	CORSOrigin       string        `env:"CORS_ORIGIN" envDefault:"http://localhost:3000"`
 	PublicAPIURL     string        `env:"PUBLIC_API_URL" envDefault:"http://localhost:8080"`
+	DashboardURL     string        `env:"DASHBOARD_URL" envDefault:"http://localhost:3000"`
+	AdminEmails      string        `env:"ADMIN_EMAILS"`
 	ACMEEmail        string        `env:"ACME_EMAIL"`
 	ACMEDirectory    string        `env:"ACME_DIRECTORY"`
 	CertificateCache string        `env:"CERTIFICATE_CACHE_DIR" envDefault:".data/acme"`

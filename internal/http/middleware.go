@@ -54,6 +54,23 @@ func organizationRoleRequired(organizations *services.OrganizationService, requi
 	}
 }
 
+func platformAdminRequired(auth *services.AuthService) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		session, ok := c.Locals("session").(models.Session)
+		if !ok || session.UserID == "" {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "authenticated session is required"})
+		}
+		admin, err := auth.IsPlatformAdmin(c.UserContext(), session.UserID)
+		if err != nil {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "platform admin access is unavailable"})
+		}
+		if !admin {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "platform admin access is required"})
+		}
+		return c.Next()
+	}
+}
+
 func internalSecretRequired(expected string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		provided := []byte(c.Get("X-Internal-Secret"))

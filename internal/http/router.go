@@ -69,6 +69,17 @@ func RegisterRoutes(app *fiber.App, handlers Handlers, options RouterOptions) er
 	protected.Post("/agents/:agentID/heartbeat", handlers.Agents.Heartbeat)
 	protected.Delete("/agents/:agentID", handlers.Agents.Revoke)
 
+	admin := protected.Group("/admin", platformAdminRequired(handlers.authService))
+	admin.Get("/overview", handlers.Admin.Overview)
+	admin.Get("/users", handlers.Admin.Users)
+	admin.Patch("/users/:userID/status", handlers.Admin.SetUserStatus)
+	admin.Get("/organizations", handlers.Admin.Organizations)
+	admin.Get("/tunnels", handlers.Admin.Tunnels)
+	admin.Get("/subscriptions", handlers.Admin.Subscriptions)
+	admin.Get("/usage", handlers.Admin.Usage)
+	admin.Get("/audit-logs", handlers.Admin.AuditLogs)
+	admin.Post("/tunnels/:tunnelID/revoke", handlers.Tunnels.Revoke)
+
 	if options.InternalAPISecret != "" {
 		app.Get("/internal/health", internalSecretRequired(options.InternalAPISecret), handlers.Health.Readiness)
 		app.Get("/internal/agents/authenticate", internalSecretRequired(options.InternalAPISecret), handlers.Agents.Authenticate)

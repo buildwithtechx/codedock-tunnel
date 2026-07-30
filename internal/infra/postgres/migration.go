@@ -73,6 +73,8 @@ func migrations() []migration {
 		return db.AutoMigrate(&models.Plan{})
 	}}, {version: 3, name: "tunnel_passwords_and_request_usage", up: func(db *gorm.DB) error {
 		return db.AutoMigrate(&models.Tunnel{}, &models.UsageEvent{})
+	}}, {version: 4, name: "platform_admin_users", up: func(db *gorm.DB) error {
+		return db.AutoMigrate(&models.User{})
 	}}}
 }
 

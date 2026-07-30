@@ -34,6 +34,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	deps.Auth.SetAdminEmails(cfg.App.AdminEmails)
 	if cfg.Auth.EncryptionKey != "" {
 		secretBox, err := storage.NewSecretBox([]byte(cfg.Auth.EncryptionKey))
 		if err != nil {
@@ -60,6 +61,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
+		oauthService.SetWelcomeMailer(deps.WelcomeMailer)
 		deps.OAuth = oauthService
 	}
 	server, err := tunnelhttp.NewServer(cfg, deps)

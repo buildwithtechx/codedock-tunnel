@@ -19,13 +19,15 @@ type Dependencies struct {
 	Billing       *services.BillingService
 	OAuth         *services.OAuthService
 	Account       *services.AccountService
+	Admin         *services.AdminService
 	Audit         *services.AuditService
+	WelcomeMailer services.WelcomeMailer
 	Ready         func(context.Context) error
 	PublicAPIURL  string
 }
 
 func (d Dependencies) Validate() error {
-	if d.Auth == nil || d.DeviceLogin == nil || d.Organizations == nil || d.Tunnels == nil || d.Agents == nil || d.Domains == nil || d.Usage == nil || d.Billing == nil || d.Account == nil || d.Audit == nil {
+	if d.Auth == nil || d.DeviceLogin == nil || d.Organizations == nil || d.Tunnels == nil || d.Agents == nil || d.Domains == nil || d.Usage == nil || d.Billing == nil || d.Account == nil || d.Admin == nil || d.Audit == nil {
 		return fmt.Errorf("http service dependencies are incomplete")
 	}
 	return nil
@@ -42,6 +44,7 @@ type Handlers struct {
 	Billing             *handlers.BillingHandler
 	OAuth               *handlers.OAuthHandler
 	Account             *handlers.AccountHandler
+	Admin               *handlers.AdminHandler
 	auditService        *services.AuditService
 	authService         *services.AuthService
 	organizationService *services.OrganizationService
@@ -90,5 +93,9 @@ func buildHandlers(deps Dependencies, cookieName string, cookieSecure bool) (Han
 	if err != nil {
 		return Handlers{}, err
 	}
-	return Handlers{Health: handlers.NewHealthHandler(deps.Ready), Auth: authHandler, Organizations: organizationHandler, Tunnels: tunnelHandler, Agents: agentHandler, Domains: domainHandler, Usage: usageHandler, Billing: billingHandler, OAuth: oauthHandler, Account: accountHandler, authService: deps.Auth, organizationService: deps.Organizations, auditService: deps.Audit}, nil
+	adminHandler, err := handlers.NewAdminHandler(deps.Admin)
+	if err != nil {
+		return Handlers{}, err
+	}
+	return Handlers{Health: handlers.NewHealthHandler(deps.Ready), Auth: authHandler, Organizations: organizationHandler, Tunnels: tunnelHandler, Agents: agentHandler, Domains: domainHandler, Usage: usageHandler, Billing: billingHandler, OAuth: oauthHandler, Account: accountHandler, Admin: adminHandler, authService: deps.Auth, organizationService: deps.Organizations, auditService: deps.Audit}, nil
 }
