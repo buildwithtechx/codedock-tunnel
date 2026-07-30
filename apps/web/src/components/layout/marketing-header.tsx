@@ -8,9 +8,10 @@ import {
   SiNextdotjs,
   SiVite,
 } from 'react-icons/si';
+import { BrandLockup } from '#/components/layout/brand-lockup';
+import { MarketingContainer } from '#/components/layout/marketing-container';
 import { useGitHubStars } from '#/hooks/use-github-stars';
 import { formatGitHubStarCount, githubRepositoryUrl } from '#/lib/github';
-import { MarketingContainer } from './marketing-container';
 
 const mobileLinks = [
   { label: 'Pricing', to: '/pricing' as const },
@@ -49,16 +50,10 @@ export function MarketingHeader() {
       }`}
     >
       <MarketingContainer className="relative flex h-18 items-center justify-between">
-        <Link
-          to="/"
-          className="flex items-center gap-3"
+        <BrandLockup
           onClick={() => setOpen(false)}
-        >
-          <img src="/favicon.svg" alt="" className="size-10 rounded-xl" />
-          <span className="hidden font-semibold tracking-tight text-white sm:inline">
-            Codedock Tunnel
-          </span>
-        </Link>
+          nameClassName="hidden font-semibold tracking-tight text-white sm:inline"
+        />
         <nav
           className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-8 md:flex"
           aria-label="Main navigation"

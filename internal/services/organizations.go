@@ -45,6 +45,18 @@ func (s *OrganizationService) Create(ctx context.Context, ownerID, name, slug st
 	return organization, nil
 }
 
+func (s *OrganizationService) ListForUser(ctx context.Context, userID string) ([]models.Organization, error) {
+	userID = strings.TrimSpace(userID)
+	if userID == "" {
+		return nil, fmt.Errorf("user id is required")
+	}
+	organizations, err := s.organizations.ListForUser(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("list user organizations: %w", err)
+	}
+	return organizations, nil
+}
+
 func (s *OrganizationService) AddMember(ctx context.Context, organizationID, userID string, role models.MemberRole) error {
 	if organizationID == "" || userID == "" || !validMemberRole(role) {
 		return fmt.Errorf("organization, user, and valid role are required")

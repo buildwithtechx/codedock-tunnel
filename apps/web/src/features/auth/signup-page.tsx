@@ -1,21 +1,15 @@
-import { Link, useNavigate } from '@tanstack/react-router';
-import { useEffect } from 'react';
+import { Link } from '@tanstack/react-router';
 import { AuthNotice } from '#/features/auth/components/auth-notice';
 import { AuthPageShell } from '#/features/auth/components/auth-page-shell';
 import { OAuthProviderButton } from '#/features/auth/components/oauth-provider-button';
 import { useAuthNotice } from '#/features/auth/hooks/use-auth-notice';
-import { useAuthSession } from '#/features/auth/hooks/use-auth-session';
+import { useAuthRedirect } from '#/features/auth/hooks/use-auth-redirect';
 import { useOAuthSignIn } from '#/features/auth/hooks/use-oauth-sign-in';
 
 export function SignupPage() {
-  const navigate = useNavigate();
   const notice = useAuthNotice();
-  const { isAuthenticated } = useAuthSession();
+  useAuthRedirect();
   const { provider, signIn } = useOAuthSignIn();
-
-  useEffect(() => {
-    if (isAuthenticated) void navigate({ to: '/' });
-  }, [isAuthenticated, navigate]);
 
   return (
     <AuthPageShell
@@ -38,13 +32,15 @@ export function SignupPage() {
         <OAuthProviderButton
           provider="github"
           label="Continue with"
-          loading={provider !== null}
+          loading={provider === 'github'}
+          disabled={provider !== null}
           onClick={signIn}
         />
         <OAuthProviderButton
           provider="google"
           label="Continue with"
-          loading={provider !== null}
+          loading={provider === 'google'}
+          disabled={provider !== null}
           onClick={signIn}
         />
       </div>

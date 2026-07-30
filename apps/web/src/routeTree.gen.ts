@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as MarketingRouteImport } from './routes/_marketing'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as SelectRouteImport } from './routes/select'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as OrgSlugIndexRouteImport } from './routes/$orgSlug/index'
 import { Route as OrgSlugAgentsRouteImport } from './routes/$orgSlug/agents'
@@ -62,6 +63,11 @@ const AdminRoute = AdminRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SelectRoute = SelectRouteImport.update({
+  id: '/select',
+  path: '/select',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignupRoute = SignupRouteImport.update({
@@ -257,6 +263,7 @@ export interface FileRoutesByFullPath {
   '/': typeof MarketingIndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
+  '/select': typeof SelectRoute
   '/signup': typeof SignupRoute
   '/$orgSlug/agents': typeof OrgSlugAgentsRoute
   '/$orgSlug/api-keys': typeof OrgSlugApiKeysRoute
@@ -296,6 +303,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/select': typeof SelectRoute
   '/signup': typeof SignupRoute
   '/$orgSlug/agents': typeof OrgSlugAgentsRoute
   '/$orgSlug/api-keys': typeof OrgSlugApiKeysRoute
@@ -338,6 +346,7 @@ export interface FileRoutesById {
   '/_marketing': typeof MarketingRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
+  '/select': typeof SelectRoute
   '/signup': typeof SignupRoute
   '/$orgSlug/agents': typeof OrgSlugAgentsRoute
   '/$orgSlug/api-keys': typeof OrgSlugApiKeysRoute
@@ -382,6 +391,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/login'
+    | '/select'
     | '/signup'
     | '/$orgSlug/agents'
     | '/$orgSlug/api-keys'
@@ -421,6 +431,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
+    | '/select'
     | '/signup'
     | '/$orgSlug/agents'
     | '/$orgSlug/api-keys'
@@ -462,6 +473,7 @@ export interface FileRouteTypes {
     | '/_marketing'
     | '/admin'
     | '/login'
+    | '/select'
     | '/signup'
     | '/$orgSlug/agents'
     | '/$orgSlug/api-keys'
@@ -505,6 +517,7 @@ export interface RootRouteChildren {
   MarketingRoute: typeof MarketingRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   LoginRoute: typeof LoginRoute
+  SelectRoute: typeof SelectRoute
   SignupRoute: typeof SignupRoute
   OrgSlugAgentsRoute: typeof OrgSlugAgentsRoute
   OrgSlugApiKeysRoute: typeof OrgSlugApiKeysRoute
@@ -545,6 +558,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/select': {
+      id: '/select'
+      path: '/select'
+      fullPath: '/select'
+      preLoaderRoute: typeof SelectRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signup': {
@@ -880,6 +900,7 @@ const rootRouteChildren: RootRouteChildren = {
   MarketingRoute: MarketingRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   LoginRoute: LoginRoute,
+  SelectRoute: SelectRoute,
   SignupRoute: SignupRoute,
   OrgSlugAgentsRoute: OrgSlugAgentsRoute,
   OrgSlugApiKeysRoute: OrgSlugApiKeysRoute,

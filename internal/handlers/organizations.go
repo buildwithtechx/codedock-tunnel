@@ -48,6 +48,18 @@ func (h *OrganizationHandler) Create(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(organization)
 }
 
+func (h *OrganizationHandler) List(c *fiber.Ctx) error {
+	userID, err := sessionUserID(c)
+	if err != nil {
+		return writeError(c, fiber.StatusUnauthorized, err)
+	}
+	organizations, err := h.organizations.ListForUser(c.UserContext(), userID)
+	if err != nil {
+		return writeError(c, fiber.StatusInternalServerError, err)
+	}
+	return c.JSON(organizations)
+}
+
 func (h *OrganizationHandler) AddMember(c *fiber.Ctx) error {
 	var input AddMemberRequest
 	if err := c.BodyParser(&input); err != nil {

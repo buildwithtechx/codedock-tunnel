@@ -164,7 +164,7 @@ apps/web/src/features/auth/
 - [x] Synchronize a successful authenticated session into `auth-store` through a feature-scoped TanStack Query hook.
 - [ ] Add logout and session-expiry UI states when the authenticated dashboard shell is implemented.
 - [x] Add provider-unavailable and callback-failure states.
-- [ ] Redirect an authenticated visitor away from `/login` and `/signup` to organization selection or their last organization.
+- [x] Redirect an authenticated visitor away from `/login` and `/signup` to organization selection, their last organization, or their only organization.
 - [ ] Add route guards only after session loading distinguishes unauthenticated from pending state.
 - [ ] Add focused tests for provider selection, redirect construction, session synchronization, and callback errors.
 
@@ -174,6 +174,7 @@ The browser flow requires these API changes before the dashboard UI is wired:
 - [x] After OAuth callback creates the HTTP-only API session cookie, redirect to the configured dashboard origin and validated return path instead of returning JSON from the API domain.
 - [x] Reject absolute or cross-origin return paths to prevent open redirects.
 - [x] Provide the current authenticated user alongside session data, or add a protected current-account endpoint so `AuthUser` can populate `auth-store`.
+- [x] Provide a protected organization list endpoint for post-login organization selection.
 - [ ] Set API cookie `Secure`, `HttpOnly`, `SameSite=Lax`, and an intentional shared-domain cookie policy for hosted dashboard/API subdomains.
 
 The control-plane API should remain versioned under `/api/v1`:

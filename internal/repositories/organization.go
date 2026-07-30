@@ -21,6 +21,7 @@ type OrganizationRepository interface {
 	ListMembers(context.Context, string) ([]models.OrganizationMember, error)
 	RemoveMember(context.Context, string, string) error
 	ListOwned(context.Context, string) ([]models.Organization, error)
+	ListForUser(context.Context, string) ([]models.Organization, error)
 	TransferOwnership(context.Context, string, string, string) error
 	CountMembers(context.Context, string) (int64, error)
 }
@@ -136,6 +137,21 @@ func (r *GormOrganizationRepository) ListOwned(ctx context.Context, ownerID stri
 	var organizations []models.Organization
 	if err := r.db.WithContext(ctx).Where("owner_id = ?", ownerID).Find(&organizations).Error; err != nil {
 		return nil, fmt.Errorf("list owned organizations: %w", err)
+	}
+	return organizations, nil
+}
+
+func (r *GormOrganizationRepository) ListForUser(ctx context.Context, userID string) ([]models.Organization, error) {
+	var organizations []models.Organization
+	err := r.db.WithContext(ctx).
+		Table("organizations").
+		Select("organizations.*").
+		Joins("JOIN organization_members ON organization_members.organization_id = organizations.id").
+		Where("organization_members.user_id = ?", userID).
+		Order("organizations.name ASC").
+		Find(&organizations).Error
+	if err != nil {
+		return nil, fmt.Errorf("list user organizations: %w", err)
 	}
 	return organizations, nil
 }
