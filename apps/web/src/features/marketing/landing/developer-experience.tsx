@@ -11,6 +11,8 @@ const traffic = [
   ['500 Error', 'POST', '/api/checkout', '120ms'],
 ];
 
+const visibleTrafficItems = 4;
+
 export function DeveloperExperience() {
   const [offset, setOffset] = useState(0);
   useEffect(() => {
@@ -19,7 +21,7 @@ export function DeveloperExperience() {
   }, []);
   const liveTraffic = [...traffic, ...traffic].slice(
     offset % traffic.length,
-    (offset % traffic.length) + 5,
+    (offset % traffic.length) + visibleTrafficItems,
   );
   return (
     <section className="bg-black py-14 sm:py-16">
@@ -29,7 +31,7 @@ export function DeveloperExperience() {
           <br />
           already connected
         </h2>
-        <div className="mt-10 grid gap-6 lg:grid-cols-2">
+        <div className="mt-10 grid items-start gap-6 lg:grid-cols-2">
           <div className="grid gap-6">
             <article className="group flex flex-col rounded-3xl border border-white/5 bg-white/[0.02] p-8 transition-colors hover:border-white/10">
               <div className="flex items-center gap-4">
@@ -62,7 +64,7 @@ export function DeveloperExperience() {
               <PluginTabs />
             </article>
           </div>
-          <article className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] p-8 transition-colors hover:border-white/10">
+          <article className="group relative self-start overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] p-8 transition-colors hover:border-white/10">
             <div className="absolute -right-24 -top-24 size-64 rounded-full bg-indigo-400/10 blur-3xl" />
             <div className="relative">
               <div className="flex items-center gap-4">
@@ -76,7 +78,7 @@ export function DeveloperExperience() {
                 status, path, duration, and response outcomes.
               </p>
             </div>
-            <div className="relative mt-auto space-y-3 pt-10 font-mono text-xs">
+            <div className="relative mt-8 space-y-2.5 font-mono text-xs">
               {liveTraffic.map(([status, method, path, time]) => (
                 <div
                   key={`${status}-${path}-${offset}`}
