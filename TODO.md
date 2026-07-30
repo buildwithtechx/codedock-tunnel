@@ -12,6 +12,174 @@ The Go backend, CLI, protocol package, and current TypeScript framework adapters
 - [ ] Build a standalone tunnel dashboard with its own authentication and organization model.
 - [ ] Keep the Tauri desktop application usable with standalone tunnel servers.
 
+## Route structure
+
+Dashboard routes should remain browser-only and organization-scoped:
+
+```text
+/
+├── pricing
+├── docs/*
+├── login
+├── signup
+├── cli/login
+├── admin/
+│   ├── index
+│   ├── users
+│   ├── users/$userId
+│   ├── organizations
+│   ├── organizations/$organizationID
+│   ├── tunnels
+│   ├── subscriptions
+│   ├── usage
+│   ├── charts
+│   ├── audit-logs
+│   └── actions
+└── $orgSlug/
+    ├── index
+    ├── tunnels/
+    │   ├── index
+    │   └── $tunnelId
+    ├── agents
+    ├── domains
+    ├── requests
+    ├── usage
+    ├── billing
+    ├── members
+    ├── api-keys
+    └── settings/
+        ├── index
+        ├── profile
+        └── organization
+```
+
+The dashboard application should keep page routing separate from reusable
+application code:
+
+```text
+apps/web/src/
+├── routes/
+│   ├── __root.tsx
+│   ├── index.tsx
+│   ├── login.tsx
+│   ├── signup.tsx
+│   └── $orgSlug/
+├── components/
+│   ├── ui/
+│   ├── layout/
+│   ├── navigation/
+│   ├── feedback/
+│   └── data-display/
+├── features/
+│   ├── auth/
+│   ├── admin/
+│   │   ├── users/
+│   │   ├── organizations/
+│   │   ├── tunnels/
+│   │   ├── subscriptions/
+│   │   ├── usage/
+│   │   ├── charts/
+│   │   └── actions/
+│   ├── organizations/
+│   ├── tunnels/
+│   ├── agents/
+│   ├── domains/
+│   ├── usage/
+│   ├── billing/
+│   ├── audit-logs/
+│   └── api-keys/
+├── interfaces/
+│   ├── api.ts
+│   ├── auth.ts
+│   ├── organization.ts
+│   ├── tunnel.ts
+│   └── billing.ts
+├── hooks/
+├── stores/
+│   ├── auth-store.ts
+│   ├── organization-store.ts
+│   ├── tunnel-store.ts
+│   └── ui-store.ts
+├── lib/
+│   ├── api-client.ts
+│   ├── auth.ts
+│   ├── query-client.ts
+│   ├── route-guards.ts
+│   └── utils.ts
+├── integrations/
+│   └── telemetry/
+└── env.ts
+```
+
+- [ ] Keep route files focused on loaders, route metadata, and page composition.
+- [ ] Protect `/admin/*` with a separate platform-admin authorization guard.
+- [ ] Keep admin features and components isolated from organization-member features.
+- [ ] Keep domain behavior inside `features/`, not inside route files.
+- [ ] Keep shared visual primitives inside `components/ui/`.
+- [ ] Keep API contracts and frontend DTOs inside `interfaces/`.
+- [ ] Keep cross-feature clients, guards, query setup, and utilities inside `lib/`.
+- [ ] Keep global client state in focused Zustand stores under `stores/`.
+- [ ] Keep feature-specific hooks beside their feature unless shared by multiple domains.
+
+The control-plane API should remain versioned under `/api/v1`:
+
+```text
+/api/v1/
+├── auth/
+│   ├── oauth/:provider
+│   ├── oauth/:provider/callback
+│   ├── device/start
+│   ├── device/poll
+│   ├── device/complete
+│   ├── session
+│   └── logout
+├── account
+├── organizations
+│   ├── :organizationID
+│   ├── :organizationID/members
+│   ├── :organizationID/members/:memberID
+│   └── :organizationID/transfer
+├── organizations/:organizationID/
+│   ├── tunnels
+│   ├── agents
+│   ├── domains
+│   ├── usage/events
+│   ├── usage/snapshot
+│   ├── usage/requests
+│   ├── billing/{status,checkout,portal,cancel,resume,invoices}
+│   ├── api-keys
+│   ├── audit-logs
+│   └── settings
+├── tunnels/:tunnelID/
+│   ├── status
+│   ├── revoke
+│   ├── connections
+│   └── requests
+├── domains/:domainID/verify
+├── agents/:agentID/
+│   ├── heartbeat
+│   └── revoke
+├── admin/
+│   ├── users
+│   ├── users/:userID
+│   ├── organizations
+│   ├── organizations/:organizationID
+│   ├── tunnels
+│   ├── subscriptions
+│   ├── usage
+│   ├── charts
+│   └── actions
+└── webhooks/billing/:provider
+```
+
+- [x] Keep liveness, readiness, and metrics outside the versioned API at `/healthz`, `/readyz`, and `/metrics`.
+- [x] Keep relay WebSocket transport separate at `wss://tunnel.codedock-tunnel.dev/v1/connect`.
+- [ ] Add organization detail, member listing/removal, profile, API-key, audit-log, request-log, and invoice routes.
+- [ ] Add platform-admin authorization and admin users, organizations, tunnels, subscriptions, usage, charts, and action routes.
+- [ ] Move agent heartbeats away from browser-session authentication to agent or relay authentication.
+- [ ] Keep internal health, usage ingestion, relay handoff, and agent authentication routes private.
+- [ ] Route wildcard public tunnel traffic through `*.tunnel.codedock-tunnel.dev`, not through control-plane handlers.
+
 - [ ] Keep `integrations/codedock/` as an optional external adapter.
 
 ## Future SDKs
