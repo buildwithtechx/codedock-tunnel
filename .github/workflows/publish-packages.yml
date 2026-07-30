@@ -30,7 +30,7 @@ jobs:
       - name: Build packages
         run: |
           npm run build --workspace packages/protocol-ts
-          npm run build --workspace packages/sdk-ts
+          npm run build --workspace packages/sdk
           npm run build --workspace packages/react
           npm run build --workspace packages/vite-plugin
           npm run build --workspace packages/next
@@ -39,7 +39,7 @@ jobs:
 
       - name: Check package contents
         run: |
-          npm pack --dry-run --workspace packages/sdk-ts
+          npm pack --dry-run --workspace packages/sdk
           npm pack --dry-run --workspace packages/react
           npm pack --dry-run --workspace packages/vite-plugin
           npm pack --dry-run --workspace packages/next
@@ -48,7 +48,7 @@ jobs:
 
       - name: Publish packages
         run: |
-          npm publish --workspace packages/sdk-ts
+          npm publish --workspace packages/sdk
           npm publish --workspace packages/react
           npm publish --workspace packages/vite-plugin
           npm publish --workspace packages/next

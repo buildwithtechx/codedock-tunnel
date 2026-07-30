@@ -1,9 +1,9 @@
+import type { MessageType, ProtocolEnvelope } from '@codedock/protocol-ts';
 import {
   absoluteMaxFrameSize,
   encodeMessage,
   protocolVersion,
 } from '@codedock/protocol-ts';
-import type { MessageType, ProtocolEnvelope } from '../interfaces/protocol';
 import type {
   PendingResponse,
   RelayConnectionOptions,

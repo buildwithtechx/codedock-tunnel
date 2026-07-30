@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/')({ component: Home });
 
@@ -19,18 +19,18 @@ function Home() {
             CI pipeline with one protocol, one CLI, and a developer-first SDK.
           </p>
           <div className="mt-10 flex flex-wrap gap-3">
-            <a
-              href="/docs/getting-started/installation"
+            <Link
+              to="/docs/installation"
               className="rounded-lg bg-fd-primary px-5 py-3 font-medium text-fd-primary-foreground transition-opacity hover:opacity-90"
             >
               Get started
-            </a>
-            <a
-              href="/docs"
+            </Link>
+            <Link
+              to="/docs"
               className="rounded-lg border border-fd-border px-5 py-3 font-medium transition-colors hover:bg-fd-accent"
             >
               Read the docs
-            </a>
+            </Link>
           </div>
         </div>
         <div className="mt-20 grid gap-4 border-t border-fd-border pt-8 sm:grid-cols-3">

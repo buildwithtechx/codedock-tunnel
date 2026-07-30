@@ -19,9 +19,7 @@ type GormTimeSeriesUsageRepository struct {
 }
 
 type timeSeriesUsageEvent struct {
-	ID             string    `gorm:"column:id"`
-	CreatedAt      time.Time `gorm:"column:created_at"`
-	UpdatedAt      time.Time `gorm:"column:updated_at"`
+	models.Base
 	OrganizationID string    `gorm:"column:organization_id"`
 	TunnelID       *string   `gorm:"column:tunnel_id"`
 	EventType      string    `gorm:"column:event_type"`
@@ -43,9 +41,7 @@ func (r *GormTimeSeriesUsageRepository) RecordTimeSeriesEvent(ctx context.Contex
 	}
 
 	sanitized := timeSeriesUsageEvent{
-		ID:             event.ID,
-		CreatedAt:      event.CreatedAt,
-		UpdatedAt:      event.UpdatedAt,
+		Base:           event.Base,
 		OrganizationID: event.OrganizationID,
 		TunnelID:       event.TunnelID,
 		EventType:      event.EventType,

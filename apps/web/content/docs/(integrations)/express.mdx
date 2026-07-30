@@ -25,7 +25,10 @@ const tunnel = createExpressTunnel({
 const state = await tunnel.start();
 console.log(state.publicUrl);
 
-process.on('SIGTERM', () => tunnel.stop('process shutdown'));
+process.on('SIGTERM', async () => {
+  await tunnel.stop('process shutdown');
+  process.exit(0);
+});
 ```
 
 Set `autoStart: false` when tunnel creation must be triggered by an explicit

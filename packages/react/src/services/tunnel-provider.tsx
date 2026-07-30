@@ -35,6 +35,7 @@ export function TunnelProvider({ options, children }: TunnelProviderOptions) {
     });
     const removeDisconnected = connection.on('disconnected', () => {
       setStatus('closed');
+      setTunnel(undefined);
     });
     const removeError = connection.on('error', (nextError) => {
       setStatus('error');

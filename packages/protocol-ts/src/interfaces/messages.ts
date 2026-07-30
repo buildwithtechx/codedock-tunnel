@@ -63,7 +63,7 @@ export type OpenTunnel = {
   tunnel_id?: string;
   local_port: number;
   subdomain?: string;
-  protocol: 'http' | 'https' | 'tcp' | 'udp' | (string & {});
+  protocol: 'http' | 'https' | 'tcp' | 'udp';
   custom_domain?: string;
   password?: string;
 };

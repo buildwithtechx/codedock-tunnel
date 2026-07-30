@@ -95,6 +95,9 @@ func (s *TunnelService) Create(ctx context.Context, organizationID, name string,
 
 func hashTunnelPassword(password string) (string, error) {
 	if strings.TrimSpace(password) == "" {
+		if password != "" {
+			return "", fmt.Errorf("tunnel password cannot contain only whitespace")
+		}
 		return "", nil
 	}
 	if len(password) < 8 || len(password) > 256 {

@@ -12,8 +12,15 @@ export function codedockTunnel(options: CodedockTunnelPluginOptions): Plugin {
       if (options.enabled === false) {
         return;
       }
-      return startTunnel(server, options, (nextConnection) => {
-        connection = nextConnection;
+      const start = () =>
+        startTunnel(server, options, (nextConnection) => {
+          connection = nextConnection;
+        });
+      if (server.httpServer?.listening) {
+        return start();
+      }
+      server.httpServer?.once('listening', () => {
+        void start();
       });
     },
     closeBundle() {
@@ -28,9 +35,9 @@ async function startTunnel(
   options: CodedockTunnelPluginOptions,
   assign: (connection: RelayConnection) => void,
 ): Promise<void> {
-  const connection = new RelayConnection(options);
+  const localPort = resolveLocalPort(server, options);
+  const connection = new RelayConnection({ ...options, localPort });
   assign(connection);
-  const localPort = options.localPort ?? server.config.server.port ?? 5173;
   const tunnel = await connection.openTunnel({
     local_port: localPort,
     protocol: 'http',
@@ -39,4 +46,18 @@ async function startTunnel(
   });
   server.config.logger.info(`Codedock Tunnel: ${tunnel.public_url}`);
   server.httpServer?.once('close', () => connection.close());
+}
+
+function resolveLocalPort(
+  server: ViteDevServer,
+  options: CodedockTunnelPluginOptions,
+): number {
+  if (options.localPort) {
+    return options.localPort;
+  }
+  const address = server.httpServer?.address();
+  if (address && typeof address === 'object') {
+    return address.port;
+  }
+  return server.config.server.port ?? 5173;
 }

@@ -53,7 +53,7 @@ func runTunnelsCommand(cfg config.CLIConfig, args []string) {
 	targetHost := flags.String("target-host", "127.0.0.1", "target host")
 	targetPort := flags.Int("target-port", 3000, "target port")
 	publicHostname := flags.String("hostname", "", "public hostname")
-	password := flags.String("password", "", "require this password for HTTP access")
+	password := flags.String("password", cfg.Password, "require this password for HTTP access")
 	_ = flags.Parse(args[1:])
 
 	apiClient, err := client.New(client.Config{BaseURL: cfg.APIURL, APIKey: cfg.APIKey})

@@ -26,6 +26,14 @@ func NewDatabaseDependencies(db *gorm.DB, cfg config.APIConfig) (Dependencies, e
 	if err != nil {
 		return Dependencies{}, err
 	}
+	apiKeyRepository, err := repositories.NewAPIKeyRepository(db)
+	if err != nil {
+		return Dependencies{}, err
+	}
+	apiKeyService, err := services.NewAPIKeyService(apiKeyRepository)
+	if err != nil {
+		return Dependencies{}, err
+	}
 	identities, err := repositories.NewOAuthIdentityRepository(db)
 	if err != nil {
 		return Dependencies{}, err
@@ -210,7 +218,7 @@ func NewDatabaseDependencies(db *gorm.DB, cfg config.APIConfig) (Dependencies, e
 	if err != nil {
 		return Dependencies{}, err
 	}
-	return Dependencies{Auth: authService, DeviceLogin: deviceService, Organizations: organizationService, Invitations: invitationService, Tunnels: tunnelService, Agents: agentService, Domains: domainService, Usage: usageService, Billing: billingService, Account: accountService, Admin: adminService, Audit: auditService, WelcomeMailer: welcomeMailer, Ready: func(ctx context.Context) error {
+	return Dependencies{Auth: authService, DeviceLogin: deviceService, Organizations: organizationService, Invitations: invitationService, Tunnels: tunnelService, Agents: agentService, Domains: domainService, Usage: usageService, Billing: billingService, Account: accountService, Admin: adminService, Audit: auditService, APIKeys: apiKeyService, WelcomeMailer: welcomeMailer, Ready: func(ctx context.Context) error {
 		sqlDB, err := db.DB()
 		if err != nil {
 			return fmt.Errorf("get database connection: %w", err)

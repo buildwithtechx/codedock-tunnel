@@ -17,6 +17,7 @@ pub fn tunnel_start(
     port: u16,
     protocol: String,
     subdomain: Option<String>,
+    password: Option<String>,
 ) -> Result<TunnelProcess, String> {
     validate_protocol(&protocol)?;
     let mut child_slot = state
@@ -43,6 +44,9 @@ pub fn tunnel_start(
     if let Some(value) = subdomain.filter(|value| !value.trim().is_empty()) {
         command.arg("--subdomain").arg(value);
     }
+    if let Some(value) = password.filter(|value| !value.trim().is_empty()) {
+        command.arg("--password").arg(value);
+    }
     let child = command
         .spawn()
         .map_err(|error| format!("start tunnel CLI: {error}"))?;
@@ -61,16 +65,7 @@ pub fn tunnel_stop(state: State<'_, TunnelState>) -> Result<TunnelProcess, Strin
         .child
         .lock()
         .map_err(|_| "tunnel state is unavailable")?;
-    let Some(mut child) = child_slot.take() else {
-        return Ok(stopped_process(None));
-    };
-    child
-        .kill()
-        .map_err(|error| format!("stop tunnel CLI: {error}"))?;
-    let status = child
-        .wait()
-        .map_err(|error| format!("wait for tunnel CLI: {error}"))?;
-    Ok(stopped_process(status.code()))
+    Ok(stopped_process(TunnelState::stop_child(&mut child_slot)?))
 }
 
 #[tauri::command]

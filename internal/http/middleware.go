@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	"crypto/subtle"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -29,29 +30,83 @@ func auditRequest(audit *services.AuditService) fiber.Handler {
 	}
 }
 
-func sessionRequired(auth *services.AuthService, cookieName string) fiber.Handler {
+func sessionRequired(auth *services.AuthService, apiKeys *services.APIKeyService, cookieName string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		raw := strings.TrimSpace(c.Cookies(cookieName))
-		session, err := auth.AuthenticateSession(c.UserContext(), raw)
+		if raw != "" {
+			session, err := auth.AuthenticateSession(c.UserContext(), raw)
+			if err != nil {
+				return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
+			}
+			c.Locals("session", session)
+			return c.Next()
+		}
+		credential, err := apiKeyFromRequest(c, apiKeys)
 		if err != nil {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err.Error()})
 		}
-		c.Locals("session", session)
+		c.Locals("apiKeyUserID", credential.Key.UserID)
+		c.Locals("apiKeyCredential", credential)
 		return c.Next()
 	}
 }
 
 func organizationRoleRequired(organizations *services.OrganizationService, required models.MemberRole) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		session, ok := c.Locals("session").(models.Session)
-		if !ok || session.UserID == "" {
+		userID, ok := authenticatedUserID(c)
+		if !ok {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "authenticated session is required"})
 		}
-		if err := organizations.Authorize(c.UserContext(), c.Params("organizationID"), session.UserID, required); err != nil {
+		if credential, apiKey := c.Locals("apiKeyCredential").(services.APIKeyCredential); apiKey && !apiKeyScopeAllowed(credential, required) {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "API key scope is insufficient"})
+		}
+		if credential, apiKey := c.Locals("apiKeyCredential").(services.APIKeyCredential); apiKey && credential.Key.OrganizationID != nil && *credential.Key.OrganizationID != c.Params("organizationID") {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "API key is restricted to another organization"})
+		}
+		if err := organizations.Authorize(c.UserContext(), c.Params("organizationID"), userID, required); err != nil {
 			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": err.Error()})
 		}
 		return c.Next()
 	}
+}
+
+func apiKeyFromRequest(c *fiber.Ctx, apiKeys *services.APIKeyService) (services.APIKeyCredential, error) {
+	if apiKeys == nil {
+		return services.APIKeyCredential{}, fmt.Errorf("authentication is unavailable")
+	}
+	value := strings.TrimSpace(c.Get("Authorization"))
+	parts := strings.SplitN(value, " ", 2)
+	if len(parts) != 2 || !strings.EqualFold(parts[0], "bearer") {
+		return services.APIKeyCredential{}, fmt.Errorf("session or bearer API key is required")
+	}
+	return apiKeys.Authenticate(c.UserContext(), strings.TrimSpace(parts[1]))
+}
+
+func authenticatedUserID(c *fiber.Ctx) (string, bool) {
+	if session, ok := c.Locals("session").(models.Session); ok && session.UserID != "" {
+		return session.UserID, true
+	}
+	userID, ok := c.Locals("apiKeyUserID").(string)
+	return userID, ok && userID != ""
+}
+
+func apiKeyScopeAllowed(credential services.APIKeyCredential, required models.MemberRole) bool {
+	scope := "organization:read"
+	if required == models.MemberRoleMember {
+		scope = "organization:write"
+	}
+	if required == models.MemberRoleAdmin {
+		scope = "organization:admin"
+	}
+	if required == models.MemberRoleOwner {
+		scope = "organization:owner"
+	}
+	for _, granted := range credential.Scopes {
+		if granted == "*" || granted == scope {
+			return true
+		}
+	}
+	return false
 }
 
 func platformAdminRequired(auth *services.AuthService) fiber.Handler {

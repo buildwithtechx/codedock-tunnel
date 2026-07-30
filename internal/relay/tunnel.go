@@ -3,6 +3,7 @@ package relay
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"codedock.run/codedock-tunnel/internal/engine"
 	"codedock.run/codedock-tunnel/internal/security"
@@ -119,8 +120,14 @@ func (h *Handler) newSession(connection *websocket.Conn, identity AgentIdentity,
 }
 
 func hashRelayPassword(password string) (string, error) {
-	if password == "" {
+	if strings.TrimSpace(password) == "" {
+		if password != "" {
+			return "", fmt.Errorf("tunnel password cannot contain only whitespace")
+		}
 		return "", nil
+	}
+	if len(password) < 8 || len(password) > 256 {
+		return "", fmt.Errorf("tunnel password must be between 8 and 256 characters")
 	}
 	hash, err := security.HashPassword(password)
 	if err != nil {

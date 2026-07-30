@@ -10,37 +10,86 @@ export function createExpressTunnel(
 ): ExpressTunnel {
   const connection = new RelayConnection(options);
   let current: ExpressTunnelState = { status: 'idle' };
+  let startPromise: Promise<ExpressTunnelState> | undefined;
+  let generation = 0;
+
+  connection.on('tunnel_opened', (tunnel) => {
+    current = {
+      status: 'active',
+      tunnelId: tunnel.tunnel_id,
+      publicUrl: tunnel.public_url,
+      publicPort: tunnel.public_port,
+    };
+  });
+  connection.on('disconnected', () => {
+    if (current.status === 'active') {
+      current = { status: 'closed' };
+    }
+  });
+  connection.on('error', (error) => {
+    if (current.status !== 'closed') {
+      current = { status: 'error', error };
+    }
+  });
 
   return {
     start: async () => {
       if (options.autoStart === false) {
         return current;
       }
+      if (current.status === 'active') {
+        return current;
+      }
+      if (startPromise) {
+        return startPromise;
+      }
+      const startGeneration = ++generation;
       current = { status: 'connecting' };
-      try {
-        const tunnel = await connection.openTunnel({
+      startPromise = connection
+        .openTunnel({
           local_port: options.localPort,
           protocol: 'http',
           subdomain: options.subdomain,
           password: options.password,
+        })
+        .then((tunnel) => {
+          if (startGeneration !== generation) {
+            return current;
+          }
+          current = {
+            status: 'active',
+            tunnelId: tunnel.tunnel_id,
+            publicUrl: tunnel.public_url,
+            publicPort: tunnel.public_port,
+          };
+          return current;
+        })
+        .catch((value) => {
+          current = { status: 'error', error: normalizeError(value) };
+          throw value;
+        })
+        .finally(() => {
+          startPromise = undefined;
         });
-        current = {
-          status: 'active',
-          tunnelId: tunnel.tunnel_id,
-          publicUrl: tunnel.public_url,
-          publicPort: tunnel.public_port,
-        };
-      } catch (value) {
-        current = { status: 'error', error: normalizeError(value) };
-      }
-      return current;
+      return startPromise;
     },
     stop: async (reason) => {
-      if (current.tunnelId) {
-        await connection.closeTunnel(current.tunnelId, reason);
+      generation += 1;
+      const tunnelId = current.tunnelId;
+      let closeError: unknown;
+      try {
+        if (tunnelId) {
+          await connection.closeTunnel(tunnelId, reason);
+        }
+      } catch (error) {
+        closeError = error;
+      } finally {
+        connection.close();
+        current = { status: 'closed' };
       }
-      connection.close();
-      current = { status: 'closed' };
+      if (closeError) {
+        throw closeError;
+      }
     },
     state: () => current,
   };

@@ -6,7 +6,7 @@ import type {
   OpenTunnelAck,
   ProtocolEnvelope,
   VersionNegotiateAck,
-} from './protocol';
+} from '@codedock/protocol-ts';
 
 export type WebSocketLike = {
   readonly readyState: number;
@@ -34,6 +34,7 @@ export type WebSocketFactory = (url: string) => WebSocketLike;
 export type RelayConnectionOptions = {
   relayUrl: string;
   agentToken: string;
+  localPort?: number;
   agentId?: string;
   clientName?: string;
   clientVersion?: string;

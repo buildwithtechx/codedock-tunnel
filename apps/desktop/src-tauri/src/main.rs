@@ -15,6 +15,13 @@ fn main() {
             tunnel_status,
             tunnel_version
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running Codedock Tunnel desktop application");
+        .build(tauri::generate_context!())
+        .expect("error while building Codedock Tunnel desktop application")
+        .run(|app, event| {
+            if let tauri::RunEvent::Exit = event {
+                if let Ok(mut child) = app.state::<TunnelState>().child.lock() {
+                    let _ = TunnelState::stop_child(&mut child);
+                }
+            }
+        });
 }

@@ -38,6 +38,7 @@ type CLIConfig struct {
 	RelayURL   string `env:"CODEDOCK_TUNNEL_RELAY_URL" envDefault:"ws://localhost:8081"`
 	APIKey     string `env:"CODEDOCK_TUNNEL_API_KEY"`
 	AgentToken string `env:"CODEDOCK_TUNNEL_AGENT_TOKEN"`
+	Password   string `env:"CODEDOCK_TUNNEL_PASSWORD"`
 	ConfigPath string `env:"CODEDOCK_TUNNEL_CONFIG_PATH" envDefault:".config/codedock-tunnel/config.json"`
 }
 
