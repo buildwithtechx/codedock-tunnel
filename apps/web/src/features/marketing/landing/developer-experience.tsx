@@ -9,9 +9,13 @@ const traffic = [
   ['401 Unauth', 'GET', '/admin', '8ms'],
   ['200 OK', 'GET', '/api/settings', '24ms'],
   ['500 Error', 'POST', '/api/checkout', '120ms'],
+  ['204 No Content', 'OPTIONS', '/api/tunnels', '4ms'],
+  ['302 Found', 'GET', '/oauth/callback', '21ms'],
+  ['200 OK', 'POST', '/api/deployments', '67ms'],
+  ['201 Created', 'POST', '/api/keys', '31ms'],
 ];
 
-const visibleTrafficItems = 4;
+const visibleTrafficItems = 8;
 
 export function DeveloperExperience() {
   const [offset, setOffset] = useState(0);
@@ -64,7 +68,7 @@ export function DeveloperExperience() {
               <PluginTabs />
             </article>
           </div>
-          <article className="group relative self-start overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] p-8 transition-colors hover:border-white/10">
+          <article className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] p-8 transition-colors hover:border-white/10">
             <div className="absolute -right-24 -top-24 size-64 rounded-full bg-indigo-400/10 blur-3xl" />
             <div className="relative">
               <div className="flex items-center gap-4">
@@ -78,7 +82,7 @@ export function DeveloperExperience() {
                 status, path, duration, and response outcomes.
               </p>
             </div>
-            <div className="relative mt-8 space-y-2.5 font-mono text-xs">
+            <div className="relative mt-auto space-y-2.5 pt-8 font-mono text-xs">
               {liveTraffic.map(([status, method, path, time]) => (
                 <div
                   key={`${status}-${path}-${offset}`}
