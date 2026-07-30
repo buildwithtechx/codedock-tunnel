@@ -7,13 +7,13 @@ icon: SiExpress
 Install the adapter:
 
 ```sh
-npm install @codedock-tunnel/express
+npm install @codedock/express
 ```
 
 Create the tunnel after the Express server has a listening port:
 
 ```ts
-import { createExpressTunnel } from '@codedock-tunnel/express';
+import { createExpressTunnel } from '@codedock/express';
 
 const tunnel = createExpressTunnel({
   relayUrl: process.env.CODEDOCK_TUNNEL_RELAY_URL!,

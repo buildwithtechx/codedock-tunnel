@@ -4,7 +4,7 @@ import {
   type MessageType,
   type ProtocolEnvelope,
   protocolVersion,
-} from '@codedock-tunnel/protocol-ts';
+} from '@codedock/protocol-ts';
 import type {
   PendingResponse,
   RelayConnectionOptions,

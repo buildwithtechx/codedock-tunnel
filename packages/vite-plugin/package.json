@@ -1,7 +1,9 @@
 {
-  "name": "@codedock-tunnel/vite-plugin",
+  "name": "@codedock/vite-plugin",
   "version": "0.1.0",
-  "private": true,
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "scripts": {
     "build": "tsup && npm run build:types",
@@ -13,7 +15,7 @@
   "description": "Vite development tunnel integration for Codedock Tunnel",
   "files": ["dist"],
   "dependencies": {
-    "@codedock-tunnel/sdk-ts": "0.1.0"
+    "@codedock/sdk-ts": "0.1.0"
   },
   "peerDependencies": {
     "vite": ">=5"

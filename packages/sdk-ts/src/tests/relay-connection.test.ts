@@ -2,7 +2,7 @@ import {
   decodeMessage,
   encodeMessage,
   type ProtocolEnvelope,
-} from '@codedock-tunnel/protocol-ts';
+} from '@codedock/protocol-ts';
 import { describe, expect, it } from 'vitest';
 import type { WebSocketEvent, WebSocketLike } from '../interfaces/relay.js';
 import { RelayConnection } from '../services/relay-connection.js';

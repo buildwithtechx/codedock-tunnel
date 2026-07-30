@@ -5,5 +5,6 @@ export default defineConfig({
   dts: false,
   entry: ['src/index.ts'],
   format: ['esm'],
+  noExternal: ['@codedock/protocol-ts'],
   sourcemap: true,
 });

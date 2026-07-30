@@ -1,4 +1,4 @@
-import { type OpenTunnelAck, RelayConnection } from '@codedock-tunnel/sdk-ts';
+import { type OpenTunnelAck, RelayConnection } from '@codedock/sdk-ts';
 import type { OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { Inject, Injectable } from '@nestjs/common';
 import {

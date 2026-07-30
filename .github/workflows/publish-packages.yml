@@ -1,0 +1,58 @@
+name: Publish npm packages
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "packages-v*"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Build and publish packages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build packages
+        run: |
+          npm run build --workspace packages/protocol-ts
+          npm run build --workspace packages/sdk-ts
+          npm run build --workspace packages/react
+          npm run build --workspace packages/vite-plugin
+          npm run build --workspace packages/next
+          npm run build --workspace packages/nest
+          npm run build --workspace packages/express
+
+      - name: Check package contents
+        run: |
+          npm pack --dry-run --workspace packages/sdk-ts
+          npm pack --dry-run --workspace packages/react
+          npm pack --dry-run --workspace packages/vite-plugin
+          npm pack --dry-run --workspace packages/next
+          npm pack --dry-run --workspace packages/nest
+          npm pack --dry-run --workspace packages/express
+
+      - name: Publish packages
+        run: |
+          npm publish --workspace packages/sdk-ts
+          npm publish --workspace packages/react
+          npm publish --workspace packages/vite-plugin
+          npm publish --workspace packages/next
+          npm publish --workspace packages/nest
+          npm publish --workspace packages/express
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

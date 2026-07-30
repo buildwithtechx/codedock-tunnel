@@ -215,4 +215,6 @@ import "codedock.run/codedock-tunnel/pkg/protocol"
 message, err := protocol.Decode(frame)
 ```
 
-The TypeScript equivalent is exported by `@codedock-tunnel/protocol-ts`.
+The TypeScript bindings are used internally by `@codedock/sdk-ts` and its
+framework adapters. Application code should use the SDK rather than depend on
+the protocol package directly.

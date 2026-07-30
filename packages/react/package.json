@@ -1,7 +1,9 @@
 {
-  "name": "@codedock-tunnel/react",
+  "name": "@codedock/react",
   "version": "0.1.0",
-  "private": true,
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "scripts": {
     "build": "tsup && npm run build:types",
@@ -13,7 +15,7 @@
   "description": "React hooks and providers for Codedock Tunnel",
   "files": ["dist"],
   "dependencies": {
-    "@codedock-tunnel/sdk-ts": "0.1.0"
+    "@codedock/sdk-ts": "0.1.0"
   },
   "peerDependencies": {
     "react": ">=18"

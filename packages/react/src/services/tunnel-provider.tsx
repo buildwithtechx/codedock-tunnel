@@ -1,8 +1,5 @@
-import type { OpenTunnel, OpenTunnelAck } from '@codedock-tunnel/protocol-ts';
-import {
-  RelayConnection,
-  type RelayConnectionOptions,
-} from '@codedock-tunnel/sdk-ts';
+import type { OpenTunnel, OpenTunnelAck } from '@codedock/protocol-ts';
+import { RelayConnection, type RelayConnectionOptions } from '@codedock/sdk-ts';
 import {
   createContext,
   type PropsWithChildren,

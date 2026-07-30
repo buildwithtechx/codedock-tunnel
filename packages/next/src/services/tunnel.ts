@@ -1,4 +1,4 @@
-import { RelayConnection } from '@codedock-tunnel/sdk-ts';
+import { RelayConnection } from '@codedock/sdk-ts';
 import type {
   NextTunnel,
   NextTunnelOptions,

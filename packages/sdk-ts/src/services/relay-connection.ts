@@ -10,7 +10,7 @@ import {
   type OpenTunnelAck,
   type ProtocolEnvelope,
   type VersionNegotiateAck,
-} from '@codedock-tunnel/protocol-ts';
+} from '@codedock/protocol-ts';
 import type { WebSocketEvent, WebSocketLike } from '../interfaces/relay.js';
 import { TunnelProtocolError, TunnelSDKError } from '../utils/errors.js';
 import { RelayConnectionBase } from './relay-base.js';
@@ -75,7 +75,7 @@ export class RelayConnection extends RelayConnectionBase {
       {
         min_version: minSupportedVersion,
         max_version: maxSupportedVersion,
-        client_name: this.options.clientName ?? 'codedock-tunnel-sdk-ts',
+        client_name: this.options.clientName ?? 'codedock-sdk-ts',
         client_version: this.options.clientVersion ?? '0.1.0',
       },
       'version_negotiate_ack',

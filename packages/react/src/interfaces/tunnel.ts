@@ -1,8 +1,5 @@
-import type { OpenTunnel, OpenTunnelAck } from '@codedock-tunnel/protocol-ts';
-import type {
-  RelayConnection,
-  RelayConnectionOptions,
-} from '@codedock-tunnel/sdk-ts';
+import type { OpenTunnel, OpenTunnelAck } from '@codedock/protocol-ts';
+import type { RelayConnection, RelayConnectionOptions } from '@codedock/sdk-ts';
 
 export type TunnelProviderProps = {
   options: RelayConnectionOptions;

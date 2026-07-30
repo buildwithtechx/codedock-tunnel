@@ -1,5 +1,5 @@
 {
-  "name": "@codedock-tunnel/protocol-ts",
+  "name": "@codedock/protocol-ts",
   "version": "0.1.0",
   "private": true,
   "type": "module",

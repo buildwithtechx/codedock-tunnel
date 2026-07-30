@@ -1,7 +1,9 @@
 {
-  "name": "@codedock-tunnel/sdk-ts",
+  "name": "@codedock/sdk-ts",
   "version": "0.1.0",
-  "private": true,
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "scripts": {
     "build": "tsup && npm run build:types",
@@ -14,9 +16,6 @@
   "files": [
     "dist"
   ],
-  "dependencies": {
-    "@codedock-tunnel/protocol-ts": "0.1.0"
-  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

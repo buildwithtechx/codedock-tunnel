@@ -1,7 +1,9 @@
 {
-  "name": "@codedock-tunnel/nest",
+  "name": "@codedock/nest",
   "version": "0.1.0",
-  "private": true,
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "scripts": {
     "build": "tsup && npm run build:types",
@@ -15,7 +17,7 @@
     "dist"
   ],
   "dependencies": {
-    "@codedock-tunnel/sdk-ts": "0.1.0"
+    "@codedock/sdk-ts": "0.1.0"
   },
   "peerDependencies": {
     "@nestjs/common": ">=10"

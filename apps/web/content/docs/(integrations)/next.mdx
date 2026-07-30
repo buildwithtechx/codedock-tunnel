@@ -7,13 +7,13 @@ icon: SiNextdotjs
 Install the adapter:
 
 ```sh
-npm install @codedock-tunnel/next
+npm install @codedock/next
 ```
 
 Create the tunnel from a server-side startup path, not a browser component:
 
 ```ts
-import { createNextTunnel } from '@codedock-tunnel/next';
+import { createNextTunnel } from '@codedock/next';
 
 const tunnel = createNextTunnel({
   relayUrl: process.env.CODEDOCK_TUNNEL_RELAY_URL!,
