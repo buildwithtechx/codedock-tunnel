@@ -18,7 +18,14 @@ type TCPManager struct {
 	connections map[string]net.Conn
 	tunnels     map[string]map[string]struct{}
 	senders     map[string]func(context.Context, protocol.Envelope) error
+	usageHook   func(string, string, int)
 	max         int
+}
+
+func (m *TCPManager) SetUsageHook(hook func(string, string, int)) {
+	m.mu.Lock()
+	m.usageHook = hook
+	m.mu.Unlock()
 }
 
 func NewTCPManager() *TCPManager {
@@ -65,7 +72,11 @@ func (m *TCPManager) accept(tunnelID string, listener net.Listener) {
 		m.mu.Lock()
 		m.connections[connectionID] = connection
 		m.tunnels[tunnelID][connectionID] = struct{}{}
+		hook := m.usageHook
 		m.mu.Unlock()
+		if hook != nil {
+			hook(tunnelID, "tcp_connection_open", 1)
+		}
 		go m.read(tunnelID, connectionID, connection)
 	}
 }
@@ -142,6 +153,7 @@ func (m *TCPManager) Write(tunnelID, connectionID string, data []byte) error {
 func (m *TCPManager) CloseConnection(tunnelID, connectionID string) {
 	m.mu.Lock()
 	connection := m.connections[connectionID]
+	hook := m.usageHook
 	if tunnelConnections := m.tunnels[tunnelID]; tunnelConnections != nil {
 		if _, ok := tunnelConnections[connectionID]; !ok {
 			m.mu.Unlock()
@@ -156,6 +168,9 @@ func (m *TCPManager) CloseConnection(tunnelID, connectionID string) {
 		}
 	}
 	m.mu.Unlock()
+	if hook != nil && connection != nil {
+		hook(tunnelID, "tcp_connection_close", -1)
+	}
 	if connection != nil {
 		_ = connection.Close()
 	}

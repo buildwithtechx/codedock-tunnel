@@ -86,7 +86,14 @@ func NewHandlerWithOptions(authenticator AgentAuthenticator, sessions *engine.Se
 	}
 	tcp.SetMaxConnections(options.MaxConnections)
 	udp.SetMaxPackets(options.MaxConnections)
-	return &Handler{authenticator: authenticator, sessions: sessions, router: router, tcp: tcp, udp: udp, maxSessions: options.MaxConnections, maxTunnels: options.MaxTunnels, maxBandwidth: options.MaxBandwidth, heartbeat: options.Heartbeat, readTimeout: options.ReadTimeout, maxFrameBytes: options.MaxFrameBytes, drainTimeout: options.DrainTimeout, logger: options.Logger, metrics: options.Metrics, usage: options.UsageRecorder, bandwidth: engine.NewBandwidthLimiter()}, nil
+	handler := &Handler{authenticator: authenticator, sessions: sessions, router: router, tcp: tcp, udp: udp, maxSessions: options.MaxConnections, maxTunnels: options.MaxTunnels, maxBandwidth: options.MaxBandwidth, heartbeat: options.Heartbeat, readTimeout: options.ReadTimeout, maxFrameBytes: options.MaxFrameBytes, drainTimeout: options.DrainTimeout, logger: options.Logger, metrics: options.Metrics, usage: options.UsageRecorder, bandwidth: engine.NewBandwidthLimiter()}
+	tcp.SetUsageHook(func(tunnelID, eventType string, connections int) {
+		organizationID, ok := router.OrganizationID(tunnelID)
+		if ok {
+			handler.recordUsage(context.Background(), organizationID, tunnelID, eventType, 0, connections)
+		}
+	})
+	return handler, nil
 }
 
 func (h *Handler) Metrics() *Metrics { return h.metrics }
