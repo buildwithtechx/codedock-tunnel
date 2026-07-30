@@ -115,6 +115,18 @@ func (r *RequestRouter) OrganizationID(tunnelID string) (string, bool) {
 	return session.OrganizationID, true
 }
 
+func (r *RequestRouter) PasswordHash(tunnelID string) (string, bool) {
+	resolved, ok := r.sessions.Resolve(tunnelID)
+	if !ok {
+		return "", false
+	}
+	session, ok := r.sessions.Get(resolved)
+	if !ok {
+		return "", false
+	}
+	return session.PasswordHash, true
+}
+
 func (r *RequestRouter) remove(requestID string) {
 	r.mu.Lock()
 	delete(r.pending, requestID)

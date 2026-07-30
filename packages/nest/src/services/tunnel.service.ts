@@ -33,6 +33,7 @@ export class CodedockTunnelService implements OnModuleInit, OnModuleDestroy {
       local_port: this.options.localPort,
       protocol: 'http',
       subdomain: this.options.subdomain,
+      password: this.options.password,
     });
     return this.tunnel;
   }

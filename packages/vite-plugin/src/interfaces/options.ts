@@ -4,4 +4,5 @@ export type CodedockTunnelPluginOptions = RelayConnectionOptions & {
   enabled?: boolean;
   localPort?: number;
   subdomain?: string;
+  password?: string;
 };

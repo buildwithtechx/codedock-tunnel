@@ -8,6 +8,7 @@ import (
 
 	"codedock.run/codedock-tunnel/internal/models"
 	"codedock.run/codedock-tunnel/internal/repositories"
+	"codedock.run/codedock-tunnel/internal/security"
 )
 
 type TunnelService struct {
@@ -54,9 +55,13 @@ func (s *TunnelService) List(ctx context.Context, organizationID string) ([]mode
 	return tunnels, nil
 }
 
-func (s *TunnelService) Create(ctx context.Context, organizationID, name string, protocol models.TunnelProtocol, targetHost string, targetPort int, publicHostname string) (models.Tunnel, error) {
+func (s *TunnelService) Create(ctx context.Context, organizationID, name string, protocol models.TunnelProtocol, targetHost string, targetPort int, publicHostname, password string) (models.Tunnel, error) {
 	if organizationID == "" || strings.TrimSpace(name) == "" || strings.TrimSpace(targetHost) == "" || !validTunnelProtocol(protocol) || targetPort < 1 || targetPort > 65535 {
 		return models.Tunnel{}, fmt.Errorf("invalid tunnel configuration")
+	}
+	passwordHash, err := hashTunnelPassword(password)
+	if err != nil {
+		return models.Tunnel{}, err
 	}
 	if s.allocator != nil {
 		allocated, err := s.allocator.Allocate(ctx, strings.TrimSpace(publicHostname))
@@ -68,7 +73,7 @@ func (s *TunnelService) Create(ctx context.Context, organizationID, name string,
 	if strings.TrimSpace(publicHostname) == "" {
 		return models.Tunnel{}, fmt.Errorf("public hostname is required")
 	}
-	tunnel := models.Tunnel{OrganizationID: organizationID, Name: strings.TrimSpace(name), Protocol: protocol, Status: models.TunnelStatusCreated, TargetHost: strings.TrimSpace(targetHost), TargetPort: targetPort, PublicHostname: strings.ToLower(strings.TrimSpace(publicHostname)), AccessPolicy: `{}`}
+	tunnel := models.Tunnel{OrganizationID: organizationID, Name: strings.TrimSpace(name), Protocol: protocol, Status: models.TunnelStatusCreated, TargetHost: strings.TrimSpace(targetHost), TargetPort: targetPort, PublicHostname: strings.ToLower(strings.TrimSpace(publicHostname)), AccessPolicy: `{}`, PasswordHash: passwordHash}
 	if s.billing != nil {
 		plan, _, err := s.billing.Entitlements(ctx, organizationID)
 		if err != nil {
@@ -86,6 +91,20 @@ func (s *TunnelService) Create(ctx context.Context, organizationID, name string,
 		return models.Tunnel{}, fmt.Errorf("create tunnel: %w", err)
 	}
 	return tunnel, nil
+}
+
+func hashTunnelPassword(password string) (string, error) {
+	if strings.TrimSpace(password) == "" {
+		return "", nil
+	}
+	if len(password) < 8 || len(password) > 256 {
+		return "", fmt.Errorf("tunnel password must be between 8 and 256 characters")
+	}
+	hash, err := security.HashPassword(password)
+	if err != nil {
+		return "", fmt.Errorf("hash tunnel password: %w", err)
+	}
+	return hash, nil
 }
 
 func (s *TunnelService) SetStatus(ctx context.Context, id string, status models.TunnelStatus) error {

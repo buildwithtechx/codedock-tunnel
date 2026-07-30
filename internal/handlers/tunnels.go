@@ -18,6 +18,7 @@ type CreateTunnelRequest struct {
 	TargetHost     string                `json:"targetHost" validate:"required,max=253"`
 	TargetPort     int                   `json:"targetPort" validate:"gte=1,lte=65535"`
 	PublicHostname string                `json:"publicHostname,omitempty" validate:"max=253"`
+	Password       string                `json:"password,omitempty" validate:"omitempty,min=8,max=256"`
 }
 
 type UpdateTunnelStatusRequest struct {
@@ -39,7 +40,7 @@ func (h *TunnelHandler) Create(c *fiber.Ctx) error {
 	if err := validation.Struct(input); err != nil {
 		return writeError(c, fiber.StatusBadRequest, err)
 	}
-	tunnel, err := h.tunnels.Create(c.UserContext(), strings.TrimSpace(c.Params("organizationID")), input.Name, input.Protocol, input.TargetHost, input.TargetPort, input.PublicHostname)
+	tunnel, err := h.tunnels.Create(c.UserContext(), strings.TrimSpace(c.Params("organizationID")), input.Name, input.Protocol, input.TargetHost, input.TargetPort, input.PublicHostname, input.Password)
 	if err != nil {
 		return writeError(c, fiber.StatusBadRequest, err)
 	}

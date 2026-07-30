@@ -65,6 +65,7 @@ export type OpenTunnel = {
   subdomain?: string;
   protocol: 'http' | 'https' | 'tcp' | 'udp' | (string & {});
   custom_domain?: string;
+  password?: string;
 };
 
 export type OpenTunnelAck = {

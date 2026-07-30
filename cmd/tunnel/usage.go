@@ -31,7 +31,7 @@ func (r *usageRecorder) Record(ctx context.Context, measurement engine.UsageMeas
 		value := measurement.TunnelID
 		tunnelID = &value
 	}
-	event := models.UsageEvent{OrganizationID: measurement.OrganizationID, TunnelID: tunnelID, EventType: measurement.EventType, Bytes: measurement.Bytes, Connections: measurement.Connections}
+	event := models.UsageEvent{OrganizationID: measurement.OrganizationID, TunnelID: tunnelID, EventType: measurement.EventType, Bytes: measurement.Bytes, Connections: measurement.Connections, Method: measurement.Method, Path: measurement.Path, StatusCode: measurement.StatusCode, DurationMillis: measurement.DurationMillis, ResponseBytes: measurement.ResponseBytes, ClientIP: measurement.ClientIP}
 	body, err := json.Marshal(event)
 	if err != nil {
 		return fmt.Errorf("encode usage event: %w", err)

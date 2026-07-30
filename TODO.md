@@ -127,6 +127,16 @@ codedock-tunnel/
 - [x] Keep framework adapters independently versioned while preserving compatibility with the core SDK.
 - [ ] Keep `integrations/codedock/` as an optional external adapter.
 
+## Platform features
+
+- [x] Protect HTTP and HTTPS tunnels with Argon2id-backed Basic Authentication.
+- [x] Support password-protected tunnel options in the Go protocol, CLI, SDK, and framework adapters.
+- [x] Support non-interactive CI/CD tunnel sessions with agent tokens and managed tunnel IDs.
+- [x] Record sanitized HTTP method, path, status, duration, response bytes, and client address usage fields.
+- [x] Aggregate request and error counts without storing payloads, credentials, or authorization headers.
+- [x] Apply plan-based usage retention through the cron worker.
+- [x] Expose relay metrics and organization usage API endpoints.
+
 ## Dashboard
 
 - [ ] Create the tunnel dashboard workspace.

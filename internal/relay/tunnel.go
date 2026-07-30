@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"codedock.run/codedock-tunnel/internal/engine"
+	"codedock.run/codedock-tunnel/internal/security"
 	"codedock.run/codedock-tunnel/pkg/protocol"
 	"github.com/gofiber/contrib/websocket"
 	"github.com/google/uuid"
@@ -32,7 +33,14 @@ func (h *Handler) openTunnel(ctx context.Context, connection *websocket.Conn, id
 	if err := h.claimTunnel(ctx, tunnelID); err != nil {
 		return err
 	}
-	session := h.newSession(connection, identity, tunnelID)
+	passwordHash, err := hashRelayPassword(open.Password)
+	if err != nil {
+		return err
+	}
+	if passwordHash == "" && exists {
+		passwordHash = previous.PasswordHash
+	}
+	session := h.newSession(connection, identity, tunnelID, passwordHash)
 	if err := h.sessions.ReserveWithDrain(session, exists, h.drainTimeout); err != nil {
 		return err
 	}
@@ -91,8 +99,8 @@ func (h *Handler) claimTunnel(ctx context.Context, tunnelID string) error {
 	return nil
 }
 
-func (h *Handler) newSession(connection *websocket.Conn, identity AgentIdentity, tunnelID string) engine.Session {
-	return engine.Session{ID: uuid.NewString(), OrganizationID: identity.OrganizationID, TunnelID: tunnelID, Send: func(sendCtx context.Context, outgoing protocol.Envelope) error {
+func (h *Handler) newSession(connection *websocket.Conn, identity AgentIdentity, tunnelID, passwordHash string) engine.Session {
+	return engine.Session{ID: uuid.NewString(), OrganizationID: identity.OrganizationID, TunnelID: tunnelID, PasswordHash: passwordHash, Send: func(sendCtx context.Context, outgoing protocol.Envelope) error {
 		if err := sendCtx.Err(); err != nil {
 			return err
 		}
@@ -108,6 +116,17 @@ func (h *Handler) newSession(connection *websocket.Conn, identity AgentIdentity,
 		h.recordMessageUsage(sendCtx, identity.OrganizationID, outgoing)
 		return h.writeJSON(connection, outgoing)
 	}, Close: func() { _ = connection.Close() }}
+}
+
+func hashRelayPassword(password string) (string, error) {
+	if password == "" {
+		return "", nil
+	}
+	hash, err := security.HashPassword(password)
+	if err != nil {
+		return "", fmt.Errorf("hash tunnel password: %w", err)
+	}
+	return hash, nil
 }
 
 func (h *Handler) bindTunnelAlias(open protocol.OpenTunnel, tunnelID, sessionID string, owned map[string]string, exists bool) error {

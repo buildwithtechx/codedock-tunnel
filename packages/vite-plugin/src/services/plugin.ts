@@ -35,6 +35,7 @@ async function startTunnel(
     local_port: localPort,
     protocol: 'http',
     subdomain: options.subdomain,
+    password: options.password,
   });
   server.config.logger.info(`Codedock Tunnel: ${tunnel.public_url}`);
   server.httpServer?.once('close', () => connection.close());

@@ -4,6 +4,7 @@ export type StartTunnelRequest = {
   port: number;
   protocol: TunnelProtocol;
   subdomain?: string;
+  password?: string;
 };
 
 export type TunnelProcess = {

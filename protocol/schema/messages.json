@@ -105,7 +105,8 @@
         "local_port": { "type": "integer", "minimum": 1, "maximum": 65535 },
         "subdomain": { "type": "string" },
         "protocol": { "type": "string", "enum": ["http", "https", "tcp", "udp"] },
-        "custom_domain": { "type": "string" }
+        "custom_domain": { "type": "string" },
+        "password": { "type": "string", "minLength": 8, "maxLength": 256 }
       },
       "additionalProperties": false
     },

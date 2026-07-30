@@ -18,6 +18,18 @@ type GormTimeSeriesUsageRepository struct {
 	db *gorm.DB
 }
 
+type timeSeriesUsageEvent struct {
+	ID             string    `gorm:"column:id"`
+	CreatedAt      time.Time `gorm:"column:created_at"`
+	UpdatedAt      time.Time `gorm:"column:updated_at"`
+	OrganizationID string    `gorm:"column:organization_id"`
+	TunnelID       *string   `gorm:"column:tunnel_id"`
+	EventType      string    `gorm:"column:event_type"`
+	Bytes          int64     `gorm:"column:bytes"`
+	Connections    int       `gorm:"column:connections"`
+	OccurredAt     time.Time `gorm:"column:occurred_at"`
+}
+
 func NewGormTimeSeriesUsageRepository(db *gorm.DB) (*GormTimeSeriesUsageRepository, error) {
 	if db == nil {
 		return nil, fmt.Errorf("database connection is required")
@@ -30,8 +42,10 @@ func (r *GormTimeSeriesUsageRepository) RecordTimeSeriesEvent(ctx context.Contex
 		return fmt.Errorf("organization and event type are required for time series tracking")
 	}
 
-	sanitized := models.UsageEvent{
-		Base:           event.Base,
+	sanitized := timeSeriesUsageEvent{
+		ID:             event.ID,
+		CreatedAt:      event.CreatedAt,
+		UpdatedAt:      event.UpdatedAt,
 		OrganizationID: event.OrganizationID,
 		TunnelID:       event.TunnelID,
 		EventType:      event.EventType,

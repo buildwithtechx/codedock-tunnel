@@ -22,6 +22,7 @@ export function createExpressTunnel(
           local_port: options.localPort,
           protocol: 'http',
           subdomain: options.subdomain,
+          password: options.password,
         });
         current = {
           status: 'active',

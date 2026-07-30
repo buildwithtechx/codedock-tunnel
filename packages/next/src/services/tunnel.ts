@@ -20,6 +20,7 @@ export function createNextTunnel(options: NextTunnelOptions): NextTunnel {
           local_port: options.localPort,
           protocol: 'http',
           subdomain: options.subdomain,
+          password: options.password,
         });
         current = {
           status: 'active',

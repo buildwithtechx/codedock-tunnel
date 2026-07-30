@@ -29,3 +29,15 @@ codedock-tunnel open --port 3000 --protocol http --subdomain demo
 
 Press `Ctrl-C` to close the local session. The client sends heartbeats while
 connected and reconnects when the relay connection is interrupted.
+
+## Protect an HTTP tunnel
+
+Add a password of at least eight characters:
+
+```sh
+codedock-tunnel http --port 3000 --password "$TUNNEL_PASSWORD"
+```
+
+Visitors receive an HTTP Basic Authentication prompt. The username is ignored;
+the password is checked by the relay before a request reaches your local
+service.

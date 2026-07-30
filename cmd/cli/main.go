@@ -78,6 +78,9 @@ func openTunnel(cfg config.CLIConfig, cmdName string, args []string) {
 	}
 	protocolName := flags.String("protocol", defaultProtocol, "tunnel protocol (http, tcp, udp)")
 	subdomain := flags.String("subdomain", "", "requested subdomain")
+	password := flags.String("password", "", "require this password for HTTP access")
+	agentToken := flags.String("agent-token", cfg.AgentToken, "agent token for CI/CD usage")
+	tunnelIDFlag := flags.String("tunnel-id", "", "resume a managed tunnel")
 	_ = flags.Parse(args)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -87,9 +90,9 @@ func openTunnel(cfg config.CLIConfig, cmdName string, args []string) {
 		target = "127.0.0.1:" + fmt.Sprint(*port)
 	}
 	delay := 2 * time.Second
-	tunnelID := ""
+	tunnelID := *tunnelIDFlag
 	for ctx.Err() == nil {
-		connection, err := client.OpenRelay(ctx, client.RelayConfig{URL: cfg.RelayURL, Token: cfg.AgentToken}, protocol.OpenTunnel{TunnelID: tunnelID, LocalPort: *port, Protocol: *protocolName, Subdomain: *subdomain})
+		connection, err := client.OpenRelay(ctx, client.RelayConfig{URL: cfg.RelayURL, Token: *agentToken}, protocol.OpenTunnel{TunnelID: tunnelID, LocalPort: *port, Protocol: *protocolName, Subdomain: *subdomain, Password: *password})
 		if err != nil {
 			if ctx.Err() != nil {
 				return

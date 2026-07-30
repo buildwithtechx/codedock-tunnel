@@ -14,6 +14,7 @@ type Session struct {
 	ID             string
 	OrganizationID string
 	TunnelID       string
+	PasswordHash   string
 	BandwidthLimit int64
 	ConnectedAt    time.Time
 	LastActiveAt   time.Time

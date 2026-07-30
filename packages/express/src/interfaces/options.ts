@@ -3,6 +3,7 @@ import type { RelayConnectionOptions } from '@codedock-tunnel/sdk-ts';
 export type ExpressTunnelOptions = RelayConnectionOptions & {
   localPort: number;
   subdomain?: string;
+  password?: string;
   autoStart?: boolean;
 };
 
