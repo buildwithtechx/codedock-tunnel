@@ -9,10 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as MarketingRouteImport } from './routes/_marketing'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as OrgSlugIndexRouteImport } from './routes/$orgSlug/index'
 import { Route as OrgSlugAgentsRouteImport } from './routes/$orgSlug/agents'
@@ -22,6 +21,13 @@ import { Route as OrgSlugDomainsRouteImport } from './routes/$orgSlug/domains'
 import { Route as OrgSlugMembersRouteImport } from './routes/$orgSlug/members'
 import { Route as OrgSlugRequestsRouteImport } from './routes/$orgSlug/requests'
 import { Route as OrgSlugUsageRouteImport } from './routes/$orgSlug/usage'
+import { Route as MarketingIndexRouteImport } from './routes/_marketing/index'
+import { Route as MarketingChangelogRouteImport } from './routes/_marketing/changelog'
+import { Route as MarketingContactRouteImport } from './routes/_marketing/contact'
+import { Route as MarketingPluginsRouteImport } from './routes/_marketing/plugins'
+import { Route as MarketingPricingRouteImport } from './routes/_marketing/pricing'
+import { Route as MarketingPrivacyRouteImport } from './routes/_marketing/privacy'
+import { Route as MarketingTermsRouteImport } from './routes/_marketing/terms'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminActionsRouteImport } from './routes/admin/actions'
 import { Route as AdminAuditLogsRouteImport } from './routes/admin/audit-logs'
@@ -42,9 +48,8 @@ import { Route as AdminOrganizationsOrganizationIDRouteImport } from './routes/a
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
 import { Route as AdminUsersUserIdRouteImport } from './routes/admin/users/$userId'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const MarketingRoute = MarketingRouteImport.update({
+  id: '/_marketing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -55,11 +60,6 @@ const AdminRoute = AdminRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PricingRoute = PricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignupRoute = SignupRouteImport.update({
@@ -106,6 +106,41 @@ const OrgSlugUsageRoute = OrgSlugUsageRouteImport.update({
   id: '/$orgSlug/usage',
   path: '/$orgSlug/usage',
   getParentRoute: () => rootRouteImport,
+} as any)
+const MarketingIndexRoute = MarketingIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingChangelogRoute = MarketingChangelogRouteImport.update({
+  id: '/changelog',
+  path: '/changelog',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingContactRoute = MarketingContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingPluginsRoute = MarketingPluginsRouteImport.update({
+  id: '/plugins',
+  path: '/plugins',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingPricingRoute = MarketingPricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingPrivacyRoute = MarketingPrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => MarketingRoute,
+} as any)
+const MarketingTermsRoute = MarketingTermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => MarketingRoute,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
@@ -206,10 +241,9 @@ const AdminUsersUserIdRoute = AdminUsersUserIdRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof MarketingIndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
-  '/pricing': typeof PricingRoute
   '/signup': typeof SignupRoute
   '/$orgSlug/agents': typeof OrgSlugAgentsRoute
   '/$orgSlug/api-keys': typeof OrgSlugApiKeysRoute
@@ -218,6 +252,12 @@ export interface FileRoutesByFullPath {
   '/$orgSlug/members': typeof OrgSlugMembersRoute
   '/$orgSlug/requests': typeof OrgSlugRequestsRoute
   '/$orgSlug/usage': typeof OrgSlugUsageRoute
+  '/changelog': typeof MarketingChangelogRoute
+  '/contact': typeof MarketingContactRoute
+  '/plugins': typeof MarketingPluginsRoute
+  '/pricing': typeof MarketingPricingRoute
+  '/privacy': typeof MarketingPrivacyRoute
+  '/terms': typeof MarketingTermsRoute
   '/admin/actions': typeof AdminActionsRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/charts': typeof AdminChartsRoute
@@ -240,9 +280,7 @@ export interface FileRoutesByFullPath {
   '/admin/users/': typeof AdminUsersIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/pricing': typeof PricingRoute
   '/signup': typeof SignupRoute
   '/$orgSlug/agents': typeof OrgSlugAgentsRoute
   '/$orgSlug/api-keys': typeof OrgSlugApiKeysRoute
@@ -251,6 +289,12 @@ export interface FileRoutesByTo {
   '/$orgSlug/members': typeof OrgSlugMembersRoute
   '/$orgSlug/requests': typeof OrgSlugRequestsRoute
   '/$orgSlug/usage': typeof OrgSlugUsageRoute
+  '/changelog': typeof MarketingChangelogRoute
+  '/contact': typeof MarketingContactRoute
+  '/plugins': typeof MarketingPluginsRoute
+  '/pricing': typeof MarketingPricingRoute
+  '/privacy': typeof MarketingPrivacyRoute
+  '/terms': typeof MarketingTermsRoute
   '/admin/actions': typeof AdminActionsRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/charts': typeof AdminChartsRoute
@@ -261,6 +305,7 @@ export interface FileRoutesByTo {
   '/cli/login': typeof CliLoginRoute
   '/docs/$': typeof DocsSplatRoute
   '/$orgSlug': typeof OrgSlugIndexRoute
+  '/': typeof MarketingIndexRoute
   '/admin': typeof AdminIndexRoute
   '/$orgSlug/settings/organization': typeof OrgSlugSettingsOrganizationRoute
   '/$orgSlug/settings/profile': typeof OrgSlugSettingsProfileRoute
@@ -274,10 +319,9 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
+  '/_marketing': typeof MarketingRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
-  '/pricing': typeof PricingRoute
   '/signup': typeof SignupRoute
   '/$orgSlug/agents': typeof OrgSlugAgentsRoute
   '/$orgSlug/api-keys': typeof OrgSlugApiKeysRoute
@@ -286,6 +330,12 @@ export interface FileRoutesById {
   '/$orgSlug/members': typeof OrgSlugMembersRoute
   '/$orgSlug/requests': typeof OrgSlugRequestsRoute
   '/$orgSlug/usage': typeof OrgSlugUsageRoute
+  '/_marketing/changelog': typeof MarketingChangelogRoute
+  '/_marketing/contact': typeof MarketingContactRoute
+  '/_marketing/plugins': typeof MarketingPluginsRoute
+  '/_marketing/pricing': typeof MarketingPricingRoute
+  '/_marketing/privacy': typeof MarketingPrivacyRoute
+  '/_marketing/terms': typeof MarketingTermsRoute
   '/admin/actions': typeof AdminActionsRoute
   '/admin/audit-logs': typeof AdminAuditLogsRoute
   '/admin/charts': typeof AdminChartsRoute
@@ -296,6 +346,7 @@ export interface FileRoutesById {
   '/cli/login': typeof CliLoginRoute
   '/docs/$': typeof DocsSplatRoute
   '/$orgSlug/': typeof OrgSlugIndexRoute
+  '/_marketing/': typeof MarketingIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/$orgSlug/settings/organization': typeof OrgSlugSettingsOrganizationRoute
   '/$orgSlug/settings/profile': typeof OrgSlugSettingsProfileRoute
@@ -313,7 +364,6 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/login'
-    | '/pricing'
     | '/signup'
     | '/$orgSlug/agents'
     | '/$orgSlug/api-keys'
@@ -322,6 +372,12 @@ export interface FileRouteTypes {
     | '/$orgSlug/members'
     | '/$orgSlug/requests'
     | '/$orgSlug/usage'
+    | '/changelog'
+    | '/contact'
+    | '/plugins'
+    | '/pricing'
+    | '/privacy'
+    | '/terms'
     | '/admin/actions'
     | '/admin/audit-logs'
     | '/admin/charts'
@@ -344,9 +400,7 @@ export interface FileRouteTypes {
     | '/admin/users/'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/login'
-    | '/pricing'
     | '/signup'
     | '/$orgSlug/agents'
     | '/$orgSlug/api-keys'
@@ -355,6 +409,12 @@ export interface FileRouteTypes {
     | '/$orgSlug/members'
     | '/$orgSlug/requests'
     | '/$orgSlug/usage'
+    | '/changelog'
+    | '/contact'
+    | '/plugins'
+    | '/pricing'
+    | '/privacy'
+    | '/terms'
     | '/admin/actions'
     | '/admin/audit-logs'
     | '/admin/charts'
@@ -365,6 +425,7 @@ export interface FileRouteTypes {
     | '/cli/login'
     | '/docs/$'
     | '/$orgSlug'
+    | '/'
     | '/admin'
     | '/$orgSlug/settings/organization'
     | '/$orgSlug/settings/profile'
@@ -377,10 +438,9 @@ export interface FileRouteTypes {
     | '/admin/users'
   id:
     | '__root__'
-    | '/'
+    | '/_marketing'
     | '/admin'
     | '/login'
-    | '/pricing'
     | '/signup'
     | '/$orgSlug/agents'
     | '/$orgSlug/api-keys'
@@ -389,6 +449,12 @@ export interface FileRouteTypes {
     | '/$orgSlug/members'
     | '/$orgSlug/requests'
     | '/$orgSlug/usage'
+    | '/_marketing/changelog'
+    | '/_marketing/contact'
+    | '/_marketing/plugins'
+    | '/_marketing/pricing'
+    | '/_marketing/privacy'
+    | '/_marketing/terms'
     | '/admin/actions'
     | '/admin/audit-logs'
     | '/admin/charts'
@@ -399,6 +465,7 @@ export interface FileRouteTypes {
     | '/cli/login'
     | '/docs/$'
     | '/$orgSlug/'
+    | '/_marketing/'
     | '/admin/'
     | '/$orgSlug/settings/organization'
     | '/$orgSlug/settings/profile'
@@ -412,10 +479,9 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
+  MarketingRoute: typeof MarketingRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   LoginRoute: typeof LoginRoute
-  PricingRoute: typeof PricingRoute
   SignupRoute: typeof SignupRoute
   OrgSlugAgentsRoute: typeof OrgSlugAgentsRoute
   OrgSlugApiKeysRoute: typeof OrgSlugApiKeysRoute
@@ -437,11 +503,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
+    '/_marketing': {
+      id: '/_marketing'
+      path: ''
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+      preLoaderRoute: typeof MarketingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -456,13 +522,6 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pricing': {
-      id: '/pricing'
-      path: '/pricing'
-      fullPath: '/pricing'
-      preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signup': {
@@ -527,6 +586,55 @@ declare module '@tanstack/react-router' {
       fullPath: '/$orgSlug/usage'
       preLoaderRoute: typeof OrgSlugUsageRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_marketing/': {
+      id: '/_marketing/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof MarketingIndexRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/changelog': {
+      id: '/_marketing/changelog'
+      path: '/changelog'
+      fullPath: '/changelog'
+      preLoaderRoute: typeof MarketingChangelogRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/contact': {
+      id: '/_marketing/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof MarketingContactRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/plugins': {
+      id: '/_marketing/plugins'
+      path: '/plugins'
+      fullPath: '/plugins'
+      preLoaderRoute: typeof MarketingPluginsRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/pricing': {
+      id: '/_marketing/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof MarketingPricingRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/privacy': {
+      id: '/_marketing/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof MarketingPrivacyRouteImport
+      parentRoute: typeof MarketingRoute
+    }
+    '/_marketing/terms': {
+      id: '/_marketing/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof MarketingTermsRouteImport
+      parentRoute: typeof MarketingRoute
     }
     '/admin/': {
       id: '/admin/'
@@ -664,6 +772,30 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface MarketingRouteChildren {
+  MarketingChangelogRoute: typeof MarketingChangelogRoute
+  MarketingContactRoute: typeof MarketingContactRoute
+  MarketingPluginsRoute: typeof MarketingPluginsRoute
+  MarketingPricingRoute: typeof MarketingPricingRoute
+  MarketingPrivacyRoute: typeof MarketingPrivacyRoute
+  MarketingTermsRoute: typeof MarketingTermsRoute
+  MarketingIndexRoute: typeof MarketingIndexRoute
+}
+
+const MarketingRouteChildren: MarketingRouteChildren = {
+  MarketingChangelogRoute: MarketingChangelogRoute,
+  MarketingContactRoute: MarketingContactRoute,
+  MarketingPluginsRoute: MarketingPluginsRoute,
+  MarketingPricingRoute: MarketingPricingRoute,
+  MarketingPrivacyRoute: MarketingPrivacyRoute,
+  MarketingTermsRoute: MarketingTermsRoute,
+  MarketingIndexRoute: MarketingIndexRoute,
+}
+
+const MarketingRouteWithChildren = MarketingRoute._addFileChildren(
+  MarketingRouteChildren,
+)
+
 interface AdminRouteChildren {
   AdminActionsRoute: typeof AdminActionsRoute
   AdminAuditLogsRoute: typeof AdminAuditLogsRoute
@@ -695,10 +827,9 @@ const AdminRouteChildren: AdminRouteChildren = {
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
+  MarketingRoute: MarketingRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   LoginRoute: LoginRoute,
-  PricingRoute: PricingRoute,
   SignupRoute: SignupRoute,
   OrgSlugAgentsRoute: OrgSlugAgentsRoute,
   OrgSlugApiKeysRoute: OrgSlugApiKeysRoute,
@@ -720,3 +851,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
