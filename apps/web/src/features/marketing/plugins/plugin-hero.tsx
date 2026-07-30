@@ -4,37 +4,31 @@ import { ArrowRight, Check, Copy } from 'lucide-react';
 import { motion, useMotionValue, useSpring, useTransform } from 'motion/react';
 import { useRef, useState } from 'react';
 import { MarketingContainer } from '#/components/layout';
-import { BeamGroup } from '../landing/beam-group';
+import { PluginBeam } from './plugin-beam';
 import type { PluginDefinition } from './plugin-data';
 
 const accents = {
   sdk: {
-    beam: '#22d3ee',
     text: 'text-cyan-300',
     button: 'bg-cyan-300 text-[#081116]',
   },
   react: {
-    beam: '#38bdf8',
     text: 'text-sky-300',
     button: 'bg-sky-300 text-[#071118]',
   },
   vite: {
-    beam: '#818cf8',
     text: 'text-indigo-300',
     button: 'bg-indigo-300 text-[#0b0b18]',
   },
   next: {
-    beam: '#e5e7eb',
     text: 'text-white',
     button: 'bg-white text-[#080b14]',
   },
   nest: {
-    beam: '#fb7185',
     text: 'text-rose-300',
     button: 'bg-rose-400 text-[#19080d]',
   },
   express: {
-    beam: '#fbbf24',
     text: 'text-amber-300',
     button: 'bg-amber-300 text-[#171107]',
   },
@@ -82,19 +76,18 @@ export function PluginHero({ plugin }: { plugin: PluginDefinition }) {
   }
 
   return (
-    <section className="relative min-h-[800px] overflow-hidden pt-32 sm:pt-40">
-      <div className="absolute inset-x-[10%] top-[-110px] h-[720px] opacity-90 [clip-path:polygon(16%_0,84%_0,100%_100%,0_100%)]">
+    <section className="relative flex min-h-[82vh] items-center overflow-hidden bg-black pb-16 pt-32 sm:pt-36">
+      <div className="absolute inset-0 z-0">
         <Canvas camera={{ position: [0, 0, 15], fov: 45 }}>
           <color attach="background" args={['#000000']} />
-          <BeamGroup color="#cbd5e1" />
+          <PluginBeam />
         </Canvas>
       </div>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_35%,rgba(99,102,241,0.14),transparent_32%)]" />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative z-10"
+        className="relative z-10 w-full"
       >
         <MarketingContainer className="flex flex-col items-center text-center">
           <nav

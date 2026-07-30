@@ -1,5 +1,4 @@
 import { Link } from '@tanstack/react-router';
-import { GitBranch, Mail } from 'lucide-react';
 import {
   SiExpress,
   SiNestjs,
@@ -11,7 +10,7 @@ import { MarketingContainer } from './marketing-container';
 
 export function MarketingFooter() {
   return (
-    <footer className="border-t border-white/10 bg-[#070910] py-14 text-white">
+    <footer className="border-t border-white/10 bg-black py-14 text-white">
       <MarketingContainer>
         <div className="grid gap-10 md:grid-cols-6">
           <div className="md:col-span-2">
@@ -36,7 +35,7 @@ export function MarketingFooter() {
             <Link
               to="/docs/$"
               params={{ _splat: '' }}
-              className="text-sm text-white/45 transition-colors hover:text-white"
+              className="text-sm text-white/45 transition-colors hover:text-indigo-300"
             >
               Documentation
             </Link>
@@ -44,7 +43,7 @@ export function MarketingFooter() {
             <Link
               to="/docs/$"
               params={{ _splat: 'cli' }}
-              className="text-sm text-white/45 transition-colors hover:text-white"
+              className="text-sm text-white/45 transition-colors hover:text-indigo-300"
             >
               CLI reference
             </Link>
@@ -69,31 +68,7 @@ export function MarketingFooter() {
           <FooterGroup title="Legal">
             <FooterLink to="/terms">Terms</FooterLink>
             <FooterLink to="/privacy">Privacy</FooterLink>
-            <a
-              href="mailto:hello@codedock-tunnel.dev"
-              className="text-sm text-white/45 transition-colors hover:text-white"
-            >
-              Email us
-            </a>
           </FooterGroup>
-        </div>
-        <div className="mt-12 flex items-center gap-4 border-t border-white/10 pt-6 text-white/45">
-          <a
-            href="https://github.com/codedock"
-            target="_blank"
-            rel="noreferrer"
-            aria-label="Codedock on GitHub"
-            className="transition-colors hover:text-white"
-          >
-            <GitBranch className="size-4" />
-          </a>
-          <a
-            href="mailto:hello@codedock-tunnel.dev"
-            aria-label="Email Codedock Tunnel"
-            className="transition-colors hover:text-white"
-          >
-            <Mail className="size-4" />
-          </a>
         </div>
       </MarketingContainer>
     </footer>
@@ -119,7 +94,7 @@ function FooterLink({ children, ...props }: React.ComponentProps<typeof Link>) {
   return (
     <Link
       {...props}
-      className="text-sm text-white/45 transition-colors hover:text-white"
+      className="text-sm text-white/45 transition-colors hover:text-indigo-300"
     >
       {children}
     </Link>
@@ -137,7 +112,7 @@ function FooterPlugin({
   return (
     <Link
       {...props}
-      className="inline-flex items-center gap-2 text-sm text-white/45 transition-colors hover:text-white"
+      className="inline-flex items-center gap-2 text-sm text-white/45 transition-colors hover:text-indigo-300"
     >
       <Icon className="size-3.5" />
       {children}

@@ -43,7 +43,6 @@ export type PluginDefinition = {
   icon: React.ComponentType<{ className?: string }>;
   features: string[];
   useCases: string[];
-  stackHeading: string;
   stackDescription: string;
   integrationHeading: string;
   integrationDescription: string;
@@ -81,7 +80,6 @@ export const pluginDefinitions: PluginDefinition[] = [
       'Custom developer tooling',
       'CI pipeline jobs',
     ],
-    stackHeading: 'Runs wherever TypeScript runs.',
     stackDescription:
       'Use the same typed tunnel lifecycle in a browser, Node.js service, or your own developer tool.',
     integrationHeading: 'Embed a tunnel in any\nTypeScript service.',
@@ -114,7 +112,6 @@ export const pluginDefinitions: PluginDefinition[] = [
       'Internal developer portals',
       'Live connection controls',
     ],
-    stackHeading: 'Works with the React ecosystem.',
     stackDescription:
       'Keep tunnel state close to the UI, whether your app uses a client router, server framework, or custom provider.',
     integrationHeading: 'Make tunnel state part of your\nReact app.',
@@ -147,7 +144,6 @@ export const pluginDefinitions: PluginDefinition[] = [
       'React, Vue, Svelte, and Solid',
     ],
     useCases: ['Design reviews', 'Webhook callbacks', 'Remote QA sessions'],
-    stackHeading: 'Works with your favorite framework.',
     stackDescription:
       'React, Vue, Svelte, Solid, Astro, and more can share the same Vite development workflow.',
     integrationHeading: 'Integrate with any\nVite application.',
@@ -183,7 +179,6 @@ export const pluginDefinitions: PluginDefinition[] = [
       'Typed configuration',
     ],
     useCases: ['Preview deployments', 'OAuth callback testing', 'Client demos'],
-    stackHeading: 'Plays well with your Next.js stack.',
     stackDescription:
       'Keep your framework, data layer, styling system, and deployment workflow exactly where they are.',
     integrationHeading: 'Give every Next.js preview\na public edge.',
@@ -219,7 +214,6 @@ export const pluginDefinitions: PluginDefinition[] = [
       'TypeScript-first API',
     ],
     useCases: ['Webhook development', 'Team API previews', 'Staging callbacks'],
-    stackHeading: 'Built for your backend toolkit.',
     stackDescription:
       'Pair NestJS with the databases, APIs, observability, and billing tools your service already depends on.',
     integrationHeading: 'One module. A reachable\nNestJS server.',
@@ -259,7 +253,6 @@ export const pluginDefinitions: PluginDefinition[] = [
       'Partner API demos',
       'Local service sharing',
     ],
-    stackHeading: 'Connects to the tools around Express.',
     stackDescription:
       'Expose an existing Express process without replacing your middleware, data, or production conventions.',
     integrationHeading: 'Expose an Express server\nwithout rewiring it.',
