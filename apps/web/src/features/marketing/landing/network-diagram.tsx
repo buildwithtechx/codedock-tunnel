@@ -1,29 +1,23 @@
-import { Globe2, Laptop, Server, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowRight, Globe2, Laptop, Server } from 'lucide-react';
 import { motion } from 'motion/react';
 import { MarketingContainer } from '#/components/layout';
 
-const nodes = [
+const connectionSteps = [
   {
-    label: 'Local service',
+    title: 'Your local service',
     detail: 'localhost:3000',
     icon: Laptop,
     color: 'text-amber-300',
   },
   {
-    label: 'Encrypted session',
-    detail: 'persistent connection',
-    icon: ShieldCheck,
-    color: 'text-emerald-300',
-  },
-  {
-    label: 'Codedock relay',
-    detail: 'routes your tunnel',
+    title: 'Codedock relay',
+    detail: 'encrypted session',
     icon: Server,
-    color: 'text-violet-300',
+    color: 'text-indigo-300',
   },
   {
-    label: 'Public endpoint',
-    detail: '{subdomain}.codedock-tunnel.dev',
+    title: 'Public endpoint',
+    detail: 'preview.codedock-tunnel.dev',
     icon: Globe2,
     color: 'text-cyan-300',
   },
@@ -33,37 +27,65 @@ export function NetworkDiagram() {
   return (
     <section className="py-16 sm:py-20">
       <MarketingContainer>
-        <div className="text-center">
-          <div className="relative inline-block">
-            <h2 className="relative whitespace-nowrap bg-gradient-to-b from-white via-white/90 to-white/40 bg-clip-text text-4xl font-semibold italic tracking-[-0.06em] text-transparent sm:text-6xl">
-              Local to public
-            </h2>
-            <Sparkles className="absolute -right-10 -top-8 size-9 text-amber-200" />
-          </div>
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="text-sm font-medium text-indigo-300">Connection path</p>
+          <h2 className="mt-4 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
+            One path to a public URL.
+          </h2>
+          <p className="mt-5 text-lg leading-8 text-white/50">
+            Your client opens an encrypted outbound session. The relay keeps it
+            connected, then routes each public request back to your service.
+          </p>
         </div>
-        <div className="relative mt-14">
-          <div className="absolute left-0 right-0 top-8 hidden h-px bg-gradient-to-r from-transparent via-white/25 to-transparent md:block" />
-          <motion.div
-            className="absolute left-0 top-8 hidden size-1 -translate-y-1/2 rounded-full bg-white shadow-[0_0_15px_5px_rgba(255,255,255,0.7)] md:block"
-            animate={{ left: ['0%', '100%'] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }}
-          />
-          <div className="relative grid gap-10 md:grid-cols-4 md:gap-6">
-            {nodes.map(({ label, detail, icon: Icon, color }) => (
-              <div
-                key={label}
-                className="flex flex-col items-center text-center"
-              >
-                <div
-                  className={`relative z-10 flex size-16 items-center justify-center rounded-2xl border border-white/10 bg-[#0c0f18] ${color}`}
-                >
-                  <Icon className="size-7" />
-                </div>
-                <h3 className="mt-6 font-semibold">{label}</h3>
-                <p className="mt-2 text-sm text-white/40">{detail}</p>
-              </div>
-            ))}
+        <div className="mx-auto mt-10 max-w-5xl rounded-3xl border border-white/10 bg-white/[0.025] p-4 sm:p-6">
+          <div className="flex items-center justify-between border-b border-white/10 pb-4 font-mono text-xs text-white/35">
+            <span>codedock-tunnel 3000</span>
+            <span className="flex items-center gap-2 text-emerald-300">
+              <span className="size-2 rounded-full bg-emerald-300" /> session
+              active
+            </span>
           </div>
+          <div className="mt-5 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:gap-2">
+            {connectionSteps.map(
+              ({ title, detail, icon: Icon, color }, index) => (
+                <div key={title} className="contents">
+                  <article className="flex flex-1 items-center gap-3 rounded-2xl bg-black/30 p-4">
+                    <span
+                      className={`flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.05] ${color}`}
+                    >
+                      <Icon className="size-5" />
+                    </span>
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-medium text-white">
+                        {title}
+                      </h3>
+                      <p className="mt-1 truncate font-mono text-xs text-white/40">
+                        {detail}
+                      </p>
+                    </div>
+                  </article>
+                  {index < connectionSteps.length - 1 && (
+                    <span className="flex shrink-0 justify-center text-indigo-300">
+                      <motion.span
+                        animate={{ x: [0, 4, 0] }}
+                        transition={{
+                          duration: 1.4,
+                          repeat: Infinity,
+                          ease: 'easeInOut',
+                        }}
+                      >
+                        <ArrowRight className="size-5 rotate-90 sm:rotate-0" />
+                      </motion.span>
+                    </span>
+                  )}
+                </div>
+              ),
+            )}
+          </div>
+          <p className="mt-5 text-center text-sm text-white/40">
+            No inbound port opening. No reverse-proxy setup. Just an outbound
+            connection your client controls.
+          </p>
         </div>
       </MarketingContainer>
     </section>
