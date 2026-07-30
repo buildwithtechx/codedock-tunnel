@@ -158,6 +158,7 @@ export class RelayConnection extends RelayConnectionBase {
           message.payload as HTTPRequest,
           message.request_id,
           this.options.localPort,
+          this.options.localRequestTimeoutMs,
           (response) =>
             this.send('http_response', response, message.request_id),
         );
@@ -191,7 +192,11 @@ export class RelayConnection extends RelayConnectionBase {
     }
     this.emit('disconnected', event as CloseEvent);
     if (!this.closedByUser && this.options.reconnect) {
-      this.scheduleReconnect();
+      if (this.reconnectAttempts >= this.options.maxReconnectAttempts) {
+        this.emit('reconnect_exhausted', undefined);
+      } else {
+        this.scheduleReconnect();
+      }
     }
   };
 

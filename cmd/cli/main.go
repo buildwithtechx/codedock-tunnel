@@ -99,11 +99,13 @@ func openTunnel(cfg config.CLIConfig, cmdName string, args []string) {
 			log.Fatal(err)
 		}
 		resolvedHostname = resolvedSubdomain
-		publicDomain := strings.TrimSuffix(cfg.PublicDomain, ".")
-		if strings.HasSuffix(resolvedSubdomain, "."+publicDomain) || resolvedSubdomain == publicDomain {
-			*subdomain = strings.TrimSuffix(strings.TrimSuffix(resolvedSubdomain, "."+publicDomain), ".")
-		} else {
-			*subdomain = ""
+		if strings.TrimSpace(*subdomain) == "" {
+			publicDomain := strings.TrimSuffix(cfg.PublicDomain, ".")
+			if strings.HasSuffix(resolvedSubdomain, "."+publicDomain) || resolvedSubdomain == publicDomain {
+				*subdomain = strings.TrimSuffix(strings.TrimSuffix(resolvedSubdomain, "."+publicDomain), ".")
+			} else {
+				*subdomain = ""
+			}
 		}
 	}
 	for ctx.Err() == nil {

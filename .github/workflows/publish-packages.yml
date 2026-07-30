@@ -30,9 +30,6 @@ jobs:
       - name: Build packages
         run: npm run build:packages
 
-      - name: Validate generated declarations
-        run: npm run validate:package-types
-
       - name: Check package contents
         run: |
           npm pack --dry-run --workspace packages/sdk

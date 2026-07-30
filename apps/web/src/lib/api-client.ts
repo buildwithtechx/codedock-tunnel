@@ -17,16 +17,15 @@ export class ApiError extends Error {
 export function getApiBaseURL(): string {
   if (typeof window !== 'undefined') {
     const configured = window.localStorage.getItem('codedock_tunnel_api_url');
-    if (configured) return configured.replace(/\/+$/, '');
+    if (configured) return normalizeApiBaseURL(configured);
   }
-  return (env.VITE_CODEDOCK_API_BASE_URL ?? 'http://localhost:8080').replace(
-    /\/+$/,
-    '',
+  return normalizeApiBaseURL(
+    env.VITE_CODEDOCK_API_BASE_URL ?? 'http://localhost:8080',
   );
 }
 
 export function setApiBaseURL(url: string): void {
-  const normalized = url.trim().replace(/\/+$/, '');
+  const normalized = normalizeApiBaseURL(url);
   if (typeof window !== 'undefined') {
     if (normalized)
       window.localStorage.setItem('codedock_tunnel_api_url', normalized);
@@ -99,7 +98,15 @@ export function apiRequest<T>(path: string, init?: RequestInit): Promise<T> {
     url: path,
     data,
     headers: init?.headers as AxiosRequestConfig['headers'],
+    signal: init?.signal ?? undefined,
   });
+}
+
+function normalizeApiBaseURL(url: string): string {
+  return url
+    .trim()
+    .replace(/\/+$/, '')
+    .replace(/\/api$/, '');
 }
 
 function parseRequestBody(body: BodyInit | null | undefined): unknown {

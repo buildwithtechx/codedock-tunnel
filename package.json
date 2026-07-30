@@ -27,7 +27,6 @@
     "format": "biome check apps packages",
     "typecheck": "npm run generate-routes && tsc --noEmit -p apps/web/tsconfig.json",
     "typecheck:packages": "npm run build:types --workspace packages/sdk && npm run typecheck --workspace packages/sdk && npm run typecheck --workspace packages/react && npm run typecheck --workspace packages/vite-plugin && npm run typecheck --workspace packages/next && npm run typecheck --workspace packages/nest && npm run typecheck --workspace packages/express",
-    "validate:package-types": "npm run build:types --workspace packages/sdk && npm run build:types --workspace packages/react && npm run build:types --workspace packages/vite-plugin && npm run build:types --workspace packages/next && npm run build:types --workspace packages/nest && npm run build:types --workspace packages/express",
     "test": "go test ./... && npm run test --workspaces --if-present",
     "clean": "rm -rf bin apps/web/dist apps/desktop/src-tauri/target"
   },

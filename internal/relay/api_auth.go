@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 )
 
@@ -105,7 +104,13 @@ func (r *InternalTunnelResolver) Resolve(ctx context.Context, tunnelID string) (
 }
 
 func (r *InternalTunnelResolver) VerifyPassword(ctx context.Context, tunnelID, password string) (bool, error) {
-	payload := strings.NewReader(`{"password":` + strconv.Quote(password) + `}`)
+	payloadBytes, err := json.Marshal(struct {
+		Password string `json:"password"`
+	}{Password: password})
+	if err != nil {
+		return false, fmt.Errorf("encode tunnel password request: %w", err)
+	}
+	payload := strings.NewReader(string(payloadBytes))
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, r.baseURL+"/internal/tunnels/"+url.PathEscape(tunnelID)+"/password", payload)
 	if err != nil {
 		return false, fmt.Errorf("create tunnel password request: %w", err)

@@ -1,4 +1,8 @@
-import type { HTTPRequest, HTTPResponse } from '../protocol';
+import {
+  absoluteMaxFrameSize,
+  type HTTPRequest,
+  type HTTPResponse,
+} from '../protocol';
 
 type ResponseSender = (response: HTTPResponse) => void;
 
@@ -6,6 +10,7 @@ export async function forwardHttpRequest(
   request: HTTPRequest,
   requestId: string | undefined,
   localPort: number | undefined,
+  timeoutMs: number,
   send: ResponseSender,
 ): Promise<void> {
   if (!requestId) return;
@@ -20,26 +25,47 @@ export async function forwardHttpRequest(
   try {
     const headers = new Headers();
     for (const [name, values] of Object.entries(request.headers ?? {})) {
-      headers.set(name, values.join(', '));
+      for (const value of values) headers.append(name, value);
     }
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
     const response = await fetch(
       `http://127.0.0.1:${localPort}${request.path}`,
       {
         method: request.method,
         headers,
+        signal: controller.signal,
         body: request.body
           ? (decodeBase64(request.body).buffer as ArrayBuffer)
           : undefined,
       },
     );
     const responseHeaders: Record<string, string[]> = {};
+    const setCookieValues =
+      (
+        response.headers as Headers & { getSetCookie?: () => string[] }
+      ).getSetCookie?.() ?? [];
     response.headers.forEach((value, name) => {
-      responseHeaders[name] = [value];
+      if (name !== 'set-cookie') responseHeaders[name] = [value];
     });
+    if (setCookieValues.length > 0)
+      responseHeaders['set-cookie'] = setCookieValues;
+    const responseBody = encodeBase64(
+      new Uint8Array(await response.arrayBuffer()),
+    );
+    clearTimeout(timeout);
+    if (responseBody.length > absoluteMaxFrameSize - 4096) {
+      sendSafely(send, {
+        status_code: 502,
+        headers: {},
+        error: 'local HTTP response exceeds the relay frame size limit',
+      });
+      return;
+    }
     sendSafely(send, {
       status_code: response.status,
       headers: responseHeaders,
-      body: encodeBase64(new Uint8Array(await response.arrayBuffer())),
+      body: responseBody,
     });
   } catch (error) {
     sendSafely(send, {

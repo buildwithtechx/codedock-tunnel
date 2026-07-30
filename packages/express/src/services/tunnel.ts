@@ -22,7 +22,12 @@ export function createExpressTunnel(
     };
   });
   connection.on('disconnected', () => {
-    return;
+    if (!options.reconnect && current.status !== 'closed') {
+      current = { status: 'closed' };
+    }
+  });
+  connection.on('reconnect_exhausted', () => {
+    if (current.status !== 'closed') current = { status: 'closed' };
   });
   connection.on('error', (error) => {
     if (current.status !== 'closed') {

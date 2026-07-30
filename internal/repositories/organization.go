@@ -16,6 +16,7 @@ type OrganizationRepository interface {
 	List(context.Context) ([]models.Organization, error)
 	Update(context.Context, *models.Organization) error
 	AddMember(context.Context, *models.OrganizationMember) error
+	AddMemberWithLimit(context.Context, *models.OrganizationMember, int64) error
 	FindMember(context.Context, string, string) (models.OrganizationMember, error)
 	ListMembers(context.Context, string) ([]models.OrganizationMember, error)
 	RemoveMember(context.Context, string, string) error
@@ -98,7 +99,7 @@ func (r *GormOrganizationRepository) AddMemberWithLimit(ctx context.Context, mem
 				return fmt.Errorf("organization member limit reached")
 			}
 		}
-		return tx.Create(member).Error
+		return wrap(tx.Create(member).Error, "add organization member")
 	})
 }
 

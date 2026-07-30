@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as SignupRouteImport } from './routes/signup'
@@ -44,6 +45,11 @@ import { Route as AdminUsersUserIdRouteImport } from './routes/admin/users/$user
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -102,39 +108,39 @@ const OrgSlugUsageRoute = OrgSlugUsageRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
-  id: '/admin/',
-  path: '/admin/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminActionsRoute = AdminActionsRouteImport.update({
-  id: '/admin/actions',
-  path: '/admin/actions',
-  getParentRoute: () => rootRouteImport,
+  id: '/actions',
+  path: '/actions',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminAuditLogsRoute = AdminAuditLogsRouteImport.update({
-  id: '/admin/audit-logs',
-  path: '/admin/audit-logs',
-  getParentRoute: () => rootRouteImport,
+  id: '/audit-logs',
+  path: '/audit-logs',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminChartsRoute = AdminChartsRouteImport.update({
-  id: '/admin/charts',
-  path: '/admin/charts',
-  getParentRoute: () => rootRouteImport,
+  id: '/charts',
+  path: '/charts',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminSubscriptionsRoute = AdminSubscriptionsRouteImport.update({
-  id: '/admin/subscriptions',
-  path: '/admin/subscriptions',
-  getParentRoute: () => rootRouteImport,
+  id: '/subscriptions',
+  path: '/subscriptions',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminTunnelsRoute = AdminTunnelsRouteImport.update({
-  id: '/admin/tunnels',
-  path: '/admin/tunnels',
-  getParentRoute: () => rootRouteImport,
+  id: '/tunnels',
+  path: '/tunnels',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminUsageRoute = AdminUsageRouteImport.update({
-  id: '/admin/usage',
-  path: '/admin/usage',
-  getParentRoute: () => rootRouteImport,
+  id: '/usage',
+  path: '/usage',
+  getParentRoute: () => AdminRoute,
 } as any)
 const ApiSearchRoute = ApiSearchRouteImport.update({
   id: '/api/search',
@@ -178,29 +184,30 @@ const OrgSlugTunnelsTunnelIdRoute = OrgSlugTunnelsTunnelIdRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminOrganizationsIndexRoute = AdminOrganizationsIndexRouteImport.update({
-  id: '/admin/organizations/',
-  path: '/admin/organizations/',
-  getParentRoute: () => rootRouteImport,
+  id: '/organizations/',
+  path: '/organizations/',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminOrganizationsOrganizationIDRoute =
   AdminOrganizationsOrganizationIDRouteImport.update({
-    id: '/admin/organizations/$organizationID',
-    path: '/admin/organizations/$organizationID',
-    getParentRoute: () => rootRouteImport,
+    id: '/organizations/$organizationID',
+    path: '/organizations/$organizationID',
+    getParentRoute: () => AdminRoute,
   } as any)
 const AdminUsersIndexRoute = AdminUsersIndexRouteImport.update({
-  id: '/admin/users/',
-  path: '/admin/users/',
-  getParentRoute: () => rootRouteImport,
+  id: '/users/',
+  path: '/users/',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AdminUsersUserIdRoute = AdminUsersUserIdRouteImport.update({
-  id: '/admin/users/$userId',
-  path: '/admin/users/$userId',
-  getParentRoute: () => rootRouteImport,
+  id: '/users/$userId',
+  path: '/users/$userId',
+  getParentRoute: () => AdminRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
   '/signup': typeof SignupRoute
@@ -268,6 +275,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
   '/signup': typeof SignupRoute
@@ -303,6 +311,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/login'
     | '/pricing'
     | '/signup'
@@ -369,6 +378,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/login'
     | '/pricing'
     | '/signup'
@@ -403,6 +413,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
   LoginRoute: typeof LoginRoute
   PricingRoute: typeof PricingRoute
   SignupRoute: typeof SignupRoute
@@ -413,26 +424,15 @@ export interface RootRouteChildren {
   OrgSlugMembersRoute: typeof OrgSlugMembersRoute
   OrgSlugRequestsRoute: typeof OrgSlugRequestsRoute
   OrgSlugUsageRoute: typeof OrgSlugUsageRoute
-  AdminActionsRoute: typeof AdminActionsRoute
-  AdminAuditLogsRoute: typeof AdminAuditLogsRoute
-  AdminChartsRoute: typeof AdminChartsRoute
-  AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
-  AdminTunnelsRoute: typeof AdminTunnelsRoute
-  AdminUsageRoute: typeof AdminUsageRoute
   ApiSearchRoute: typeof ApiSearchRoute
   CliLoginRoute: typeof CliLoginRoute
   DocsSplatRoute: typeof DocsSplatRoute
   OrgSlugIndexRoute: typeof OrgSlugIndexRoute
-  AdminIndexRoute: typeof AdminIndexRoute
   OrgSlugSettingsOrganizationRoute: typeof OrgSlugSettingsOrganizationRoute
   OrgSlugSettingsProfileRoute: typeof OrgSlugSettingsProfileRoute
   OrgSlugTunnelsTunnelIdRoute: typeof OrgSlugTunnelsTunnelIdRoute
-  AdminOrganizationsOrganizationIDRoute: typeof AdminOrganizationsOrganizationIDRoute
-  AdminUsersUserIdRoute: typeof AdminUsersUserIdRoute
   OrgSlugSettingsIndexRoute: typeof OrgSlugSettingsIndexRoute
   OrgSlugTunnelsIndexRoute: typeof OrgSlugTunnelsIndexRoute
-  AdminOrganizationsIndexRoute: typeof AdminOrganizationsIndexRoute
-  AdminUsersIndexRoute: typeof AdminUsersIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -442,6 +442,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -523,52 +530,52 @@ declare module '@tanstack/react-router' {
     }
     '/admin/': {
       id: '/admin/'
-      path: '/admin'
+      path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/actions': {
       id: '/admin/actions'
-      path: '/admin/actions'
+      path: '/actions'
       fullPath: '/admin/actions'
       preLoaderRoute: typeof AdminActionsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/audit-logs': {
       id: '/admin/audit-logs'
-      path: '/admin/audit-logs'
+      path: '/audit-logs'
       fullPath: '/admin/audit-logs'
       preLoaderRoute: typeof AdminAuditLogsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/charts': {
       id: '/admin/charts'
-      path: '/admin/charts'
+      path: '/charts'
       fullPath: '/admin/charts'
       preLoaderRoute: typeof AdminChartsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/subscriptions': {
       id: '/admin/subscriptions'
-      path: '/admin/subscriptions'
+      path: '/subscriptions'
       fullPath: '/admin/subscriptions'
       preLoaderRoute: typeof AdminSubscriptionsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/tunnels': {
       id: '/admin/tunnels'
-      path: '/admin/tunnels'
+      path: '/tunnels'
       fullPath: '/admin/tunnels'
       preLoaderRoute: typeof AdminTunnelsRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/usage': {
       id: '/admin/usage'
-      path: '/admin/usage'
+      path: '/usage'
       fullPath: '/admin/usage'
       preLoaderRoute: typeof AdminUsageRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/api/search': {
       id: '/api/search'
@@ -628,37 +635,68 @@ declare module '@tanstack/react-router' {
     }
     '/admin/organizations/': {
       id: '/admin/organizations/'
-      path: '/admin/organizations'
+      path: '/organizations'
       fullPath: '/admin/organizations/'
       preLoaderRoute: typeof AdminOrganizationsIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/organizations/$organizationID': {
       id: '/admin/organizations/$organizationID'
-      path: '/admin/organizations/$organizationID'
+      path: '/organizations/$organizationID'
       fullPath: '/admin/organizations/$organizationID'
       preLoaderRoute: typeof AdminOrganizationsOrganizationIDRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/users/': {
       id: '/admin/users/'
-      path: '/admin/users'
+      path: '/users'
       fullPath: '/admin/users/'
       preLoaderRoute: typeof AdminUsersIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/admin/users/$userId': {
       id: '/admin/users/$userId'
-      path: '/admin/users/$userId'
+      path: '/users/$userId'
       fullPath: '/admin/users/$userId'
       preLoaderRoute: typeof AdminUsersUserIdRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRoute
     }
   }
 }
 
+interface AdminRouteChildren {
+  AdminActionsRoute: typeof AdminActionsRoute
+  AdminAuditLogsRoute: typeof AdminAuditLogsRoute
+  AdminChartsRoute: typeof AdminChartsRoute
+  AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
+  AdminTunnelsRoute: typeof AdminTunnelsRoute
+  AdminUsageRoute: typeof AdminUsageRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  AdminOrganizationsOrganizationIDRoute: typeof AdminOrganizationsOrganizationIDRoute
+  AdminUsersUserIdRoute: typeof AdminUsersUserIdRoute
+  AdminOrganizationsIndexRoute: typeof AdminOrganizationsIndexRoute
+  AdminUsersIndexRoute: typeof AdminUsersIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminActionsRoute: AdminActionsRoute,
+  AdminAuditLogsRoute: AdminAuditLogsRoute,
+  AdminChartsRoute: AdminChartsRoute,
+  AdminSubscriptionsRoute: AdminSubscriptionsRoute,
+  AdminTunnelsRoute: AdminTunnelsRoute,
+  AdminUsageRoute: AdminUsageRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  AdminOrganizationsOrganizationIDRoute: AdminOrganizationsOrganizationIDRoute,
+  AdminUsersUserIdRoute: AdminUsersUserIdRoute,
+  AdminOrganizationsIndexRoute: AdminOrganizationsIndexRoute,
+  AdminUsersIndexRoute: AdminUsersIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
   LoginRoute: LoginRoute,
   PricingRoute: PricingRoute,
   SignupRoute: SignupRoute,
@@ -669,26 +707,15 @@ const rootRouteChildren: RootRouteChildren = {
   OrgSlugMembersRoute: OrgSlugMembersRoute,
   OrgSlugRequestsRoute: OrgSlugRequestsRoute,
   OrgSlugUsageRoute: OrgSlugUsageRoute,
-  AdminActionsRoute: AdminActionsRoute,
-  AdminAuditLogsRoute: AdminAuditLogsRoute,
-  AdminChartsRoute: AdminChartsRoute,
-  AdminSubscriptionsRoute: AdminSubscriptionsRoute,
-  AdminTunnelsRoute: AdminTunnelsRoute,
-  AdminUsageRoute: AdminUsageRoute,
   ApiSearchRoute: ApiSearchRoute,
   CliLoginRoute: CliLoginRoute,
   DocsSplatRoute: DocsSplatRoute,
   OrgSlugIndexRoute: OrgSlugIndexRoute,
-  AdminIndexRoute: AdminIndexRoute,
   OrgSlugSettingsOrganizationRoute: OrgSlugSettingsOrganizationRoute,
   OrgSlugSettingsProfileRoute: OrgSlugSettingsProfileRoute,
   OrgSlugTunnelsTunnelIdRoute: OrgSlugTunnelsTunnelIdRoute,
-  AdminOrganizationsOrganizationIDRoute: AdminOrganizationsOrganizationIDRoute,
-  AdminUsersUserIdRoute: AdminUsersUserIdRoute,
   OrgSlugSettingsIndexRoute: OrgSlugSettingsIndexRoute,
   OrgSlugTunnelsIndexRoute: OrgSlugTunnelsIndexRoute,
-  AdminOrganizationsIndexRoute: AdminOrganizationsIndexRoute,
-  AdminUsersIndexRoute: AdminUsersIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

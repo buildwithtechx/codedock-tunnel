@@ -82,7 +82,11 @@ func (h *AuthHandler) Session(c *fiber.Ctx) error {
 	if err != nil {
 		return writeError(c, fiber.StatusUnauthorized, err)
 	}
-	return c.JSON(fiber.Map{"id": session.ID, "userId": session.UserID, "expiresAt": session.ExpiresAt})
+	isPlatformAdmin, err := h.auth.IsPlatformAdmin(c.UserContext(), session.UserID)
+	if err != nil {
+		return writeError(c, fiber.StatusInternalServerError, fmt.Errorf("check platform admin access: %w", err))
+	}
+	return c.JSON(fiber.Map{"id": session.ID, "userId": session.UserID, "expiresAt": session.ExpiresAt, "isPlatformAdmin": isPlatformAdmin})
 }
 
 func (h *AuthHandler) Logout(c *fiber.Ctx) error {

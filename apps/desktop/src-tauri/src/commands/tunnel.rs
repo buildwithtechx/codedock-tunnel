@@ -67,7 +67,7 @@ fn validate_password(password: Option<String>) -> Result<Option<String>, String>
     if value.trim().is_empty() {
         return Err("tunnel password cannot contain only whitespace".to_string());
     }
-    let length = value.chars().count();
+    let length = value.len();
     if !(8..=256).contains(&length) {
         return Err("tunnel password must be between 8 and 256 characters".to_string());
     }

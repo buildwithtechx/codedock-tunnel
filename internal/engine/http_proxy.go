@@ -32,7 +32,7 @@ type UsageMeasurement struct {
 	StatusCode     int
 	DurationMillis int64
 	ResponseBytes  int64
-	ClientIP       *string
+	ClientIP       *string `json:"clientIp,omitempty"`
 }
 
 type UsageRecorder interface {

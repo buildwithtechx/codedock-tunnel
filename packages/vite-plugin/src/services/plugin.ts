@@ -31,11 +31,17 @@ export function codedockTunnel(options: CodedockTunnelPluginOptions): Plugin {
           });
         });
       } else {
-        void start().catch((error: unknown) => {
-          server.config.logger.error(
-            `Codedock Tunnel failed: ${String(error)}`,
+        if (options.localPort) {
+          void start().catch((error: unknown) => {
+            server.config.logger.error(
+              `Codedock Tunnel failed: ${String(error)}`,
+            );
+          });
+        } else {
+          server.config.logger.warn(
+            'Codedock Tunnel requires localPort when Vite has no HTTP server',
           );
-        });
+        }
       }
     },
     closeBundle() {

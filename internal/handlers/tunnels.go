@@ -85,6 +85,9 @@ func (h *TunnelHandler) VerifyPassword(c *fiber.Ctx) error {
 	if err := c.BodyParser(&input); err != nil {
 		return writeError(c, fiber.StatusBadRequest, fmt.Errorf("decode tunnel password request: %w", err))
 	}
+	if strings.TrimSpace(input.Password) == "" || len(input.Password) < 8 || len(input.Password) > 256 {
+		return writeError(c, fiber.StatusBadRequest, fmt.Errorf("tunnel password must be between 8 and 256 bytes"))
+	}
 	tunnel, err := h.tunnels.Policy(c.UserContext(), strings.TrimSpace(c.Params("tunnelID")))
 	if err != nil {
 		return writeError(c, fiber.StatusNotFound, err)

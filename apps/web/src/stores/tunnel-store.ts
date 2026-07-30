@@ -22,6 +22,8 @@ export const useTunnelStore = create<TunnelState>((set) => ({
         ...state.tunnels.filter((item) => item.id !== tunnel.id),
         tunnel,
       ],
+      selectedTunnel:
+        state.selectedTunnel?.id === tunnel.id ? tunnel : state.selectedTunnel,
     })),
   removeTunnel: (tunnelId) =>
     set((state) => ({

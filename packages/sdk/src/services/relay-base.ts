@@ -22,6 +22,7 @@ export class RelayConnectionBase {
       | 'reconnect'
       | 'reconnectDelayMs'
       | 'maxReconnectAttempts'
+      | 'localRequestTimeoutMs'
     >
   > &
     RelayConnectionOptions;
@@ -48,6 +49,7 @@ export class RelayConnectionBase {
       reconnect: options.reconnect ?? true,
       reconnectDelayMs: options.reconnectDelayMs ?? 2_000,
       maxReconnectAttempts: options.maxReconnectAttempts ?? 10,
+      localRequestTimeoutMs: options.localRequestTimeoutMs ?? 30_000,
     };
     if (!this.options.relayUrl.trim() || !this.options.agentToken.trim()) {
       throw new TunnelSDKError('relay URL and agent token are required');
