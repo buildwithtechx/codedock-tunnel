@@ -17,20 +17,32 @@ type DomainService struct {
 	billing *BillingService
 	now     func() time.Time
 	issuer  CertificateIssuer
+	dns     DNSProvider
+	dnsTTL  int
 }
 
 type CertificateIssuer interface {
 	Issue(context.Context, string) (time.Time, error)
 }
 
+type DNSProvider interface {
+	UpsertTXT(context.Context, string, string, int) error
+}
+
 func (s *DomainService) SetBilling(billing *BillingService)            { s.billing = billing }
 func (s *DomainService) SetCertificateIssuer(issuer CertificateIssuer) { s.issuer = issuer }
+func (s *DomainService) SetDNSTTL(ttl int) {
+	if ttl > 0 {
+		s.dnsTTL = ttl
+	}
+}
+func (s *DomainService) SetDNSProvider(provider DNSProvider) { s.dns = provider }
 
 func NewDomainService(domains repositories.DomainRepository) (*DomainService, error) {
 	if domains == nil {
 		return nil, fmt.Errorf("domain repository is required")
 	}
-	return &DomainService{domains: domains, now: time.Now}, nil
+	return &DomainService{domains: domains, now: time.Now, dnsTTL: 120}, nil
 }
 
 func (s *DomainService) Create(ctx context.Context, organizationID, hostname, method string, tunnelID *string) (string, models.Domain, error) {
@@ -60,6 +72,11 @@ func (s *DomainService) Create(ctx context.Context, organizationID, hostname, me
 		return "", models.Domain{}, err
 	}
 	domain := models.Domain{OrganizationID: organizationID, TunnelID: tunnelID, Hostname: hostname, Status: models.DomainStatusPending, VerificationMethod: method, VerificationToken: auth.HashToken(raw), CertificateStatus: "pending"}
+	if method == "dns" && s.dns != nil {
+		if err := s.dns.UpsertTXT(ctx, "_codedock-challenge."+hostname, raw, s.dnsTTL); err != nil {
+			return "", models.Domain{}, fmt.Errorf("create dns challenge: %w", err)
+		}
+	}
 	if err := s.domains.Create(ctx, &domain); err != nil {
 		return "", models.Domain{}, fmt.Errorf("create domain: %w", err)
 	}

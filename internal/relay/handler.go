@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log/slog"
+	"strings"
 	"sync"
 	"time"
 
@@ -35,28 +36,29 @@ type connectionState struct {
 }
 
 type Handler struct {
-	authenticator AgentAuthenticator
-	sessions      *engine.SessionRegistry
-	router        *engine.RequestRouter
-	tcp           *TCPManager
-	udp           *UDPManager
-	maxSessions   int
-	maxTunnels    int
-	maxBandwidth  int64
-	heartbeat     time.Duration
-	readTimeout   time.Duration
-	maxFrameBytes int64
-	drainTimeout  time.Duration
-	logger        *slog.Logger
-	metrics       *Metrics
-	bandwidth     *engine.BandwidthLimiter
-	usage         engine.UsageRecorder
-	affinity      RelayAffinity
-	relayID       string
-	affinityTTL   time.Duration
-	mu            sync.Mutex
-	connections   int
-	writeMu       sync.Mutex
+	authenticator  AgentAuthenticator
+	sessions       *engine.SessionRegistry
+	router         *engine.RequestRouter
+	tcp            *TCPManager
+	udp            *UDPManager
+	maxSessions    int
+	maxTunnels     int
+	maxBandwidth   int64
+	heartbeat      time.Duration
+	readTimeout    time.Duration
+	maxFrameBytes  int64
+	drainTimeout   time.Duration
+	logger         *slog.Logger
+	metrics        *Metrics
+	bandwidth      *engine.BandwidthLimiter
+	usage          engine.UsageRecorder
+	allowedOrigins []string
+	affinity       RelayAffinity
+	relayID        string
+	affinityTTL    time.Duration
+	mu             sync.Mutex
+	connections    int
+	writeMu        sync.Mutex
 }
 
 type HandlerOptions struct {
@@ -70,6 +72,7 @@ type HandlerOptions struct {
 	Logger         *slog.Logger
 	Metrics        *Metrics
 	UsageRecorder  engine.UsageRecorder
+	AllowedOrigins string
 	Affinity       RelayAffinity
 	RelayID        string
 	AffinityTTL    time.Duration
@@ -100,7 +103,7 @@ func NewHandlerWithOptions(authenticator AgentAuthenticator, sessions *engine.Se
 	}
 	tcp.SetMaxConnections(options.MaxConnections)
 	udp.SetMaxPackets(options.MaxConnections)
-	handler := &Handler{authenticator: authenticator, sessions: sessions, router: router, tcp: tcp, udp: udp, maxSessions: options.MaxConnections, maxTunnels: options.MaxTunnels, maxBandwidth: options.MaxBandwidth, heartbeat: options.Heartbeat, readTimeout: options.ReadTimeout, maxFrameBytes: options.MaxFrameBytes, drainTimeout: options.DrainTimeout, logger: options.Logger, metrics: options.Metrics, usage: options.UsageRecorder, affinity: options.Affinity, relayID: options.RelayID, affinityTTL: options.AffinityTTL, bandwidth: engine.NewBandwidthLimiter()}
+	handler := &Handler{authenticator: authenticator, sessions: sessions, router: router, tcp: tcp, udp: udp, maxSessions: options.MaxConnections, maxTunnels: options.MaxTunnels, maxBandwidth: options.MaxBandwidth, heartbeat: options.Heartbeat, readTimeout: options.ReadTimeout, maxFrameBytes: options.MaxFrameBytes, drainTimeout: options.DrainTimeout, logger: options.Logger, metrics: options.Metrics, usage: options.UsageRecorder, affinity: options.Affinity, relayID: options.RelayID, affinityTTL: options.AffinityTTL, allowedOrigins: splitOrigins(options.AllowedOrigins), bandwidth: engine.NewBandwidthLimiter()}
 	tcp.SetUsageHook(func(tunnelID, eventType string, connections int) {
 		organizationID, ok := router.OrganizationID(tunnelID)
 		if ok {
@@ -117,6 +120,10 @@ func (h *Handler) Upgrade(c *fiber.Ctx) error {
 }
 
 func (h *Handler) Connect(connection *websocket.Conn) {
+	if !h.originAllowed(connection.Headers("Origin")) {
+		_ = connection.Close()
+		return
+	}
 	if !h.acquireConnection() {
 		_ = connection.WriteJSON(protocol.Envelope{Version: protocol.Version, Type: protocol.MessageTypeError, Payload: []byte(`{"code":"capacity","message":"relay capacity reached"}`)})
 		_ = connection.Close()
@@ -178,6 +185,28 @@ func (h *Handler) Connect(connection *websocket.Conn) {
 		}
 		h.recordMessageUsage(ctx, identity.OrganizationID, message)
 	}
+}
+
+func splitOrigins(value string) []string {
+	var origins []string
+	for _, item := range strings.Split(value, ",") {
+		if item = strings.TrimSpace(item); item != "" {
+			origins = append(origins, item)
+		}
+	}
+	return origins
+}
+
+func (h *Handler) originAllowed(origin string) bool {
+	if origin == "" || len(h.allowedOrigins) == 0 {
+		return true
+	}
+	for _, allowed := range h.allowedOrigins {
+		if origin == allowed {
+			return true
+		}
+	}
+	return false
 }
 
 func (h *Handler) sendHeartbeats(ctx context.Context, connection *websocket.Conn, organizationID string) {

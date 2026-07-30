@@ -131,6 +131,9 @@ func validateApp(cfg AppConfig) error {
 	if cfg.PublicAPIURL == "" {
 		return fmt.Errorf("public api url is required")
 	}
+	if cfg.RequireTLS && (cfg.TLSCertFile == "" || cfg.TLSKeyFile == "") {
+		return fmt.Errorf("tls certificate and key files are required when tls is enabled")
+	}
 	return nil
 }
 

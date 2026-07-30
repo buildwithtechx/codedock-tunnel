@@ -64,6 +64,7 @@ func migrations() []migration {
 			&models.Plan{},
 			&models.Subscription{},
 			&models.BillingEvent{},
+			&models.BillingCredential{},
 			&models.UsageSnapshot{},
 			&models.UsageEvent{},
 			&models.AuditEvent{},

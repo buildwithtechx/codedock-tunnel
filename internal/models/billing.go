@@ -87,3 +87,14 @@ type Receipt struct {
 	Currency       string    `json:"currency" gorm:"type:varchar(3);not null"`
 	IssuedAt       time.Time `json:"issuedAt" gorm:"not null"`
 }
+
+type BillingCredential struct {
+	Base
+	OrganizationID string          `json:"organizationId" gorm:"type:uuid;uniqueIndex:billing_credential_scope;not null"`
+	Provider       BillingProvider `json:"provider" gorm:"type:varchar(20);uniqueIndex:billing_credential_scope;not null"`
+	Kind           string          `json:"kind" gorm:"type:varchar(40);uniqueIndex:billing_credential_scope;not null"`
+	Ciphertext     string          `json:"-" gorm:"not null"`
+	RotatedAt      time.Time       `json:"rotatedAt" gorm:"not null"`
+	ExpiresAt      *time.Time      `json:"expiresAt,omitempty"`
+	RevokedAt      *time.Time      `json:"-"`
+}

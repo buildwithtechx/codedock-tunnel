@@ -42,7 +42,7 @@ This section is the authoritative list of backend implementation work still outs
 
 ### Security and hardening
 
-- [ ] Enforce TLS and secure WebSocket configuration in production mode.
+- [x] Enforce TLS and secure WebSocket configuration in production mode.
 - [ ] Add strict origin, host, SSRF, open-proxy, port-scanning, and abuse controls.
 - [x] Add security tests for token replay, cross-tunnel access, credential revocation, and stale sessions.
 - [ ] Add protocol fuzzing and malformed-frame tests.
@@ -416,7 +416,7 @@ codedock-tunnel/
 - [x] Add database migrations and migration integrity checks.
 - [x] Add backups and restore procedures for control-plane metadata.
 - [x] Add Docker deployment examples.
-- [ ] Add horizontal scaling design for multiple relay servers.
+- [x] Add horizontal scaling design for multiple relay servers.
 - [ ] Define CLI-to-relay affinity and session handoff behavior.
 - [ ] Add Prometheus-compatible metrics and operational dashboards.
 - [x] Add resource budgets to preserve the lightweight runtime target.

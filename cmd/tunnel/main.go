@@ -57,7 +57,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	relayHandler, err := relay.NewHandlerWithOptions(authenticator, sessions, requestRouter, tcpManager, udpManager, relay.HandlerOptions{MaxConnections: cfg.Tunnel.MaxConnections, MaxTunnels: cfg.Tunnel.MaxTunnels, MaxBandwidth: cfg.Tunnel.MaxBandwidth, Heartbeat: cfg.Tunnel.Heartbeat, ReadTimeout: cfg.Tunnel.ReadTimeout, DrainTimeout: cfg.Tunnel.DrainTimeout, MaxFrameBytes: cfg.Tunnel.MaxFrameBytes, Logger: slog.Default(), Metrics: metrics, UsageRecorder: usage, Affinity: affinity, RelayID: cfg.RelayID, AffinityTTL: cfg.Tunnel.AgentInactivity})
+	relayHandler, err := relay.NewHandlerWithOptions(authenticator, sessions, requestRouter, tcpManager, udpManager, relay.HandlerOptions{MaxConnections: cfg.Tunnel.MaxConnections, MaxTunnels: cfg.Tunnel.MaxTunnels, MaxBandwidth: cfg.Tunnel.MaxBandwidth, Heartbeat: cfg.Tunnel.Heartbeat, ReadTimeout: cfg.Tunnel.ReadTimeout, DrainTimeout: cfg.Tunnel.DrainTimeout, MaxFrameBytes: cfg.Tunnel.MaxFrameBytes, Logger: slog.Default(), Metrics: metrics, UsageRecorder: usage, Affinity: affinity, RelayID: cfg.RelayID, AffinityTTL: cfg.Tunnel.AgentInactivity, AllowedOrigins: cfg.App.AllowedOrigins})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -79,7 +79,13 @@ func main() {
 	})
 	app.All("/*", adaptor.HTTPHandler(httpProxy))
 	go func() {
-		if err := app.Listen(cfg.App.ListenAddress()); err != nil {
+		var listenErr error
+		if cfg.App.RequireTLS {
+			listenErr = app.ListenTLS(cfg.App.ListenAddress(), cfg.App.TLSCertFile, cfg.App.TLSKeyFile)
+		} else {
+			listenErr = app.Listen(cfg.App.ListenAddress())
+		}
+		if err := listenErr; err != nil {
 			log.Printf("relay stopped: %v", err)
 			stop()
 		}

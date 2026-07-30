@@ -13,7 +13,10 @@ import (
 )
 
 type Server struct {
-	app *fiber.App
+	app        *fiber.App
+	requireTLS bool
+	certFile   string
+	keyFile    string
 }
 
 func NewServer(cfg config.APIConfig, deps Dependencies) (*Server, error) {
@@ -39,7 +42,7 @@ func NewServer(cfg config.APIConfig, deps Dependencies) (*Server, error) {
 		}
 		handlers.Billing.SetProviderSecrets(cfg.Billing.PolarWebhookSecret, paystackClient)
 	}
-	return &Server{app: app}, nil
+	return &Server{app: app, requireTLS: cfg.App.RequireTLS, certFile: cfg.App.TLSCertFile, keyFile: cfg.App.TLSKeyFile}, nil
 }
 
 func (s *Server) App() *fiber.App {
@@ -49,6 +52,9 @@ func (s *Server) App() *fiber.App {
 func (s *Server) Listen(address string) error {
 	if s == nil || s.app == nil {
 		return fmt.Errorf("http server is not initialized")
+	}
+	if s.requireTLS {
+		return s.app.ListenTLS(address, s.certFile, s.keyFile)
 	}
 	return s.app.Listen(address)
 }

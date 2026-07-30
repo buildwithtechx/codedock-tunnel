@@ -21,6 +21,8 @@ type BillingRepository interface {
 	CreateBillingEvent(context.Context, *models.BillingEvent) error
 	MarkBillingEventProcessed(context.Context, string, time.Time) error
 	ApplyBillingEvent(context.Context, *models.BillingEvent, *models.Subscription) error
+	SaveCredential(context.Context, *models.BillingCredential) error
+	FindCredential(context.Context, string, models.BillingProvider, string) (models.BillingCredential, error)
 }
 
 type GormBillingRepository struct{ db *gorm.DB }
@@ -131,4 +133,19 @@ func (r *GormBillingRepository) ApplyBillingEvent(ctx context.Context, event *mo
 		}
 		return nil
 	})
+}
+
+func (r *GormBillingRepository) SaveCredential(ctx context.Context, credential *models.BillingCredential) error {
+	if credential == nil {
+		return fmt.Errorf("billing credential is required")
+	}
+	return wrap(r.db.WithContext(ctx).Save(credential).Error, "save billing credential")
+}
+
+func (r *GormBillingRepository) FindCredential(ctx context.Context, organizationID string, provider models.BillingProvider, kind string) (models.BillingCredential, error) {
+	var credential models.BillingCredential
+	if err := r.db.WithContext(ctx).Where("organization_id = ? AND provider = ? AND kind = ? AND revoked_at IS NULL", organizationID, provider, kind).First(&credential).Error; err != nil {
+		return models.BillingCredential{}, mapError(err)
+	}
+	return credential, nil
 }

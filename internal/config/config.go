@@ -11,6 +11,7 @@ type APIConfig struct {
 	Service  ServiceConfig  `envPrefix:"CODEDOCK_"`
 	Billing  BillingConfig  `envPrefix:"CODEDOCK_"`
 	Tunnel   TunnelConfig   `envPrefix:"CODEDOCK_"`
+	DNS      DNSConfig      `envPrefix:"CODEDOCK_"`
 }
 
 type RelayConfig struct {
@@ -58,6 +59,9 @@ type AppConfig struct {
 	ACMEEmail        string        `env:"ACME_EMAIL"`
 	ACMEDirectory    string        `env:"ACME_DIRECTORY"`
 	CertificateCache string        `env:"CERTIFICATE_CACHE_DIR" envDefault:".data/acme"`
+	RequireTLS       bool          `env:"REQUIRE_TLS" envDefault:"false"`
+	TLSCertFile      string        `env:"TLS_CERT_FILE"`
+	TLSKeyFile       string        `env:"TLS_KEY_FILE"`
 }
 
 type AuthConfig struct {
@@ -123,4 +127,12 @@ type BillingConfig struct {
 	PaystackBaseURL         string        `env:"PAYSTACK_BASE_URL" envDefault:"https://api.paystack.co"`
 	PaystackSecret          string        `env:"PAYSTACK_SECRET_KEY"`
 	WebhookSecret           string        `env:"BILLING_WEBHOOK_SECRET"`
+}
+
+type DNSConfig struct {
+	Provider string `env:"DNS_PROVIDER"`
+	BaseURL  string `env:"DNS_BASE_URL"`
+	ZoneID   string `env:"DNS_ZONE_ID"`
+	APIToken string `env:"DNS_API_TOKEN"`
+	TTL      int    `env:"DNS_TTL" envDefault:"120"`
 }
