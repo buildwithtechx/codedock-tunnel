@@ -68,8 +68,12 @@ func (s *AuthService) AuthenticateSession(ctx context.Context, raw string) (mode
 	if err != nil {
 		return models.Session{}, fmt.Errorf("find auth session: %w", err)
 	}
-	if _, err := s.users.FindByID(ctx, session.UserID); err != nil {
+	user, err := s.users.FindByID(ctx, session.UserID)
+	if err != nil {
 		return models.Session{}, fmt.Errorf("find session user: %w", err)
+	}
+	if user.Status == models.UserStatusDisabled {
+		return models.Session{}, fmt.Errorf("user account is disabled")
 	}
 	if err := s.sessions.Touch(ctx, session.ID, now); err != nil {
 		return models.Session{}, fmt.Errorf("touch auth session: %w", err)

@@ -35,8 +35,8 @@ func (m *BillingMailer) SendBillingUpdate(ctx context.Context, organizationID, s
 	return m.client.Send(ctx, Message{To: to, Subject: "Codedock Tunnel subscription update", HTML: html})
 }
 
-func (m *BillingMailer) SendPaymentFailed(ctx context.Context, email, name, planName, amount, billingURL string, attemptsRemaining int) error {
-	html, err := m.renderer.render("payment-failed", PaymentFailedData{Name: name, PlanName: planName, Amount: amount, BillingURL: billingURL, AttemptsRemaining: attemptsRemaining})
+func (m *BillingMailer) SendPaymentFailed(ctx context.Context, email, name, planName, amount, billingURL string, attemptsRemaining int, attemptsKnown bool) error {
+	html, err := m.renderer.render("payment-failed", PaymentFailedData{Name: name, PlanName: planName, Amount: amount, BillingURL: billingURL, AttemptsRemaining: attemptsRemaining, AttemptsKnown: attemptsKnown})
 	if err != nil {
 		return err
 	}

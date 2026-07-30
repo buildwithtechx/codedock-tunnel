@@ -163,7 +163,8 @@ func parseWebhook(provider string, payload []byte) (services.BillingTransition, 
 	}
 	status := subscriptionStatus(eventType, stringValue(data, "status"))
 	periodEnd := timeValue(data, "current_period_end", "period_end")
-	transition := services.BillingTransition{Provider: models.BillingProvider(strings.ToLower(provider)), ProviderSubscription: stringValue(data, "subscription_id", "subscription_code", "id"), ProviderCustomer: stringValue(data, "customer_id", "customer_code"), ProviderProduct: stringValue(data, "product_id"), Status: status, CurrentPeriodEnd: periodEnd, CancelAtPeriodEnd: boolValue(data, "cancel_at_period_end", "cancelled"), EventType: eventType, AmountMinor: int64Value(data, "amount", "amount_minor", "amountMinor"), Currency: stringValue(data, "currency"), AttemptsRemaining: intValue(data, "attempts_remaining", "attemptsRemaining", "retries_remaining"), PreviousPlan: stringValue(data, "previous_plan", "previousPlan")}
+	attemptKeys := []string{"attempts_remaining", "attemptsRemaining", "retries_remaining"}
+	transition := services.BillingTransition{Provider: models.BillingProvider(strings.ToLower(provider)), ProviderSubscription: stringValue(data, "subscription_id", "subscription_code", "id"), ProviderCustomer: stringValue(data, "customer_id", "customer_code"), ProviderProduct: stringValue(data, "product_id"), Status: status, CurrentPeriodEnd: periodEnd, CancelAtPeriodEnd: boolValue(data, "cancel_at_period_end", "cancelled"), EventType: eventType, AmountMinor: int64Value(data, "amount", "amount_minor", "amountMinor"), Currency: stringValue(data, "currency"), AttemptsRemaining: intValue(data, attemptKeys...), AttemptsKnown: hasIntValue(data, attemptKeys...), PreviousPlan: stringValue(data, "previous_plan", "previousPlan")}
 	if metadata, ok := data["metadata"].(map[string]any); ok {
 		if transition.ProviderSubscription == "" {
 			transition.ProviderSubscription = stringValue(metadata, "subscription_id")
@@ -226,6 +227,20 @@ func intValue(values map[string]any, keys ...string) int {
 		}
 	}
 	return 0
+}
+
+func hasIntValue(values map[string]any, keys ...string) bool {
+	for _, key := range keys {
+		switch value := values[key].(type) {
+		case float64, int:
+			return true
+		case string:
+			if _, err := strconv.Atoi(value); err == nil {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func int64Value(values map[string]any, keys ...string) int64 {

@@ -12,8 +12,13 @@ import (
 
 type OrganizationInvitationRepository interface {
 	CreateInvitation(context.Context, *models.OrganizationInvitation) error
+	DeleteInvitation(context.Context, string) error
 	FindActiveInvitation(context.Context, string, time.Time) (models.OrganizationInvitation, error)
-	AcceptInvitation(context.Context, string, string, string, models.MemberRole, time.Time) error
+	AcceptInvitation(context.Context, string, string, string, models.MemberRole, int64, time.Time) error
+}
+
+func (r *GormOrganizationInvitationRepository) DeleteInvitation(ctx context.Context, id string) error {
+	return wrap(r.db.WithContext(ctx).Where("id = ? AND accepted_at IS NULL", id).Delete(&models.OrganizationInvitation{}).Error, "delete organization invitation")
 }
 
 type GormOrganizationInvitationRepository struct{ db *gorm.DB }
@@ -41,11 +46,24 @@ func (r *GormOrganizationInvitationRepository) FindActiveInvitation(ctx context.
 	return invitation, nil
 }
 
-func (r *GormOrganizationInvitationRepository) AcceptInvitation(ctx context.Context, invitationID, organizationID, userID string, role models.MemberRole, at time.Time) error {
+func (r *GormOrganizationInvitationRepository) AcceptInvitation(ctx context.Context, invitationID, organizationID, userID string, role models.MemberRole, memberLimit int64, at time.Time) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var organization models.Organization
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("id = ?", organizationID).First(&organization).Error; err != nil {
+			return mapError(err)
+		}
 		var invitation models.OrganizationInvitation
 		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("id = ? AND organization_id = ? AND expires_at > ? AND accepted_at IS NULL AND revoked_at IS NULL", invitationID, organizationID, at).First(&invitation).Error; err != nil {
 			return mapError(err)
+		}
+		if memberLimit > 0 {
+			var members int64
+			if err := tx.Model(&models.OrganizationMember{}).Where("organization_id = ?", organizationID).Count(&members).Error; err != nil {
+				return fmt.Errorf("count organization members: %w", err)
+			}
+			if members >= memberLimit {
+				return fmt.Errorf("organization member limit reached")
+			}
 		}
 		member := &models.OrganizationMember{OrganizationID: organizationID, UserID: userID, Role: role}
 		if err := tx.Create(member).Error; err != nil {

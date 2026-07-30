@@ -6,6 +6,7 @@ import (
 
 	"codedock.run/codedock-tunnel/internal/models"
 	"codedock.run/codedock-tunnel/internal/services"
+	"codedock.run/codedock-tunnel/pkg/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -33,7 +34,7 @@ func (h *AdminHandler) Overview(c *fiber.Ctx) error {
 func (h *AdminHandler) Users(c *fiber.Ctx) error {
 	users, total, err := h.admin.Users(c.UserContext(), pageValue(c, "limit"), pageValue(c, "offset"))
 	if err != nil {
-		return writeError(c, fiber.StatusBadRequest, err)
+		return writeAdminError(c, err)
 	}
 	return c.JSON(fiber.Map{"items": users, "total": total})
 }
@@ -41,7 +42,7 @@ func (h *AdminHandler) Users(c *fiber.Ctx) error {
 func (h *AdminHandler) Organizations(c *fiber.Ctx) error {
 	organizations, total, err := h.admin.Organizations(c.UserContext(), pageValue(c, "limit"), pageValue(c, "offset"))
 	if err != nil {
-		return writeError(c, fiber.StatusBadRequest, err)
+		return writeAdminError(c, err)
 	}
 	return c.JSON(fiber.Map{"items": organizations, "total": total})
 }
@@ -49,7 +50,7 @@ func (h *AdminHandler) Organizations(c *fiber.Ctx) error {
 func (h *AdminHandler) Tunnels(c *fiber.Ctx) error {
 	tunnels, total, err := h.admin.Tunnels(c.UserContext(), pageValue(c, "limit"), pageValue(c, "offset"))
 	if err != nil {
-		return writeError(c, fiber.StatusBadRequest, err)
+		return writeAdminError(c, err)
 	}
 	return c.JSON(fiber.Map{"items": tunnels, "total": total})
 }
@@ -57,7 +58,7 @@ func (h *AdminHandler) Tunnels(c *fiber.Ctx) error {
 func (h *AdminHandler) Subscriptions(c *fiber.Ctx) error {
 	subscriptions, total, err := h.admin.Subscriptions(c.UserContext(), pageValue(c, "limit"), pageValue(c, "offset"))
 	if err != nil {
-		return writeError(c, fiber.StatusBadRequest, err)
+		return writeAdminError(c, err)
 	}
 	return c.JSON(fiber.Map{"items": subscriptions, "total": total})
 }
@@ -65,9 +66,16 @@ func (h *AdminHandler) Subscriptions(c *fiber.Ctx) error {
 func (h *AdminHandler) AuditLogs(c *fiber.Ctx) error {
 	events, total, err := h.admin.AuditLogs(c.UserContext(), pageValue(c, "limit"), pageValue(c, "offset"))
 	if err != nil {
-		return writeError(c, fiber.StatusBadRequest, err)
+		return writeAdminError(c, err)
 	}
 	return c.JSON(fiber.Map{"items": events, "total": total})
+}
+
+func writeAdminError(c *fiber.Ctx, err error) error {
+	if utils.IsClientError(err) {
+		return writeError(c, fiber.StatusBadRequest, err)
+	}
+	return writeError(c, fiber.StatusInternalServerError, err)
 }
 
 func (h *AdminHandler) Usage(c *fiber.Ctx) error {

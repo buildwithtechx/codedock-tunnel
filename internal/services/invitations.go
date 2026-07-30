@@ -10,6 +10,7 @@ import (
 	"codedock.run/codedock-tunnel/internal/auth"
 	"codedock.run/codedock-tunnel/internal/models"
 	"codedock.run/codedock-tunnel/internal/repositories"
+	"codedock.run/codedock-tunnel/pkg/utils"
 )
 
 type OrganizationInvitationMailer interface {
@@ -41,10 +42,13 @@ func (s *InvitationService) SetMailer(mailer OrganizationInvitationMailer) { s.m
 func (s *InvitationService) Invite(ctx context.Context, inviterID, organizationID, email string, role models.MemberRole) (models.OrganizationInvitation, error) {
 	email = strings.ToLower(strings.TrimSpace(email))
 	if inviterID == "" || organizationID == "" || email == "" || role == models.MemberRoleOwner || !validMemberRole(role) {
-		return models.OrganizationInvitation{}, fmt.Errorf("inviter, organization, email, and valid non-owner role are required")
+		return models.OrganizationInvitation{}, utils.NewClientErrorf("inviter, organization, email, and valid non-owner role are required")
+	}
+	if s.mailer == nil {
+		return models.OrganizationInvitation{}, fmt.Errorf("invitation delivery is unavailable")
 	}
 	if err := s.organizations.Authorize(ctx, organizationID, inviterID, models.MemberRoleAdmin); err != nil {
-		return models.OrganizationInvitation{}, err
+		return models.OrganizationInvitation{}, utils.NewAuthorizationError(err)
 	}
 	organization, err := s.organizations.organizations.FindByID(ctx, organizationID)
 	if err != nil {
@@ -56,7 +60,7 @@ func (s *InvitationService) Invite(ctx context.Context, inviterID, organizationI
 	}
 	if existing, findErr := s.users.FindByEmail(ctx, email); findErr == nil {
 		if _, memberErr := s.organizations.organizations.FindMember(ctx, organizationID, existing.ID); memberErr == nil {
-			return models.OrganizationInvitation{}, fmt.Errorf("user is already an organization member")
+			return models.OrganizationInvitation{}, utils.NewClientErrorf("user is already an organization member")
 		}
 	} else if findErr != repositories.ErrNotFound {
 		return models.OrganizationInvitation{}, fmt.Errorf("find invited user: %w", findErr)
@@ -70,11 +74,12 @@ func (s *InvitationService) Invite(ctx context.Context, inviterID, organizationI
 	if err := s.invitations.CreateInvitation(ctx, &invitation); err != nil {
 		return models.OrganizationInvitation{}, err
 	}
-	if s.mailer != nil {
-		link := s.dashboardURL + "/invitations/accept?token=" + url.QueryEscape(rawToken)
-		if err := s.mailer.SendOrganizationInvite(ctx, email, inviter.Name, organization.Name, string(role), link); err != nil {
-			return models.OrganizationInvitation{}, fmt.Errorf("send organization invitation: %w", err)
+	link := s.dashboardURL + "/invitations/accept?token=" + url.QueryEscape(rawToken)
+	if err := s.mailer.SendOrganizationInvite(ctx, email, inviter.Name, organization.Name, string(role), link); err != nil {
+		if deleteErr := s.invitations.DeleteInvitation(ctx, invitation.ID); deleteErr != nil {
+			return models.OrganizationInvitation{}, fmt.Errorf("send organization invitation: %w; clean up invitation: %v", err, deleteErr)
 		}
+		return models.OrganizationInvitation{}, fmt.Errorf("send organization invitation: %w", err)
 	}
 	return invitation, nil
 }
@@ -95,10 +100,11 @@ func (s *InvitationService) Accept(ctx context.Context, userID, rawToken string)
 	if !strings.EqualFold(user.Email, invitation.Email) {
 		return fmt.Errorf("invitation email does not match authenticated user")
 	}
-	if err := s.organizations.checkMemberCapacity(ctx, invitation.OrganizationID); err != nil {
+	memberLimit, err := s.organizations.memberLimit(ctx, invitation.OrganizationID)
+	if err != nil {
 		return err
 	}
-	if err := s.invitations.AcceptInvitation(ctx, invitation.ID, invitation.OrganizationID, userID, invitation.Role, s.now()); err != nil {
+	if err := s.invitations.AcceptInvitation(ctx, invitation.ID, invitation.OrganizationID, userID, invitation.Role, memberLimit, s.now()); err != nil {
 		return fmt.Errorf("accept organization invitation: %w", err)
 	}
 	return nil

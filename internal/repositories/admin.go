@@ -31,9 +31,9 @@ type PlatformAdminRepository interface {
 }
 
 type AdminUsage struct {
-	BandwidthBytes int64
-	RequestCount   int64
-	ErrorCount     int64
+	BandwidthBytes int64 `json:"bandwidthBytes"`
+	RequestCount   int64 `json:"requestCount"`
+	ErrorCount     int64 `json:"errorCount"`
 }
 
 type GormAdminRepository struct{ db *gorm.DB }
@@ -67,7 +67,7 @@ func (r *GormAdminRepository) IsPlatformAdmin(ctx context.Context, userID string
 
 func (r *GormAdminRepository) ListUsers(ctx context.Context, limit, offset int) ([]models.User, error) {
 	var users []models.User
-	err := r.db.WithContext(ctx).Where("deleted_at IS NULL").Order("created_at DESC").Limit(limit).Offset(offset).Find(&users).Error
+	err := r.db.WithContext(ctx).Where("deleted_at IS NULL").Order("created_at DESC").Order("id DESC").Limit(limit).Offset(offset).Find(&users).Error
 	return users, wrap(err, "list admin users")
 }
 
@@ -88,7 +88,7 @@ func (r *GormAdminRepository) SetUserStatus(ctx context.Context, userID string, 
 
 func (r *GormAdminRepository) ListOrganizations(ctx context.Context, limit, offset int) ([]models.Organization, error) {
 	var organizations []models.Organization
-	err := r.db.WithContext(ctx).Order("created_at DESC").Limit(limit).Offset(offset).Find(&organizations).Error
+	err := r.db.WithContext(ctx).Order("created_at DESC").Order("id DESC").Limit(limit).Offset(offset).Find(&organizations).Error
 	return organizations, wrap(err, "list admin organizations")
 }
 
@@ -98,7 +98,7 @@ func (r *GormAdminRepository) CountOrganizations(ctx context.Context) (int64, er
 
 func (r *GormAdminRepository) ListTunnels(ctx context.Context, limit, offset int) ([]models.Tunnel, error) {
 	var tunnels []models.Tunnel
-	err := r.db.WithContext(ctx).Order("created_at DESC").Limit(limit).Offset(offset).Find(&tunnels).Error
+	err := r.db.WithContext(ctx).Order("created_at DESC").Order("id DESC").Limit(limit).Offset(offset).Find(&tunnels).Error
 	return tunnels, wrap(err, "list admin tunnels")
 }
 
@@ -108,7 +108,7 @@ func (r *GormAdminRepository) CountTunnels(ctx context.Context) (int64, error) {
 
 func (r *GormAdminRepository) ListSubscriptions(ctx context.Context, limit, offset int) ([]models.Subscription, error) {
 	var subscriptions []models.Subscription
-	err := r.db.WithContext(ctx).Order("created_at DESC").Limit(limit).Offset(offset).Find(&subscriptions).Error
+	err := r.db.WithContext(ctx).Order("created_at DESC").Order("id DESC").Limit(limit).Offset(offset).Find(&subscriptions).Error
 	return subscriptions, wrap(err, "list admin subscriptions")
 }
 
@@ -118,7 +118,7 @@ func (r *GormAdminRepository) CountSubscriptions(ctx context.Context) (int64, er
 
 func (r *GormAdminRepository) ListAuditEvents(ctx context.Context, limit, offset int) ([]models.AuditEvent, error) {
 	var events []models.AuditEvent
-	err := r.db.WithContext(ctx).Order("occurred_at DESC").Limit(limit).Offset(offset).Find(&events).Error
+	err := r.db.WithContext(ctx).Order("occurred_at DESC").Order("id DESC").Limit(limit).Offset(offset).Find(&events).Error
 	return events, wrap(err, "list admin audit events")
 }
 

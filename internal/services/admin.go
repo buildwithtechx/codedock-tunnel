@@ -6,6 +6,7 @@ import (
 
 	"codedock.run/codedock-tunnel/internal/models"
 	"codedock.run/codedock-tunnel/internal/repositories"
+	"codedock.run/codedock-tunnel/pkg/utils"
 )
 
 type AdminService struct{ admin repositories.AdminRepository }
@@ -47,7 +48,7 @@ func (s *AdminService) Overview(ctx context.Context) (AdminOverview, error) {
 func (s *AdminService) Users(ctx context.Context, limit, offset int) ([]models.User, int64, error) {
 	limit, offset, err := normalizePage(limit, offset)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, utils.ClientError{Err: err}
 	}
 	users, err := s.admin.ListUsers(ctx, limit, offset)
 	if err != nil {
@@ -60,7 +61,7 @@ func (s *AdminService) Users(ctx context.Context, limit, offset int) ([]models.U
 func (s *AdminService) Organizations(ctx context.Context, limit, offset int) ([]models.Organization, int64, error) {
 	limit, offset, err := normalizePage(limit, offset)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, utils.ClientError{Err: err}
 	}
 	organizations, err := s.admin.ListOrganizations(ctx, limit, offset)
 	if err != nil {
@@ -73,7 +74,7 @@ func (s *AdminService) Organizations(ctx context.Context, limit, offset int) ([]
 func (s *AdminService) Tunnels(ctx context.Context, limit, offset int) ([]models.Tunnel, int64, error) {
 	limit, offset, err := normalizePage(limit, offset)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, utils.ClientError{Err: err}
 	}
 	tunnels, err := s.admin.ListTunnels(ctx, limit, offset)
 	if err != nil {
@@ -86,7 +87,7 @@ func (s *AdminService) Tunnels(ctx context.Context, limit, offset int) ([]models
 func (s *AdminService) Subscriptions(ctx context.Context, limit, offset int) ([]models.Subscription, int64, error) {
 	limit, offset, err := normalizePage(limit, offset)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, utils.ClientError{Err: err}
 	}
 	subscriptions, err := s.admin.ListSubscriptions(ctx, limit, offset)
 	if err != nil {
@@ -106,7 +107,7 @@ func (s *AdminService) SetUserStatus(ctx context.Context, userID string, status 
 func (s *AdminService) AuditLogs(ctx context.Context, limit, offset int) ([]models.AuditEvent, int64, error) {
 	limit, offset, err := normalizePage(limit, offset)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, utils.ClientError{Err: err}
 	}
 	events, err := s.admin.ListAuditEvents(ctx, limit, offset)
 	if err != nil {
@@ -124,8 +125,8 @@ func normalizePage(limit, offset int) (int, int, error) {
 	if limit == 0 {
 		limit = 50
 	}
-	if limit < 1 || limit > 100 || offset < 0 {
-		return 0, 0, fmt.Errorf("limit must be between 1 and 100 and offset cannot be negative")
+	if limit < 1 || limit > 100 || offset < 0 || offset > 100_000 {
+		return 0, 0, fmt.Errorf("limit must be between 1 and 100 and offset must be between 0 and 100000")
 	}
 	return limit, offset, nil
 }

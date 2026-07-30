@@ -7,6 +7,7 @@ import (
 	"codedock.run/codedock-tunnel/internal/models"
 	"codedock.run/codedock-tunnel/internal/services"
 	"codedock.run/codedock-tunnel/internal/validation"
+	"codedock.run/codedock-tunnel/pkg/utils"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -38,7 +39,13 @@ func (h *InvitationHandler) Create(c *fiber.Ctx) error {
 	}
 	invitation, err := h.invitations.Invite(c.UserContext(), userID, strings.TrimSpace(c.Params("organizationID")), input.Email, input.Role)
 	if err != nil {
-		return writeError(c, fiber.StatusBadRequest, err)
+		if utils.IsAuthorizationError(err) {
+			return writeError(c, fiber.StatusForbidden, err)
+		}
+		if utils.IsClientError(err) {
+			return writeError(c, fiber.StatusBadRequest, err)
+		}
+		return writeError(c, fiber.StatusInternalServerError, err)
 	}
 	return c.Status(fiber.StatusCreated).JSON(invitation)
 }

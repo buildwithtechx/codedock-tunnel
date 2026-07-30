@@ -93,7 +93,7 @@ Each independently deployed command has a focused environment example:
 Users authenticate with Google or GitHub before they can be granted platform-admin access. The server does not promote users automatically during signup. After the user has signed in once, provision an administrator explicitly:
 
 ```sh
-codedockd bootstrap-admin --email owner@example.com
+./bin/codedock-api bootstrap-admin --email owner@example.com
 ```
 
 Use `--name` to set a separate admin display name. The command assigns the `owner` role in the `platform_admins` table.

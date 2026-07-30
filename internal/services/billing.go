@@ -3,12 +3,12 @@ package services
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
 	"codedock.run/codedock-tunnel/internal/models"
 	"codedock.run/codedock-tunnel/internal/repositories"
+	"codedock.run/codedock-tunnel/pkg/utils"
 )
 
 type BillingService struct {
@@ -25,7 +25,7 @@ type BillingService struct {
 
 type BillingMailer interface {
 	SendBillingUpdate(context.Context, string, string) error
-	SendPaymentFailed(context.Context, string, string, string, string, string, int) error
+	SendPaymentFailed(context.Context, string, string, string, string, string, int, bool) error
 	SendSubscriptionReset(context.Context, string, string, string, string, string) error
 }
 
@@ -56,6 +56,7 @@ type BillingTransition struct {
 	AmountMinor           int64
 	Currency              string
 	AttemptsRemaining     int
+	AttemptsKnown         bool
 	PreviousPlan          string
 }
 
@@ -151,21 +152,23 @@ func (s *BillingService) notifyTransition(ctx context.Context, event *models.Bil
 	eventType := strings.ToLower(event.EventType)
 	if (transition != nil && transition.Status == models.SubscriptionStatusPastDue) || strings.Contains(eventType, "fail") || strings.Contains(eventType, "past_due") {
 		planName := "Subscription"
-		amount := "0"
+		amount := utils.FormatMinorAmount(0, "USD")
 		if subscription.PlanID != "" {
 			if plan, planErr := s.billing.FindPlan(ctx, subscription.PlanID); planErr == nil {
 				planName = plan.Name
-				amount = strconv.FormatInt(plan.PriceMinor, 10) + " " + plan.Currency
+				amount = utils.FormatMinorAmount(plan.PriceMinor, plan.Currency)
 			}
 		}
 		attempts := 0
+		attemptsKnown := false
 		if transition != nil {
 			attempts = transition.AttemptsRemaining
-			if transition.AmountMinor > 0 {
-				amount = strconv.FormatInt(transition.AmountMinor, 10) + " " + transition.Currency
+			attemptsKnown = transition.AttemptsKnown
+			if transition.AmountMinor > 0 && transition.Currency != "" {
+				amount = utils.FormatMinorAmount(transition.AmountMinor, transition.Currency)
 			}
 		}
-		_ = s.mailer.SendPaymentFailed(ctx, target.Email, target.Name, planName, amount, target.BillingURL, attempts)
+		_ = s.mailer.SendPaymentFailed(ctx, target.Email, target.Name, planName, amount, target.BillingURL, attempts, attemptsKnown)
 		return
 	}
 	if strings.Contains(eventType, "downgrade") || strings.Contains(eventType, "reset") || strings.Contains(eventType, "revoke") {

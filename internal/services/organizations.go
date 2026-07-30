@@ -57,20 +57,31 @@ func (s *OrganizationService) AddMember(ctx context.Context, organizationID, use
 }
 
 func (s *OrganizationService) checkMemberCapacity(ctx context.Context, organizationID string) error {
-	if s.billing != nil {
-		plan, _, err := s.billing.Entitlements(ctx, organizationID)
-		if err != nil {
-			return fmt.Errorf("check member entitlement: %w", err)
-		}
+	limit, err := s.memberLimit(ctx, organizationID)
+	if err != nil {
+		return err
+	}
+	if limit > 0 {
 		count, err := s.organizations.CountMembers(ctx, organizationID)
 		if err != nil {
 			return fmt.Errorf("count organization members: %w", err)
 		}
-		if plan.MaxMembers > 0 && count >= int64(plan.MaxMembers) {
+		if count >= limit {
 			return fmt.Errorf("organization member limit reached")
 		}
 	}
 	return nil
+}
+
+func (s *OrganizationService) memberLimit(ctx context.Context, organizationID string) (int64, error) {
+	if s.billing == nil {
+		return 0, nil
+	}
+	plan, _, err := s.billing.Entitlements(ctx, organizationID)
+	if err != nil {
+		return 0, fmt.Errorf("check member entitlement: %w", err)
+	}
+	return int64(plan.MaxMembers), nil
 }
 
 func (s *OrganizationService) Authorize(ctx context.Context, organizationID, userID string, required models.MemberRole) error {

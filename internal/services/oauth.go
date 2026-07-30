@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"codedock.run/codedock-tunnel/internal/auth"
@@ -71,7 +72,7 @@ func (s *OAuthService) Callback(ctx context.Context, state, code, userAgent, ipA
 	}
 	if created && s.welcome != nil {
 		if err := s.welcome.SendWelcome(ctx, user.Email, user.Name); err != nil {
-			return "", models.Session{}, fmt.Errorf("send welcome email: %w", err)
+			slog.Default().Warn("welcome email delivery failed", "email", user.Email, "error", err)
 		}
 	}
 	raw, session, err := s.auth.CreateSession(ctx, user.ID, userAgent, ipAddress)

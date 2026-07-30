@@ -31,6 +31,7 @@ type PaymentFailedData struct {
 	Amount            string
 	BillingURL        string
 	AttemptsRemaining int
+	AttemptsKnown     bool
 }
 
 type SubscriptionResetData struct {

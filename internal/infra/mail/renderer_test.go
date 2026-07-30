@@ -29,7 +29,7 @@ func TestTemplateRendererSupportsTransactionalTemplates(t *testing.T) {
 		"account-update":      AccountUpdateData{Event: "deleted"},
 		"billing-update":      BillingUpdateData{Status: "active"},
 		"organization-invite": OrganizationInviteData{InviterName: "Ada", OrganizationName: "Acme", Role: "member", InvitationLink: "https://localhost/invite"},
-		"payment-failed":      PaymentFailedData{Name: "Ada", PlanName: "Beam", Amount: "$10", BillingURL: "https://localhost/billing", AttemptsRemaining: 1},
+		"payment-failed":      PaymentFailedData{Name: "Ada", PlanName: "Beam", Amount: "$10", BillingURL: "https://localhost/billing", AttemptsRemaining: 1, AttemptsKnown: true},
 		"subscription-reset":  SubscriptionResetData{Name: "Ada", OrganizationName: "Acme", PreviousPlan: "Beam", DashboardURL: "https://localhost"},
 	}
 	for name, data := range templates {
