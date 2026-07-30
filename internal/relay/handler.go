@@ -40,11 +40,11 @@ type ManagedTunnelPasswordVerifier interface {
 }
 
 type ManagedTunnelPolicy struct {
-	OrganizationID string
-	PublicHostname string
-	PasswordHash   string
+	OrganizationID    string
+	PublicHostname    string
+	PasswordHash      string
 	PasswordProtected bool
-	Status         string
+	Status            string
 }
 
 type connectionState struct {

@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"codedock.run/codedock-tunnel/internal/models"
+	"codedock.run/codedock-tunnel/internal/security"
 	"codedock.run/codedock-tunnel/internal/services"
 	"codedock.run/codedock-tunnel/internal/validation"
-	"codedock.run/codedock-tunnel/internal/security"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -79,7 +79,9 @@ func (h *TunnelHandler) Policy(c *fiber.Ctx) error {
 }
 
 func (h *TunnelHandler) VerifyPassword(c *fiber.Ctx) error {
-	var input struct { Password string `json:"password"` }
+	var input struct {
+		Password string `json:"password"`
+	}
 	if err := c.BodyParser(&input); err != nil {
 		return writeError(c, fiber.StatusBadRequest, fmt.Errorf("decode tunnel password request: %w", err))
 	}

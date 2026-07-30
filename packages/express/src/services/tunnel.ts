@@ -63,9 +63,9 @@ export function createExpressTunnel(
           return current;
         })
         .catch((value) => {
-        if (startGeneration === generation) {
-          current = { status: 'error', error: normalizeError(value) };
-        }
+          if (startGeneration === generation) {
+            current = { status: 'error', error: normalizeError(value) };
+          }
           throw value;
         })
         .finally(() => {
