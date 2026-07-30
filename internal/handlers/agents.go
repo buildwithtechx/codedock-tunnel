@@ -64,9 +64,9 @@ func (h *AgentHandler) Authenticate(c *fiber.Ctx) error {
 	if len(parts) != 2 || !strings.EqualFold(parts[0], "bearer") {
 		return writeError(c, fiber.StatusUnauthorized, fmt.Errorf("bearer agent token is required"))
 	}
-	agent, err := h.agents.Authenticate(c.UserContext(), strings.TrimSpace(parts[1]))
+	agent, plan, err := h.agents.AuthenticateWithPlan(c.UserContext(), strings.TrimSpace(parts[1]))
 	if err != nil {
 		return writeError(c, fiber.StatusUnauthorized, err)
 	}
-	return c.JSON(fiber.Map{"agentId": agent.ID, "organizationId": agent.OrganizationID, "status": models.AgentStatusOnline})
+	return c.JSON(fiber.Map{"agentId": agent.ID, "organizationId": agent.OrganizationID, "status": models.AgentStatusOnline, "limits": fiber.Map{"maxTunnels": plan.MaxTunnels, "maxConnections": plan.MaxConnections, "bandwidthBytes": plan.BandwidthBytes}})
 }

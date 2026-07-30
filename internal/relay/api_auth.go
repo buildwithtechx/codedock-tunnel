@@ -42,6 +42,11 @@ func (a *InternalAgentAuthenticator) Authenticate(ctx context.Context, token str
 	var body struct {
 		AgentID        string `json:"agentId"`
 		OrganizationID string `json:"organizationId"`
+		Limits         struct {
+			MaxTunnels     int   `json:"maxTunnels"`
+			MaxConnections int   `json:"maxConnections"`
+			BandwidthBytes int64 `json:"bandwidthBytes"`
+		} `json:"limits"`
 	}
 	if err := json.NewDecoder(response.Body).Decode(&body); err != nil {
 		return AgentIdentity{}, fmt.Errorf("decode agent authentication response: %w", err)
@@ -49,5 +54,5 @@ func (a *InternalAgentAuthenticator) Authenticate(ctx context.Context, token str
 	if body.AgentID == "" || body.OrganizationID == "" {
 		return AgentIdentity{}, fmt.Errorf("agent authentication response is incomplete")
 	}
-	return AgentIdentity{AgentID: body.AgentID, OrganizationID: body.OrganizationID}, nil
+	return AgentIdentity{AgentID: body.AgentID, OrganizationID: body.OrganizationID, MaxTunnels: body.Limits.MaxTunnels, MaxConnections: body.Limits.MaxConnections, BandwidthBytes: body.Limits.BandwidthBytes}, nil
 }

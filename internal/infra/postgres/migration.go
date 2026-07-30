@@ -69,6 +69,8 @@ func migrations() []migration {
 			&models.UsageEvent{},
 			&models.AuditEvent{},
 		)
+	}}, {version: 2, name: "plan_connection_limits", up: func(db *gorm.DB) error {
+		return db.AutoMigrate(&models.Plan{})
 	}}}
 }
 

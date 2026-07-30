@@ -170,6 +170,7 @@ func NewDatabaseDependencies(db *gorm.DB, cfg config.APIConfig) (Dependencies, e
 	if err != nil {
 		return Dependencies{}, err
 	}
+	agentService.SetBilling(billingService)
 	usageRepository, err := repositories.NewUsageRepository(db)
 	if err != nil {
 		return Dependencies{}, err

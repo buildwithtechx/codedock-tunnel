@@ -31,6 +31,7 @@ type Plan struct {
 	MaxTunnels      int    `json:"maxTunnels" gorm:"not null"`
 	MaxDomains      int    `json:"maxDomains" gorm:"not null"`
 	MaxMembers      int    `json:"maxMembers" gorm:"not null"`
+	MaxConnections  int    `json:"maxConnections" gorm:"not null;default:0"`
 	BandwidthBytes  int64  `json:"bandwidthBytes" gorm:"not null"`
 	RetentionDays   int    `json:"retentionDays" gorm:"not null"`
 	Features        string `json:"features" gorm:"type:jsonb;not null;default:'{}'"`

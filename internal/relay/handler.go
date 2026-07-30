@@ -19,6 +19,9 @@ import (
 type AgentIdentity struct {
 	AgentID        string
 	OrganizationID string
+	MaxTunnels     int
+	MaxConnections int
+	BandwidthBytes int64
 }
 
 type AgentAuthenticator interface {
@@ -58,6 +61,8 @@ type Handler struct {
 	affinityTTL    time.Duration
 	mu             sync.Mutex
 	connections    int
+	orgLimits      map[string]int
+	orgConnections map[string]int
 	writeMu        sync.Mutex
 }
 
@@ -103,10 +108,12 @@ func NewHandlerWithOptions(authenticator AgentAuthenticator, sessions *engine.Se
 	}
 	tcp.SetMaxConnections(options.MaxConnections)
 	udp.SetMaxPackets(options.MaxConnections)
-	handler := &Handler{authenticator: authenticator, sessions: sessions, router: router, tcp: tcp, udp: udp, maxSessions: options.MaxConnections, maxTunnels: options.MaxTunnels, maxBandwidth: options.MaxBandwidth, heartbeat: options.Heartbeat, readTimeout: options.ReadTimeout, maxFrameBytes: options.MaxFrameBytes, drainTimeout: options.DrainTimeout, logger: options.Logger, metrics: options.Metrics, usage: options.UsageRecorder, affinity: options.Affinity, relayID: options.RelayID, affinityTTL: options.AffinityTTL, allowedOrigins: splitOrigins(options.AllowedOrigins), bandwidth: engine.NewBandwidthLimiter()}
+	handler := &Handler{authenticator: authenticator, sessions: sessions, router: router, tcp: tcp, udp: udp, maxSessions: options.MaxConnections, maxTunnels: options.MaxTunnels, maxBandwidth: options.MaxBandwidth, heartbeat: options.Heartbeat, readTimeout: options.ReadTimeout, maxFrameBytes: options.MaxFrameBytes, drainTimeout: options.DrainTimeout, logger: options.Logger, metrics: options.Metrics, usage: options.UsageRecorder, affinity: options.Affinity, relayID: options.RelayID, affinityTTL: options.AffinityTTL, allowedOrigins: splitOrigins(options.AllowedOrigins), bandwidth: engine.NewBandwidthLimiter(), orgLimits: make(map[string]int), orgConnections: make(map[string]int)}
+	tcp.SetAdmissionHook(handler.allowConnection)
 	tcp.SetUsageHook(func(tunnelID, eventType string, connections int) {
 		organizationID, ok := router.OrganizationID(tunnelID)
-		if ok {
+		if ok && eventType == "tcp_connection_close" {
+			handler.updateOrganizationConnections(organizationID, connections)
 			handler.recordUsage(context.Background(), organizationID, tunnelID, eventType, 0, connections)
 		}
 	})
@@ -143,6 +150,7 @@ func (h *Handler) Connect(connection *websocket.Conn) {
 		return
 	}
 	h.logger.Info("relay connection authenticated", slog.String("agent_id", identity.AgentID), slog.String("organization_id", identity.OrganizationID))
+	h.setOrganizationLimit(identity.OrganizationID, identity.MaxConnections)
 	owned := make(map[string]string)
 	state := connectionState{}
 	connectionCtx, cancelConnection := context.WithCancel(ctx)
@@ -184,6 +192,34 @@ func (h *Handler) Connect(connection *websocket.Conn) {
 			h.writeError(connection, "message", err.Error())
 		}
 		h.recordMessageUsage(ctx, identity.OrganizationID, message)
+	}
+}
+
+func (h *Handler) setOrganizationLimit(organizationID string, limit int) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if limit > 0 {
+		h.orgLimits[organizationID] = limit
+	}
+}
+
+func (h *Handler) allowConnection(tunnelID string) bool {
+	organizationID, ok := h.router.OrganizationID(tunnelID)
+	if !ok {
+		return false
+	}
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	limit := h.orgLimits[organizationID]
+	return limit <= 0 || h.orgConnections[organizationID] < limit
+}
+
+func (h *Handler) updateOrganizationConnections(organizationID string, delta int) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	h.orgConnections[organizationID] += delta
+	if h.orgConnections[organizationID] <= 0 {
+		delete(h.orgConnections, organizationID)
 	}
 }
 
@@ -238,8 +274,12 @@ func (h *Handler) handleMessage(ctx context.Context, connection *websocket.Conn,
 	if len(states) > 0 && states[0] != nil {
 		state = states[0]
 	}
-	if h.maxBandwidth > 0 && isDataMessage(message.Type) {
-		if err := h.bandwidth.Consume(identity.OrganizationID, h.maxBandwidth, int64(len(message.Payload))); err != nil {
+	bandwidthLimit := identity.BandwidthBytes
+	if bandwidthLimit == 0 {
+		bandwidthLimit = h.maxBandwidth
+	}
+	if bandwidthLimit > 0 && isDataMessage(message.Type) {
+		if err := h.bandwidth.Consume(identity.OrganizationID, bandwidthLimit, int64(len(message.Payload))); err != nil {
 			return err
 		}
 	}
@@ -305,7 +345,17 @@ func (h *Handler) handleMessage(ctx context.Context, connection *websocket.Conn,
 		if exists && previous.OrganizationID != identity.OrganizationID {
 			return fmt.Errorf("tunnel belongs to another organization")
 		}
-		if !exists && len(h.sessions.Snapshot()) >= h.maxTunnels {
+		maxTunnels := identity.MaxTunnels
+		if maxTunnels == 0 {
+			maxTunnels = h.maxTunnels
+		}
+		organizationTunnels := 0
+		for _, active := range h.sessions.Snapshot() {
+			if active.OrganizationID == identity.OrganizationID {
+				organizationTunnels++
+			}
+		}
+		if !exists && (len(h.sessions.Snapshot()) >= h.maxTunnels || (maxTunnels > 0 && organizationTunnels >= maxTunnels)) {
 			return fmt.Errorf("tunnel capacity reached")
 		}
 		if h.affinity != nil {
@@ -321,8 +371,12 @@ func (h *Handler) handleMessage(ctx context.Context, connection *websocket.Conn,
 			if err := sendCtx.Err(); err != nil {
 				return err
 			}
-			if h.maxBandwidth > 0 && isDataMessage(outgoing.Type) {
-				if err := h.bandwidth.Consume(identity.OrganizationID, h.maxBandwidth, int64(len(outgoing.Payload))); err != nil {
+			limit := identity.BandwidthBytes
+			if limit == 0 {
+				limit = h.maxBandwidth
+			}
+			if limit > 0 && isDataMessage(outgoing.Type) {
+				if err := h.bandwidth.Consume(identity.OrganizationID, limit, int64(len(outgoing.Payload))); err != nil {
 					return err
 				}
 			}

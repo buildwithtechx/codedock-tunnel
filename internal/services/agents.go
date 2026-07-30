@@ -12,8 +12,9 @@ import (
 )
 
 type AgentService struct {
-	agents repositories.AgentRepository
-	now    func() time.Time
+	agents  repositories.AgentRepository
+	billing *BillingService
+	now     func() time.Time
 }
 
 func NewAgentService(agents repositories.AgentRepository) (*AgentService, error) {
@@ -21,6 +22,10 @@ func NewAgentService(agents repositories.AgentRepository) (*AgentService, error)
 		return nil, fmt.Errorf("agent repository is required")
 	}
 	return &AgentService{agents: agents, now: time.Now}, nil
+}
+
+func (s *AgentService) SetBilling(billing *BillingService) {
+	s.billing = billing
 }
 
 func (s *AgentService) Register(ctx context.Context, organizationID, name string) (string, models.Agent, error) {
@@ -50,6 +55,21 @@ func (s *AgentService) Authenticate(ctx context.Context, raw string) (models.Age
 		return models.Agent{}, fmt.Errorf("agent is revoked")
 	}
 	return agent, nil
+}
+
+func (s *AgentService) AuthenticateWithPlan(ctx context.Context, raw string) (models.Agent, models.Plan, error) {
+	agent, err := s.Authenticate(ctx, raw)
+	if err != nil {
+		return models.Agent{}, models.Plan{}, err
+	}
+	if s.billing == nil {
+		return models.Agent{}, models.Plan{}, fmt.Errorf("billing service is required")
+	}
+	plan, _, err := s.billing.Entitlements(ctx, agent.OrganizationID)
+	if err != nil {
+		return models.Agent{}, models.Plan{}, fmt.Errorf("resolve agent entitlements: %w", err)
+	}
+	return agent, plan, nil
 }
 
 func (s *AgentService) Heartbeat(ctx context.Context, id, version, hostname, platform string) error {

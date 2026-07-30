@@ -10,6 +10,7 @@ type Plan struct {
 	MaxTunnels      int
 	MaxDomains      int
 	MaxMembers      int
+	MaxConnections  int
 	BandwidthBytes  int64
 	RetentionDays   int
 	CustomDomains   bool
@@ -18,22 +19,22 @@ type Plan struct {
 
 var plans = map[string]Plan{
 	"free": {
-		Key: "free", Name: "Free", MaxTunnels: 2, MaxDomains: 0, MaxMembers: 1,
+		Key: "free", Name: "Free", MaxTunnels: 2, MaxDomains: 0, MaxMembers: 1, MaxConnections: 10,
 		BandwidthBytes: 2 * 1024 * 1024 * 1024, RetentionDays: 3,
 	},
 	"ray": {
 		Key: "ray", Name: "Ray", PriceUSDMinor: 700, PriceNGNMinor: 1_000_000,
-		MaxTunnels: 3, MaxDomains: 1, MaxMembers: 3, BandwidthBytes: 25 * 1024 * 1024 * 1024,
+		MaxTunnels: 3, MaxDomains: 1, MaxMembers: 3, MaxConnections: 50, BandwidthBytes: 25 * 1024 * 1024 * 1024,
 		RetentionDays: 14, CustomDomains: true,
 	},
 	"beam": {
 		Key: "beam", Name: "Beam", PriceUSDMinor: 1500, PriceNGNMinor: 2_100_000,
-		MaxTunnels: 5, MaxDomains: 5, MaxMembers: 5, BandwidthBytes: 100 * 1024 * 1024 * 1024,
+		MaxTunnels: 5, MaxDomains: 5, MaxMembers: 5, MaxConnections: 100, BandwidthBytes: 100 * 1024 * 1024 * 1024,
 		RetentionDays: 30, CustomDomains: true, PrioritySupport: true,
 	},
 	"pulse": {
 		Key: "pulse", Name: "Pulse", PriceUSDMinor: 12_000, PriceNGNMinor: 17_000_000,
-		MaxTunnels: 20, MaxDomains: 25, MaxMembers: -1, BandwidthBytes: 1024 * 1024 * 1024 * 1024,
+		MaxTunnels: 20, MaxDomains: 25, MaxMembers: -1, MaxConnections: 500, BandwidthBytes: 1024 * 1024 * 1024 * 1024,
 		RetentionDays: 90, CustomDomains: true, PrioritySupport: true,
 	},
 }
