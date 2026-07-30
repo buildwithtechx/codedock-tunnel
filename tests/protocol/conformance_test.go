@@ -1,20 +1,22 @@
-package protocol
+package protocol_test
 
 import (
 	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"codedock.run/codedock-tunnel/pkg/protocol"
 )
 
-type FixtureItem struct {
+type fixtureItem struct {
 	Name  string `json:"name"`
 	Valid bool   `json:"valid"`
 	Raw   string `json:"raw"`
 }
 
-type FixturesFile struct {
-	Fixtures []FixtureItem `json:"fixtures"`
+type fixturesFile struct {
+	Fixtures []fixtureItem `json:"fixtures"`
 }
 
 func TestProtocolConformance(t *testing.T) {
@@ -23,51 +25,43 @@ func TestProtocolConformance(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to read conformance fixtures: %v", err)
 	}
-
-	var file FixturesFile
+	var file fixturesFile
 	if err := json.Unmarshal(data, &file); err != nil {
 		t.Fatalf("failed to parse conformance fixtures JSON: %v", err)
 	}
-
 	for _, fixture := range file.Fixtures {
 		t.Run(fixture.Name, func(t *testing.T) {
-			envelope, err := Decode([]byte(fixture.Raw))
+			envelope, err := protocol.Decode([]byte(fixture.Raw))
 			if fixture.Valid {
 				if err != nil {
 					t.Fatalf("expected valid envelope for %s, got error: %v", fixture.Name, err)
 				}
-				if envelope.Version < MinSupportedVersion || envelope.Version > MaxSupportedVersion {
+				if envelope.Version < protocol.MinSupportedVersion || envelope.Version > protocol.MaxSupportedVersion {
 					t.Fatalf("expected valid version for %s, got %d", fixture.Name, envelope.Version)
 				}
-			} else {
-				if err == nil {
-					t.Fatalf("expected decode error for invalid fixture %s, got nil", fixture.Name)
-				}
+			} else if err == nil {
+				t.Fatalf("expected decode error for invalid fixture %s, got nil", fixture.Name)
 			}
 		})
 	}
 }
 
 func TestVersionNegotiation(t *testing.T) {
-	req := VersionNegotiate{MinVersion: 1, MaxVersion: 1, ClientName: "test", ClientVersion: "1.0"}
-	ack, err := NegotiateVersion(req)
+	ack, err := protocol.NegotiateVersion(protocol.VersionNegotiate{MinVersion: 1, MaxVersion: 1, ClientName: "test", ClientVersion: "1.0"})
 	if err != nil {
-		t.Fatalf("unexpected negotiation error: %v", err)
+		t.Fatal(err)
 	}
 	if ack.NegotiatedVersion != 1 {
 		t.Fatalf("expected negotiated version 1, got %d", ack.NegotiatedVersion)
 	}
-
-	incompatible := VersionNegotiate{MinVersion: 2, MaxVersion: 3}
-	if _, err := NegotiateVersion(incompatible); err == nil {
-		t.Fatal("expected error negotiating incompatible versions, got nil")
+	if _, err := protocol.NegotiateVersion(protocol.VersionNegotiate{MinVersion: 2, MaxVersion: 3}); err == nil {
+		t.Fatal("expected error negotiating incompatible versions")
 	}
 }
 
 func TestMaxFrameSizeEnforcement(t *testing.T) {
-	hugeData := make([]byte, AbsoluteMaxFrameSize+100)
-	hugeEnvelope := Envelope{Type: MessageTypeData, Version: Version, Payload: hugeData}
-	if _, err := Encode(hugeEnvelope); err == nil {
-		t.Fatal("expected error encoding frame exceeding max size, got nil")
+	hugeData := make([]byte, protocol.AbsoluteMaxFrameSize+100)
+	if _, err := protocol.Encode(protocol.Envelope{Type: protocol.MessageTypeData, Version: protocol.Version, Payload: hugeData}); err == nil {
+		t.Fatal("expected error encoding frame exceeding max size")
 	}
 }

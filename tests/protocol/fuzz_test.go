@@ -1,7 +1,9 @@
-package protocol
+package protocol_test
 
 import (
 	"testing"
+
+	"codedock.run/codedock-tunnel/pkg/protocol"
 )
 
 func FuzzProtocolDecode(f *testing.F) {
@@ -16,6 +18,6 @@ func FuzzProtocolDecode(f *testing.F) {
 		f.Add(seed)
 	}
 	f.Fuzz(func(t *testing.T, data []byte) {
-		_, _ = Decode(data)
+		_, _ = protocol.Decode(data)
 	})
 }

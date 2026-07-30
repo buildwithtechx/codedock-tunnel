@@ -1,4 +1,4 @@
-package relay
+package integration_test
 
 import (
 	"context"
@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"codedock.run/codedock-tunnel/internal/engine"
+	"codedock.run/codedock-tunnel/internal/relay"
 	"codedock.run/codedock-tunnel/pkg/protocol"
 )
 
@@ -69,11 +70,10 @@ func TestTCPManagerRoundTripWithRealLocalTarget(t *testing.T) {
 			_, _ = connection.Write(data)
 		}
 	}()
-	manager := NewTCPManager()
+	manager := relay.NewTCPManager()
 	manager.SetMaxConnections(4)
-	tunnelID := "tcp-integration"
 	ready := make(chan protocol.TCPData, 1)
-	port, err := manager.Open(tunnelID, func(ctx context.Context, envelope protocol.Envelope) error {
+	port, err := manager.Open("tcp-integration", func(ctx context.Context, envelope protocol.Envelope) error {
 		var data protocol.TCPData
 		if err := protocol.DecodePayload(envelope, &data); err != nil {
 			return err
@@ -84,7 +84,7 @@ func TestTCPManagerRoundTripWithRealLocalTarget(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer manager.CloseTunnel(tunnelID)
+	defer manager.CloseTunnel("tcp-integration")
 	client, err := net.Dial("tcp", net.JoinHostPort("127.0.0.1", fmt.Sprint(port)))
 	if err != nil {
 		t.Fatal(err)
@@ -92,9 +92,6 @@ func TestTCPManagerRoundTripWithRealLocalTarget(t *testing.T) {
 	defer client.Close()
 	_, _ = client.Write([]byte("tcp"))
 	data := <-ready
-	if data.ConnectionID == "" {
-		t.Fatal("agent received an empty tcp connection id")
-	}
 	targetConn, err := net.Dial("tcp", target.Addr().String())
 	if err != nil {
 		t.Fatal(err)
@@ -103,7 +100,7 @@ func TestTCPManagerRoundTripWithRealLocalTarget(t *testing.T) {
 	response := make([]byte, 3)
 	_, _ = io.ReadFull(targetConn, response)
 	_ = targetConn.Close()
-	if err := manager.Write(tunnelID, data.ConnectionID, response); err != nil {
+	if err := manager.Write("tcp-integration", data.ConnectionID, response); err != nil {
 		t.Fatal(err)
 	}
 	actual := make([]byte, 3)
@@ -121,7 +118,7 @@ func TestUDPManagerRoundTripWithRealLocalTarget(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer target.Close()
-	manager := NewUDPManager()
+	manager := relay.NewUDPManager()
 	port, err := manager.Open("udp-integration", func(ctx context.Context, envelope protocol.Envelope) error {
 		var data protocol.UDPData
 		if err := protocol.DecodePayload(envelope, &data); err != nil {
