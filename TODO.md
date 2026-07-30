@@ -120,7 +120,7 @@ codedock-tunnel/
 - [x] Create `packages/next/` for Next.js server, route, and development integration.
 - [x] Create `packages/nest/` for NestJS modules, providers, and tunnel lifecycle integration.
 - [x] Create `packages/express/` for Express middleware and tunnel lifecycle integration.
-- [ ] Create `packages/tauri-bridge/` for desktop commands and Go CLI tunnel-client communication.
+- [x] Create `packages/tauri-bridge/` for desktop commands and Go CLI tunnel-client communication.
 - [x] Keep framework integrations as thin adapters over the same protocol and SDK lifecycle.
 - [x] Use peer dependencies for optional frameworks so the base SDK stays lightweight.
 - [x] Add package export maps, type declarations, and tree-shakable entrypoints.
