@@ -60,6 +60,18 @@ func (h *OrganizationHandler) List(c *fiber.Ctx) error {
 	return c.JSON(organizations)
 }
 
+func (h *OrganizationHandler) CheckSlug(c *fiber.Ctx) error {
+	slug := strings.TrimSpace(c.Query("slug"))
+	if slug == "" {
+		return writeError(c, fiber.StatusBadRequest, fmt.Errorf("slug is required"))
+	}
+	available, err := h.organizations.IsSlugAvailable(c.UserContext(), slug)
+	if err != nil {
+		return writeError(c, fiber.StatusBadRequest, err)
+	}
+	return c.JSON(fiber.Map{"available": available})
+}
+
 func (h *OrganizationHandler) AddMember(c *fiber.Ctx) error {
 	var input AddMemberRequest
 	if err := c.BodyParser(&input); err != nil {

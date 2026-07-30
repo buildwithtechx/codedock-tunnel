@@ -57,6 +57,18 @@ func (s *OrganizationService) ListForUser(ctx context.Context, userID string) ([
 	return organizations, nil
 }
 
+func (s *OrganizationService) IsSlugAvailable(ctx context.Context, slug string) (bool, error) {
+	slug = strings.ToLower(strings.TrimSpace(slug))
+	if !slugPattern.MatchString(slug) {
+		return false, fmt.Errorf("slug must use lowercase letters, numbers, and single hyphens")
+	}
+	available, err := s.organizations.IsSlugAvailable(ctx, slug)
+	if err != nil {
+		return false, fmt.Errorf("check organization slug: %w", err)
+	}
+	return available, nil
+}
+
 func (s *OrganizationService) AddMember(ctx context.Context, organizationID, userID string, role models.MemberRole) error {
 	if organizationID == "" || userID == "" || !validMemberRole(role) {
 		return fmt.Errorf("organization, user, and valid role are required")

@@ -48,6 +48,7 @@ func RegisterRoutes(app *fiber.App, handlers Handlers, options RouterOptions) er
 	protected := app.Group("/api/v1", sessionRequired(handlers.authService, handlers.apiKeyService, options.CookieName), auditRequest(handlers.auditService))
 	protected.Post("/auth/device/complete", handlers.Auth.CompleteDeviceLogin)
 	protected.Get("/organizations", handlers.Organizations.List)
+	protected.Get("/organizations/slug-availability", handlers.Organizations.CheckSlug)
 	protected.Post("/organizations", handlers.Organizations.Create)
 	protected.Post("/organizations/:organizationID/members", organizationRoleRequired(handlers.organizationService, models.MemberRoleAdmin), handlers.Organizations.AddMember)
 	protected.Post("/organizations/:organizationID/invitations", organizationRoleRequired(handlers.organizationService, models.MemberRoleAdmin), handlers.Invitations.Create)

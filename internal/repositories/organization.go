@@ -13,6 +13,7 @@ type OrganizationRepository interface {
 	Create(context.Context, *models.Organization) error
 	FindByID(context.Context, string) (models.Organization, error)
 	FindBySlug(context.Context, string) (models.Organization, error)
+	IsSlugAvailable(context.Context, string) (bool, error)
 	List(context.Context) ([]models.Organization, error)
 	Update(context.Context, *models.Organization) error
 	AddMember(context.Context, *models.OrganizationMember) error
@@ -58,6 +59,14 @@ func (r *GormOrganizationRepository) FindBySlug(ctx context.Context, slug string
 		return models.Organization{}, mapError(err)
 	}
 	return organization, nil
+}
+
+func (r *GormOrganizationRepository) IsSlugAvailable(ctx context.Context, slug string) (bool, error) {
+	var count int64
+	if err := r.db.WithContext(ctx).Model(&models.Organization{}).Where("slug = ?", slug).Count(&count).Error; err != nil {
+		return false, fmt.Errorf("check organization slug availability: %w", err)
+	}
+	return count == 0, nil
 }
 
 func (r *GormOrganizationRepository) List(ctx context.Context) ([]models.Organization, error) {

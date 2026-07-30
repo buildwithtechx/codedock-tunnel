@@ -17,6 +17,12 @@ export function createOrganization(name: string, slug: string) {
   });
 }
 
+export function checkOrganizationSlug(slug: string) {
+  return apiClient.get<{ available: boolean }>(
+    `/api/v1/organizations/slug-availability?slug=${encodeURIComponent(slug)}`,
+  );
+}
+
 export function getLastOrganizationSlug() {
   if (typeof window === 'undefined') return null;
   return window.localStorage.getItem('codedock_tunnel_last_organization');
