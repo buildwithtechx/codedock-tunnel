@@ -17,3 +17,18 @@ CLI or SDK ── HTTPS ──> API ── control state ──> PostgreSQL
 
 The web and desktop applications are clients of the same public API. They do
 not bypass organization authorization or relay session authentication.
+
+## Responsibilities
+
+The API owns identity, organizations, billing, tunnel metadata, hostname
+allocation, audit events, and durable usage records. PostgreSQL is the source
+of truth for those records.
+
+The relay owns live WebSocket sessions, hostname routing, stream forwarding,
+backpressure, connection limits, and relay metrics. Redis coordinates ephemeral
+presence, heartbeats, rate limits, and relay affinity; it is not a payload
+store.
+
+The CLI and SDK authenticate before opening a relay session. The desktop app
+uses the same client behavior through the Tauri bridge, so desktop and CLI
+connections have the same authorization and plan enforcement.

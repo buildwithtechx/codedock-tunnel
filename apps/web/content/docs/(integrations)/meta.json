@@ -1,4 +1,12 @@
 {
   "title": "Integrations",
-  "pages": ["overview", "sdk-ts", "framework-adapters"]
+  "pages": [
+    "overview",
+    "sdk-ts",
+    "react",
+    "vite",
+    "next",
+    "nest",
+    "express"
+  ]
 }

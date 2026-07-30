@@ -1,0 +1,34 @@
+---
+title: NestJS integration
+description: Start and stop a tunnel with NestJS module lifecycle hooks.
+icon: Boxes
+---
+
+Install the adapter:
+
+```sh
+npm install @codedock-tunnel/nest @codedock-tunnel/sdk-ts
+```
+
+Register the module once:
+
+```ts
+import { CodedockTunnelModule } from '@codedock-tunnel/nest';
+
+@Module({
+  imports: [
+    CodedockTunnelModule.forRoot({
+      relayUrl: process.env.CODEDOCK_TUNNEL_RELAY_URL!,
+      agentToken: process.env.CODEDOCK_TUNNEL_AGENT_TOKEN!,
+      localPort: 3000,
+      autoStart: true,
+      password: process.env.TUNNEL_PASSWORD,
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+The service uses `OnModuleInit` and `OnModuleDestroy`, so application startup
+and shutdown own the relay lifecycle. Inject the service when you need the
+current public URL or explicit start/stop control.

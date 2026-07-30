@@ -20,3 +20,16 @@ packages add lifecycle helpers without creating a second protocol or client.
 
 Use the SDK directly when you need full control. Choose an adapter when your
 framework already owns application startup and shutdown.
+
+## Common lifecycle
+
+Every adapter follows the same lifecycle:
+
+1. Construct a relay connection with a relay URL and agent token.
+2. Negotiate the protocol and authenticate the client.
+3. Open a tunnel with a local port, protocol, and optional subdomain.
+4. Keep the connection alive with heartbeats and reconnect when enabled.
+5. Close the tunnel and connection during application shutdown.
+
+The adapter changes how this lifecycle is attached to a framework; it does not
+change the wire protocol or authorization rules.

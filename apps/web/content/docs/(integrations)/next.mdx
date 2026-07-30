@@ -1,0 +1,30 @@
+---
+title: Next.js integration
+description: Attach tunnel lifecycle to a Next.js server process.
+icon: SquareArrowOutUpRight
+---
+
+Install the adapter:
+
+```sh
+npm install @codedock-tunnel/next @codedock-tunnel/sdk-ts
+```
+
+Create the tunnel from a server-side startup path, not a browser component:
+
+```ts
+import { createNextTunnel } from '@codedock-tunnel/next';
+
+const tunnel = createNextTunnel({
+  relayUrl: process.env.CODEDOCK_TUNNEL_RELAY_URL!,
+  agentToken: process.env.CODEDOCK_TUNNEL_AGENT_TOKEN!,
+  localPort: 3000,
+  subdomain: process.env.CODEDOCK_TUNNEL_SUBDOMAIN,
+  password: process.env.TUNNEL_PASSWORD,
+});
+
+await tunnel.start();
+```
+
+Keep credentials in server-only environment variables. Do not expose the
+agent token through `NEXT_PUBLIC_*` variables or client bundles.

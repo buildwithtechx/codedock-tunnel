@@ -22,3 +22,17 @@ icon: Terminal
 
 Run `codedock-tunnel help` for the command list. Run a command with `--help`
 for its available flags.
+
+## Common workflows
+
+```sh
+codedock-tunnel login
+codedock-tunnel http --port 3000
+codedock-tunnel tcp --port 5432
+codedock-tunnel http --port 3000 --password "$TUNNEL_PASSWORD"
+codedock-tunnel open --tunnel-id "$TUNNEL_ID" --port 3000
+```
+
+For CI, provide `CODEDOCK_TUNNEL_AGENT_TOKEN` or pass `--agent-token`. Use
+`CODEDOCK_TUNNEL_API_KEY` for management requests such as listing and
+revoking tunnels. Keep both values in the CI secret store.

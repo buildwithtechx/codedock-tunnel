@@ -9,13 +9,12 @@ endpoint. It is an independent product: you can use the hosted service,
 self-host the server components, or build on the protocol and SDKs without
 using Codedock.
 
-## Product surfaces
+## Why Codedock Tunnel?
 
-- The `codedock-tunnel` CLI opens and manages tunnels from a workstation or CI runner.
-- The web dashboard manages accounts, organizations, tunnels, domains, and usage.
-- The relay handles public ingress and forwards traffic to connected clients.
-- The TypeScript SDK and framework adapters integrate tunnel lifecycle into applications.
-- The desktop app provides a graphical client for tunnel management.
+- **Independent by design:** Use the hosted service, self-host the server, or connect your own tools without installing Codedock.
+- **One protocol:** The CLI, desktop client, TypeScript SDK, and framework adapters share the same versioned relay protocol.
+- **Built for real workflows:** Protect previews, receive webhooks, test OAuth callbacks, and run tunnels inside CI jobs.
+- **Operationally visible:** Track connections, bandwidth, request outcomes, and retention through the API and dashboard.
 
 ## How a request travels
 
@@ -27,8 +26,23 @@ using Codedock.
 
 ## Start here
 
-- [Install the CLI](/docs/getting-started/installation)
-- [Open your first HTTP tunnel](/docs/getting-started/first-tunnel)
-- [Understand authentication](/docs/getting-started/authentication)
-- [Choose an integration](/docs/integrations/overview)
-- [Read the architecture overview](/docs/reference/architecture)
+<Cards>
+  <Card title="Installation" href="/docs/getting-started/installation">
+    Install the CLI or desktop app and verify your connection.
+  </Card>
+  <Card title="Open a tunnel" href="/docs/getting-started/first-tunnel">
+    Expose your first local HTTP or TCP service.
+  </Card>
+  <Card title="Protect your tunnel" href="/docs/platform-features/password-protection">
+    Add password protection before sharing a preview or webhook endpoint.
+  </Card>
+  <Card title="Use it in CI/CD" href="/docs/platform-features/ci-cd">
+    Run non-interactive preview tunnels in automated pipelines.
+  </Card>
+  <Card title="Explore the SDKs" href="/docs/integrations/overview">
+    Integrate tunnel lifecycle into your application stack.
+  </Card>
+  <Card title="Understand the architecture" href="/docs/reference/architecture">
+    See how the API, relay, clients, and storage work together.
+  </Card>
+</Cards>

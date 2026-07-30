@@ -15,3 +15,25 @@ version before application traffic is accepted.
 Protocol consumers should use the generated package instead of recreating
 message shapes. This keeps the CLI, SDKs, and relay compatible as the protocol
 evolves.
+
+## Session sequence
+
+```text
+client -> relay: version_negotiate
+relay  -> client: version_negotiate_ack
+client -> relay: auth
+relay  -> client: auth_response
+client -> relay: open_tunnel
+relay  -> client: open_tunnel_ack
+```
+
+After the tunnel is open, HTTP requests use request and response messages;
+TCP and UDP traffic use their respective stream messages. Heartbeats keep the
+session alive and allow both sides to detect an interrupted connection.
+
+## Compatibility rules
+
+- The schema in `protocol/schema/messages.json` is canonical.
+- Generated Go and TypeScript bindings are checked into the repository.
+- Clients must reject unsupported protocol versions instead of guessing.
+- Unknown or malformed messages must not reach the local target.

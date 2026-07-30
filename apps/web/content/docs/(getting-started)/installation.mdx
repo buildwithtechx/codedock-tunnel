@@ -1,13 +1,17 @@
 ---
-title: Install the CLI
-description: Install the standalone Codedock Tunnel client.
+title: Installation
+description: Install the Codedock Tunnel CLI or desktop application.
 icon: Download
 ---
 
-The CLI runs on your workstation or CI runner. It is not a server daemon and
-does not need to be installed on the relay host.
+Choose the client that matches how you work. The CLI is designed for terminals,
+automation, and CI. The desktop application provides a graphical control
+surface for local tunnel management. They are separate installers and share
+the same tunnel protocol.
 
-## Linux and macOS
+## CLI installation
+
+### Linux and macOS
 
 ```sh
 curl -fsSL https://cli.codedock-tunnel.dev | bash
@@ -16,12 +20,33 @@ curl -fsSL https://cli.codedock-tunnel.dev | bash
 The installer places `codedock-tunnel` in `$HOME/.local/bin` by default. Make
 sure that directory is on your `PATH`.
 
-## Verify the installation
+### Windows
+
+Download the Windows release archive from the CLI release page, extract
+`codedock-tunnel.exe`, and place it in a directory on `PATH`.
+
+### Verify the CLI
 
 ```sh
 codedock-tunnel version
 codedock-tunnel health --api-url https://api.codedock-tunnel.dev
 ```
+
+## Desktop installation
+
+Download the installer for your operating system from:
+
+```text
+https://desktop.codedock-tunnel.dev
+```
+
+Use the `.deb` or `.rpm` package on Linux, the `.dmg` application on macOS,
+or the Windows installer on Windows. Launch the application after installation
+and sign in through the browser-based account flow.
+
+The desktop app supervises the Go tunnel client. It does not replace the CLI,
+and installing the desktop app does not add a `codedock-tunnel` command to
+your terminal.
 
 ## Private or local installations
 
@@ -29,5 +54,9 @@ Pass the API and relay endpoints through the CLI environment or command
 configuration. The client is designed to work with the hosted service and
 independent installations of the server.
 
-The CLI and desktop app are separate products. Installing the CLI does not
-install the desktop app.
+## Release channels
+
+The branded installer resolves the current CLI release for the host platform.
+For pinned builds, download a versioned release artifact and verify its
+checksum before placing it on `PATH`. In CI, prefer a pinned release rather
+than installing an unreviewed floating version on every run.
