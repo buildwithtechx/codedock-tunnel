@@ -70,7 +70,7 @@ pub fn tunnel_stop(state: State<'_, TunnelState>) -> Result<TunnelProcess, Strin
     let status = child
         .wait()
         .map_err(|error| format!("wait for tunnel CLI: {error}"))?;
-    Ok(stopped_process(Some(status.code())))
+    Ok(stopped_process(status.code()))
 }
 
 #[tauri::command]
