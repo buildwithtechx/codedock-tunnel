@@ -22,6 +22,7 @@ type Server struct {
 
 func NewServer(cfg config.APIConfig, deps Dependencies) (*Server, error) {
 	deps.PublicAPIURL = cfg.App.PublicAPIURL
+	deps.DashboardURL = cfg.App.DashboardURL
 	handlers, err := buildHandlers(deps, cfg.Auth.CookieName, cfg.Auth.CookieSecure)
 	if err != nil {
 		return nil, err

@@ -72,6 +72,18 @@ apps/web/src/
 │   └── data-display/
 ├── features/
 │   ├── auth/
+│   │   ├── components/
+│   │   │   ├── auth-page-shell.tsx
+│   │   │   ├── oauth-provider-button.tsx
+│   │   │   └── auth-notice.tsx
+│   │   ├── hooks/
+│   │   │   ├── use-auth-session.ts
+│   │   │   └── use-oauth-sign-in.ts
+│   │   ├── services/
+│   │   │   └── auth-service.ts
+│   │   ├── login-page.tsx
+│   │   ├── signup-page.tsx
+│   │   └── index.ts
 │   ├── admin/
 │   │   ├── users/
 │   │   ├── organizations/
@@ -102,8 +114,6 @@ apps/web/src/
 │   └── ui-store.ts
 ├── lib/
 │   ├── api-client.ts
-│   ├── auth.ts
-│   ├── query-client.ts
 │   ├── route-guards.ts
 │   └── utils.ts
 ├── integrations/
@@ -122,6 +132,49 @@ apps/web/src/
 - [ ] Keep cross-feature clients, guards, query setup, and utilities inside `lib/`.
 - [ ] Keep global client state in focused Zustand stores under `stores/`.
 - [ ] Keep feature-specific hooks beside their feature unless shared by multiple domains.
+
+### Dashboard authentication
+
+The login and signup routes should remain thin compositions that import their
+feature page from `features/auth/`. OAuth navigation, session loading, and
+query invalidation belong in the feature service and hooks; the shared
+Axios instance stays in `lib/api-client.ts`, contracts stay in
+`interfaces/auth.ts`, and the authenticated browser state stays in
+`stores/auth-store.ts`.
+
+```text
+apps/web/src/features/auth/
+├── components/
+│   ├── auth-page-shell.tsx        # Shared login/signup visual frame
+│   ├── oauth-provider-button.tsx  # Google or GitHub action
+│   └── auth-notice.tsx            # Provider and callback errors
+├── hooks/
+│   ├── use-auth-session.ts        # Session query and Zustand synchronization
+│   └── use-oauth-sign-in.ts       # Browser redirect to the selected provider
+├── services/
+│   └── auth-service.ts            # OAuth URL and session requests
+├── login-page.tsx
+├── signup-page.tsx
+└── index.ts
+```
+
+- [x] Implement the shared OAuth-only authentication feature for Google and GitHub.
+- [x] Keep `/login` and `/signup` as distinct intent pages with shared OAuth controls.
+- [x] Navigate the browser to the API OAuth start endpoint; do not exchange OAuth tokens in browser code.
+- [x] Synchronize a successful authenticated session into `auth-store` through a feature-scoped TanStack Query hook.
+- [ ] Add logout and session-expiry UI states when the authenticated dashboard shell is implemented.
+- [x] Add provider-unavailable and callback-failure states.
+- [ ] Redirect an authenticated visitor away from `/login` and `/signup` to organization selection or their last organization.
+- [ ] Add route guards only after session loading distinguishes unauthenticated from pending state.
+- [ ] Add focused tests for provider selection, redirect construction, session synchronization, and callback errors.
+
+The browser flow requires these API changes before the dashboard UI is wired:
+
+- [x] Let OAuth start accept a validated dashboard-relative return path and store it in server-side OAuth state.
+- [x] After OAuth callback creates the HTTP-only API session cookie, redirect to the configured dashboard origin and validated return path instead of returning JSON from the API domain.
+- [x] Reject absolute or cross-origin return paths to prevent open redirects.
+- [x] Provide the current authenticated user alongside session data, or add a protected current-account endpoint so `AuthUser` can populate `auth-store`.
+- [ ] Set API cookie `Secure`, `HttpOnly`, `SameSite=Lax`, and an intentional shared-domain cookie policy for hosted dashboard/API subdomains.
 
 The control-plane API should remain versioned under `/api/v1`:
 

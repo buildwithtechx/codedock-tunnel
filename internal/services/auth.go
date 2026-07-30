@@ -44,6 +44,20 @@ func (s *AuthService) EnsureUserActive(ctx context.Context, userID string) error
 	return nil
 }
 
+func (s *AuthService) CurrentUser(ctx context.Context, userID string) (models.User, error) {
+	if strings.TrimSpace(userID) == "" {
+		return models.User{}, fmt.Errorf("user id is required")
+	}
+	user, err := s.users.FindByID(ctx, userID)
+	if err != nil {
+		return models.User{}, fmt.Errorf("find current user: %w", err)
+	}
+	if user.Status == models.UserStatusDisabled || user.DeletedAt != nil {
+		return models.User{}, fmt.Errorf("user account is disabled")
+	}
+	return user, nil
+}
+
 func NewAuthService(users repositories.UserRepository, identities repositories.OAuthIdentityRepository, sessions repositories.SessionRepository, admins platformAdminAuthorizer, sessionTTL time.Duration) (*AuthService, error) {
 	if users == nil || identities == nil || sessions == nil || admins == nil {
 		return nil, fmt.Errorf("auth repositories are required")

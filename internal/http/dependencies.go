@@ -26,6 +26,7 @@ type Dependencies struct {
 	WelcomeMailer services.WelcomeMailer
 	Ready         func(context.Context) error
 	PublicAPIURL  string
+	DashboardURL  string
 }
 
 func (d Dependencies) Validate() error {
@@ -92,7 +93,7 @@ func buildHandlers(deps Dependencies, cookieName string, cookieSecure bool) (Han
 	}
 	var oauthHandler *handlers.OAuthHandler
 	if deps.OAuth != nil {
-		oauthHandler, err = handlers.NewOAuthHandler(deps.OAuth, deps.PublicAPIURL, cookieName, cookieSecure)
+		oauthHandler, err = handlers.NewOAuthHandler(deps.OAuth, deps.PublicAPIURL, deps.DashboardURL, cookieName, cookieSecure)
 		if err != nil {
 			return Handlers{}, err
 		}

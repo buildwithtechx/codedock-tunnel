@@ -1,13 +1,13 @@
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
+import { getAuthSession } from '#/features/auth/services/auth-service';
 import { requirePlatformAdmin } from '#/lib/route-guards';
-import { getSession } from '#/lib/session';
 
 export const Route = createFileRoute('/admin')({
   beforeLoad: async ({ context }) => {
     try {
       const session = await context.queryClient.fetchQuery({
         queryKey: ['auth', 'session'],
-        queryFn: getSession,
+        queryFn: getAuthSession,
         retry: false,
       });
       requirePlatformAdmin(session);
