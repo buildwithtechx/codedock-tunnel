@@ -11,7 +11,8 @@ import {
   DocsTitle,
 } from 'fumadocs-ui/page';
 import type { ComponentType } from 'react';
-import { source } from '../../lib/source';
+import { createSeo } from '#/lib/seo';
+import { source } from '#/lib/source';
 
 export const Route = createFileRoute('/docs/$')({
   loader: async ({ params }) => {
@@ -20,6 +21,14 @@ export const Route = createFileRoute('/docs/$')({
     await clientLoader.preload(data.path);
     return data;
   },
+  head: ({ loaderData }) =>
+    createSeo({
+      title: loaderData?.title
+        ? `${loaderData.title} | Codedock Tunnel Docs`
+        : 'Codedock Tunnel Documentation',
+      description: loaderData?.description,
+      path: loaderData?.path ?? '/docs',
+    }),
   notFoundComponent: () => (
     <div className="flex min-h-[50vh] flex-col items-center justify-center p-8 text-center">
       <h1 className="text-2xl font-bold">404 - Document Not Found</h1>

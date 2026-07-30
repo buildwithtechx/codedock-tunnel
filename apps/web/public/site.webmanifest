@@ -1,0 +1,17 @@
+{
+  "name": "Codedock Tunnel",
+  "short_name": "Codedock Tunnel",
+  "description": "Secure public access for local and private services.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#101827",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
