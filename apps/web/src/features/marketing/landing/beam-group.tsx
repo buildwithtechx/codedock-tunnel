@@ -16,7 +16,7 @@ function createDust(count: number) {
 
 function Dust() {
   const points = useRef<THREE.Points>(null);
-  const count = 260;
+  const count = 300;
   const positions = useMemo(() => createDust(count), []);
 
   useFrame(({ clock }) => {
@@ -36,7 +36,7 @@ function Dust() {
       </bufferGeometry>
       <pointsMaterial
         size={0.05}
-        color="#b9c7ff"
+        color="#ffffff"
         transparent
         opacity={0.6}
         sizeAttenuation
@@ -73,13 +73,13 @@ function RelayBeam({ color }: { color: string }) {
         blending={THREE.AdditiveBlending}
         uniforms={uniforms}
         vertexShader="varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }"
-        fragmentShader="uniform float uTime; uniform vec3 uColor; varying vec2 vUv; float random(vec2 st) { return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453); } void main() { float beam = smoothstep(0.0, 0.6, vUv.y) * smoothstep(1.0, 0.85, vUv.y); float ray = smoothstep(0.4, 0.6, random(vec2(vUv.x * 20.0, uTime * 0.1))) * 0.08; float core = smoothstep(0.5, 0.85, vUv.y) * smoothstep(1.0, 0.85, vUv.y) * 0.1; gl_FragColor = vec4(uColor, beam * 0.13 + ray * beam * 2.0 + core); }"
+        fragmentShader="uniform float uTime; uniform vec3 uColor; varying vec2 vUv; float random(vec2 st) { return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453); } void main() { float beam = smoothstep(0.0, 0.6, vUv.y); float softness = smoothstep(1.0, 0.85, vUv.y); float ray = smoothstep(0.4, 0.6, random(vec2(vUv.x * 20.0, 0.0))) * 0.04; float alpha = beam * softness * 0.06; alpha += ray * beam * softness; float core = smoothstep(0.5, 0.85, vUv.y) * smoothstep(1.0, 0.85, vUv.y) * 0.15; gl_FragColor = vec4(uColor, alpha + core); }"
       />
     </mesh>
   );
 }
 
-export function BeamGroup({ color = '#8194ff' }: { color?: string }) {
+export function BeamGroup({ color = '#ffffff' }: { color?: string }) {
   return (
     <group position={[-10, 0, 0]}>
       <RelayBeam color={color} />

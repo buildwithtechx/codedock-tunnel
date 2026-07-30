@@ -41,56 +41,60 @@ export function Hero() {
   }
 
   return (
-    <section className="relative min-h-[880px] overflow-hidden pt-28 sm:pt-32">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_22%,rgba(79,70,229,0.16),transparent_28%),radial-gradient(circle_at_12%_42%,rgba(8,145,178,0.12),transparent_24%)]" />
-      <div className="absolute inset-x-[-20%] top-[31%] h-[390px] -rotate-[16deg] bg-[linear-gradient(105deg,transparent_5%,rgba(129,140,248,0.18)_32%,rgba(255,255,255,0.08)_53%,transparent_80%)] blur-[1px]" />
-      <div className="absolute inset-0 opacity-40 [background-image:radial-gradient(circle_at_20%_40%,white_0_1px,transparent_1px),radial-gradient(circle_at_70%_25%,white_0_1px,transparent_1px),radial-gradient(circle_at_42%_68%,white_0_1px,transparent_1px)] [background-size:190px_170px,240px_220px,320px_260px]" />
-      <div className="pointer-events-none absolute inset-x-0 top-[24%] h-[420px] opacity-80">
+    <section className="relative min-h-screen overflow-hidden bg-black pb-16 pt-20">
+      <div className="pointer-events-none absolute inset-0 z-0 md:-translate-x-[10%]">
         <Canvas camera={{ position: [0, 0, 15], fov: 45 }}>
-          <color attach="background" args={['#080b14']} />
+          <color attach="background" args={['#000000']} />
           <BeamGroup />
         </Canvas>
       </div>
-      <MarketingContainer className="relative flex flex-col items-center">
-        <div className="mt-10 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/55">
+      <MarketingContainer className="relative z-10 flex flex-col items-center">
+        <div className="mt-20 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/55 backdrop-blur-sm">
           <span className="size-1.5 rounded-full bg-cyan-300" />
           Open-source tunnel infrastructure for developers
         </div>
-        <h1 className="mt-8 max-w-5xl text-center text-5xl font-semibold leading-[0.98] tracking-[-0.06em] sm:text-7xl lg:text-8xl">
-          <motion.button
-            type="button"
-            className="relative inline-block cursor-default appearance-none border-0 bg-transparent p-0 text-inherit"
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-          >
-            <motion.span
-              animate={{ rotate: hovered ? -5 : 0, y: hovered ? -4 : 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-              className="relative z-10 inline-block rounded-2xl border border-indigo-300/35 bg-indigo-300/15 px-4 py-1"
+        <h1 className="mt-8 w-full text-center text-[clamp(1.8rem,6vw,4.5rem)] font-bold leading-[1.02] tracking-[-0.055em]">
+          <span className="block whitespace-nowrap">
+            <motion.button
+              type="button"
+              className="relative inline-block cursor-default appearance-none border-0 bg-transparent p-0 text-inherit"
+              onMouseEnter={() => setHovered(true)}
+              onMouseLeave={() => setHovered(false)}
             >
-              Expose
-            </motion.span>
-            <span className="pointer-events-none absolute inset-0 rounded-2xl border border-cyan-300/30 bg-[#090d17] px-4 py-1 font-mono text-xs leading-[5rem] sm:text-sm">
-              {' '}
-              <AnimatePresence mode="popLayout">
-                {visibleLogs.map(({ log, id }) => (
-                  <motion.span
-                    key={id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: hovered ? 1 : 0, x: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="mr-4 inline-flex gap-2"
-                  >
-                    <span className="text-cyan-300">{log[0]}</span>
-                    <span className="text-white/50">{log[1]}</span>
-                    <span className="text-emerald-300">{log[2]}</span>
-                  </motion.span>
-                ))}
-              </AnimatePresence>
-            </span>
-          </motion.button>{' '}
-          your local service
-          <br className="hidden sm:block" /> to the internet
+              <motion.span
+                animate={{ rotate: hovered ? -5 : 0, y: hovered ? -4 : 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                className="relative z-10 inline-block rounded-2xl border border-indigo-300/35 bg-indigo-300/15 px-4 py-1"
+              >
+                Expose
+              </motion.span>
+              <span className="pointer-events-none absolute inset-0 flex overflow-hidden rounded-2xl border border-indigo-300/30 bg-black px-3 py-1 font-mono text-[0.16em] leading-tight">
+                <span className="flex w-full flex-col justify-center">
+                  <AnimatePresence mode="popLayout" initial={false}>
+                    {visibleLogs.map(({ log, id }) => (
+                      <motion.span
+                        key={id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: hovered ? 1 : 0, x: 0 }}
+                        exit={{ opacity: 0 }}
+                        className="flex items-center gap-2 whitespace-nowrap"
+                      >
+                        <span className="w-10 text-left text-indigo-300">
+                          {log[0]}
+                        </span>
+                        <span className="flex-1 text-left text-white/50">
+                          {log[1]}
+                        </span>
+                        <span className="text-emerald-300">{log[2]}</span>
+                      </motion.span>
+                    ))}
+                  </AnimatePresence>
+                </span>
+              </span>
+            </motion.button>{' '}
+            your local service
+          </span>
+          <span className="block">to the internet</span>
         </h1>
         <p className="mt-8 max-w-2xl text-center text-lg leading-8 text-white/55 sm:text-xl">
           Codedock Tunnel gives your local apps a secure, observable public

@@ -22,18 +22,18 @@ export function DeveloperExperience() {
     (offset % traffic.length) + 5,
   );
   return (
-    <section className="py-24 sm:py-32">
+    <section className="bg-black py-20 sm:py-24">
       <MarketingContainer>
-        <h2 className="max-w-2xl text-4xl font-semibold tracking-[-0.05em] sm:text-6xl">
+        <h2 className="mx-auto max-w-3xl text-center text-4xl font-bold tracking-[-0.05em] sm:text-6xl">
           Your workflow,
           <br />
           already connected
         </h2>
-        <div className="mt-14 grid gap-6 lg:grid-cols-2">
-          <div className="grid gap-6">
-            <article className="flex flex-col rounded-3xl border border-white/10 bg-white/[0.025] p-8">
+        <div className="mt-16 grid gap-8 lg:grid-cols-2">
+          <div className="grid gap-8">
+            <article className="group flex flex-col rounded-3xl border border-white/5 bg-white/[0.02] p-8 transition-colors hover:border-white/10">
               <div className="flex items-center gap-4">
-                <span className="flex size-10 items-center justify-center rounded-full bg-indigo-300/10">
+                <span className="flex size-10 items-center justify-center rounded-full bg-indigo-300/10 transition-colors group-hover:bg-indigo-300/20">
                   <Terminal className="size-5 text-indigo-300" />
                 </span>
                 <h3 className="text-xl font-semibold">Online in one command</h3>
@@ -46,9 +46,9 @@ export function DeveloperExperience() {
                 <span className="text-indigo-300">$</span> codedock-tunnel 3000
               </div>
             </article>
-            <article className="rounded-3xl border border-white/10 bg-white/[0.025] p-8">
+            <article className="group rounded-3xl border border-white/5 bg-white/[0.02] p-8 transition-colors hover:border-white/10">
               <div className="flex items-center gap-4">
-                <span className="flex size-10 items-center justify-center rounded-full bg-indigo-300/10">
+                <span className="flex size-10 items-center justify-center rounded-full bg-indigo-300/10 transition-colors group-hover:bg-indigo-300/20">
                   <Code2 className="size-5 text-indigo-300" />
                 </span>
                 <h3 className="text-xl font-semibold">
@@ -77,11 +77,11 @@ export function DeveloperExperience() {
               </div>
             </article>
           </div>
-          <article className="relative flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/[0.025] p-8">
+          <article className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] p-8 transition-colors hover:border-white/10">
             <div className="absolute -right-24 -top-24 size-64 rounded-full bg-indigo-400/10 blur-3xl" />
             <div className="relative">
               <div className="flex items-center gap-4">
-                <span className="flex size-10 items-center justify-center rounded-full bg-indigo-300/10">
+                <span className="flex size-10 items-center justify-center rounded-full bg-indigo-300/10 transition-colors group-hover:bg-indigo-300/20">
                   <Activity className="size-5 text-indigo-300" />
                 </span>
                 <h3 className="text-xl font-semibold">Instant observability</h3>
