@@ -1,4 +1,4 @@
-import { docs } from 'collections/server';
+import { docs } from 'fumadocs-mdx:collections/server';
 import { loader } from 'fumadocs-core/source';
 import { lucideIconsPlugin } from 'fumadocs-core/source/plugins/lucide-icons';
 

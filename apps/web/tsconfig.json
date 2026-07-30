@@ -7,7 +7,8 @@
     "paths": {
       "#/*": ["./src/*"],
       "@/*": ["./src/*"],
-      "collections/*": ["./.source/*"]
+      "collections/*": ["./.source/*"],
+      "fumadocs-mdx:collections/*": ["./.source/*"]
     },
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["vite/client"],

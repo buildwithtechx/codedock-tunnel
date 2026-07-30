@@ -3,6 +3,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import {
   createRootRouteWithContext,
   HeadContent,
+  Outlet,
   Scripts,
 } from '@tanstack/react-router';
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
@@ -44,8 +45,30 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       </p>
     </div>
   ),
-  shellComponent: RootDocument,
+  component: RootComponent,
 });
+
+function RootComponent() {
+  return (
+    <RootDocument>
+      <PostHogProvider>
+        <Outlet />
+        <TanStackDevtools
+          config={{
+            position: 'bottom-right',
+          }}
+          plugins={[
+            {
+              name: 'Tanstack Router',
+              render: <TanStackRouterDevtoolsPanel />,
+            },
+            TanStackQueryDevtools,
+          ]}
+        />
+      </PostHogProvider>
+    </RootDocument>
+  );
+}
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
@@ -54,23 +77,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <RootProvider>
-          <PostHogProvider>
-            {children}
-            <TanStackDevtools
-              config={{
-                position: 'bottom-right',
-              }}
-              plugins={[
-                {
-                  name: 'Tanstack Router',
-                  render: <TanStackRouterDevtoolsPanel />,
-                },
-                TanStackQueryDevtools,
-              ]}
-            />
-          </PostHogProvider>
-        </RootProvider>
+        <RootProvider>{children}</RootProvider>
         <Scripts />
       </body>
     </html>

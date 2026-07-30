@@ -227,9 +227,9 @@
 
 #nd-sidebar [data-radix-scroll-area-viewport] a,
 #nd-sidebar [data-radix-scroll-area-viewport] button {
-  min-height: 2rem;
+  min-height: 2.125rem;
   padding-block: 0.375rem;
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
 }
 
 figure.shiki button[data-checked] {
