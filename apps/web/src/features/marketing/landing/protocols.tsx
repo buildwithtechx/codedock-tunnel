@@ -1,30 +1,27 @@
-import { ArrowRight, Database, Gamepad2, Globe2 } from 'lucide-react';
+import { ArrowUpRight, Database, Gamepad2, Globe2 } from 'lucide-react';
 import { MarketingContainer } from '#/components/layout';
 
 const protocols = [
   {
-    title: 'HTTP / HTTPS',
-    text: 'Secure URLs for local web servers, APIs, webhooks, and OAuth callbacks.',
+    title: 'HTTP and HTTPS',
+    detail: 'Webhooks, previews, callbacks, and APIs.',
     command: 'codedock-tunnel http 3000',
     icon: Globe2,
-    cardClass: 'hover:border-blue-300/30',
-    iconClass: 'border-blue-300/20 bg-blue-300/10 text-blue-300',
+    color: 'text-sky-300',
   },
   {
-    title: 'TCP tunnels',
-    text: 'Expose databases, SSH, RDP, and other TCP services securely.',
+    title: 'TCP',
+    detail: 'Databases, SSH, and private services.',
     command: 'codedock-tunnel tcp 5432',
     icon: Database,
-    cardClass: 'hover:border-violet-300/30',
-    iconClass: 'border-violet-300/20 bg-violet-300/10 text-violet-300',
+    color: 'text-violet-300',
   },
   {
-    title: 'UDP tunnels',
-    text: 'Carry real-time services, game servers, and other UDP traffic.',
+    title: 'UDP',
+    detail: 'Real-time services and game servers.',
     command: 'codedock-tunnel udp 25565',
     icon: Gamepad2,
-    cardClass: 'hover:border-amber-300/30',
-    iconClass: 'border-amber-300/20 bg-amber-300/10 text-amber-300',
+    color: 'text-amber-300',
   },
 ];
 
@@ -33,39 +30,41 @@ export function ProtocolsSection() {
     <section className="py-16 sm:py-20">
       <MarketingContainer>
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
+          <h2 className="text-4xl font-semibold tracking-tighter sm:text-5xl">
             Every protocol. One workflow.
           </h2>
-          <p className="mt-6 text-lg leading-8 text-white/50">
-            Codedock Tunnel is not limited to browser traffic. Use one CLI and
-            one account for HTTP, HTTPS, TCP, and UDP services.
+          <p className="mt-5 text-lg leading-8 text-white/50">
+            Use one CLI, one account, and one tunnel lifecycle for HTTP, HTTPS,
+            TCP, and UDP services.
           </p>
         </div>
-        <div className="mt-12 grid gap-5 md:grid-cols-3">
-          {protocols.map(
-            ({ title, text, command, icon: Icon, cardClass, iconClass }) => (
+        <div className="mx-auto mt-10 max-w-4xl overflow-hidden rounded-3xl border border-white/10 bg-white/2.5 p-3 sm:p-4">
+          <div className="mb-2 flex items-center justify-between px-3 py-2 font-mono text-xs text-white/35">
+            <span>protocols</span>
+            <span className="text-emerald-300">ready</span>
+          </div>
+          <div className="space-y-2">
+            {protocols.map(({ title, detail, command, icon: Icon, color }) => (
               <article
                 key={title}
-                className={`group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.025] p-8 transition-transform hover:-translate-y-1 ${cardClass}`}
+                className="group grid gap-4 rounded-2xl border border-transparent bg-black/25 p-4 transition-colors hover:border-white/10 hover:bg-white/[0.035] sm:grid-cols-[auto_1fr_auto] sm:items-center"
               >
-                <div
-                  className={`mb-7 flex size-12 items-center justify-center rounded-2xl border ${iconClass}`}
+                <span
+                  className={`flex size-10 items-center justify-center rounded-xl bg-white/5 ${color}`}
                 >
-                  <Icon className="size-6" />
+                  <Icon className="size-5" />
+                </span>
+                <div>
+                  <h3 className="font-medium text-white">{title}</h3>
+                  <p className="mt-1 text-sm text-white/40">{detail}</p>
                 </div>
-                <h3 className="text-xl font-semibold">{title}</h3>
-                <p className="mt-3 min-h-16 text-sm leading-6 text-white/40">
-                  {text}
-                </p>
-                <div className="mt-8 flex items-center justify-between rounded-xl border border-white/10 bg-black/30 p-3 font-mono text-xs text-white/55">
-                  <span>{command}</span>
-                  <ArrowRight
-                    className={`size-4 opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100 ${iconClass.split(' ').at(-1)}`}
-                  />
+                <div className="flex items-center justify-between gap-4 font-mono text-xs text-white/50 sm:justify-end">
+                  <code>{command}</code>
+                  <ArrowUpRight className={`size-4 ${color}`} />
                 </div>
               </article>
-            ),
-          )}
+            ))}
+          </div>
         </div>
       </MarketingContainer>
     </section>

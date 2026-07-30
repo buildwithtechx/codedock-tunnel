@@ -23,7 +23,8 @@ export function MarketingFooter() {
               private networks.
             </p>
             <p className="mt-7 text-xs text-white/35">
-              © {new Date().getFullYear()} Codedock Tunnel. All rights reserved.
+              © {new Date().getFullYear()} TechX Innovations Limited. All rights
+              reserved.
             </p>
           </div>
           <FooterGroup title="Product">

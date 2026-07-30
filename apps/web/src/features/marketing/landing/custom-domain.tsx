@@ -1,63 +1,100 @@
-import { Check, Globe2 } from 'lucide-react';
+import { ArrowRight, Check, Globe2, Link2, Route } from 'lucide-react';
 import { MarketingContainer } from '#/components/layout';
+
+const endpoints = [
+  {
+    label: 'Reserved endpoint',
+    value: 'checkout.codedock-tunnel.dev',
+    detail: 'Keep a recognizable URL for repeatable previews.',
+    color: 'text-indigo-300',
+  },
+  {
+    label: 'Custom domain',
+    value: 'api.yourcompany.com',
+    detail: 'Route your own hostname through the same tunnel.',
+    color: 'text-cyan-300',
+  },
+];
 
 export function CustomDomainSection() {
   return (
-    <section className="py-16 sm:py-20">
-      <MarketingContainer className="grid items-center gap-14 lg:grid-cols-2">
-        <div>
-          <h2 className="text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
-            Memorable endpoints, every time.
-          </h2>
-          <p className="mt-6 max-w-xl text-lg leading-8 text-white/45">
-            Use a memorable endpoint for demos, webhooks, and shared previews.
-            Point your domain at the relay and keep routing in one place.
+    <section className="py-14 sm:py-16">
+      <MarketingContainer>
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="text-sm font-medium text-indigo-300">
+            Endpoint identity
           </p>
-          <div className="mt-8 space-y-4 text-sm text-white/60">
-            {[
-              'Reserved hostnames for repeatable previews',
-              'Simple DNS target and certificate readiness',
-              'Move traffic without changing your application',
-            ].map((item) => (
-              <div key={item} className="flex items-center gap-3">
-                <span className="flex size-6 items-center justify-center rounded-full border border-indigo-300/30 bg-indigo-300/10">
-                  <Check className="size-3 text-indigo-300" />
-                </span>
-                {item}
-              </div>
-            ))}
-          </div>
+          <h2 className="mt-4 text-4xl font-semibold tracking-[-0.05em] sm:text-5xl">
+            A URL people can remember.
+          </h2>
+          <p className="mt-4 text-lg leading-8 text-white/50">
+            Give a preview a stable name or bring the domain your team already
+            knows. Both lead to the same connected service.
+          </p>
         </div>
-        <div className="relative">
-          <div className="absolute inset-0 rounded-full bg-indigo-400/10 blur-3xl" />
-          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#101421] p-5 shadow-2xl shadow-indigo-950/30">
-            <div className="flex items-center gap-3 border-b border-white/10 pb-5">
-              <span className="flex size-10 items-center justify-center rounded-xl bg-indigo-300/10">
-                <Globe2 className="size-5 text-indigo-300" />
-              </span>
-              <div>
-                <p className="font-medium">api.yourcompany.com</p>
-                <span className="rounded-full bg-emerald-300/10 px-2 py-0.5 text-xs text-emerald-300">
-                  Ready
+        <div className="relative mx-auto mt-8 max-w-5xl overflow-hidden rounded-3xl border border-white/10 bg-white/[0.025] p-4 sm:p-5">
+          <div className="absolute inset-x-20 top-0 h-px bg-gradient-to-r from-transparent via-indigo-300/50 to-transparent" />
+          <div className="flex items-center justify-between border-b border-white/10 pb-4 font-mono text-xs text-white/35">
+            <span>endpoint routing</span>
+            <span className="flex items-center gap-2 text-emerald-300">
+              <span className="size-2 rounded-full bg-emerald-300" /> connected
+            </span>
+          </div>
+          <div className="relative mt-4 flex flex-col gap-3 sm:flex-row sm:items-stretch">
+            <article className="flex-1 rounded-2xl bg-black/30 p-4 transition-colors hover:bg-white/[0.04]">
+              <div className="flex items-center gap-2.5">
+                <span
+                  className={`flex size-9 items-center justify-center rounded-xl bg-white/[0.05] ${endpoints[0].color}`}
+                >
+                  <Route className="size-5" />
+                </span>
+                <span className="text-sm font-medium text-white/70">
+                  {endpoints[0].label}
                 </span>
               </div>
+              <p className="mt-4 break-all font-mono text-sm text-white sm:text-base">
+                https://{endpoints[0].value}
+              </p>
+              <p className="mt-2 text-sm leading-5 text-white/40">
+                {endpoints[0].detail}
+              </p>
+            </article>
+            <div className="relative z-10 flex shrink-0 items-center justify-center py-1 sm:px-1">
+              <span className="flex size-10 items-center justify-center rounded-full border border-indigo-300/25 bg-[#101421] text-indigo-300">
+                <ArrowRight className="size-5 rotate-90 sm:rotate-0" />
+              </span>
             </div>
-            <div className="mt-5 overflow-hidden rounded-2xl border border-white/10 bg-black/25 font-mono text-xs">
-              {[
-                ['Type', 'CNAME'],
-                ['Name', 'api'],
-                ['Value', 'edge.codedock-tunnel.dev'],
-                ['TTL', 'Auto'],
-              ].map(([key, value]) => (
-                <div
-                  key={key}
-                  className="flex justify-between border-b border-white/5 px-4 py-4 last:border-0"
+            <article className="flex-1 rounded-2xl bg-black/30 p-4 transition-colors hover:bg-white/[0.04]">
+              <div className="flex items-center gap-2.5">
+                <span
+                  className={`flex size-9 items-center justify-center rounded-xl bg-white/[0.05] ${endpoints[1].color}`}
                 >
-                  <span className="text-white/35">{key}</span>
-                  <span className="text-white/70">{value}</span>
-                </div>
-              ))}
-            </div>
+                  <Globe2 className="size-5" />
+                </span>
+                <span className="text-sm font-medium text-white/70">
+                  {endpoints[1].label}
+                </span>
+              </div>
+              <p className="mt-4 break-all font-mono text-sm text-white sm:text-base">
+                https://{endpoints[1].value}
+              </p>
+              <p className="mt-2 text-sm leading-5 text-white/40">
+                {endpoints[1].detail}
+              </p>
+            </article>
+          </div>
+          <div className="mt-4 grid gap-2 text-sm text-white/50 sm:grid-cols-3 sm:gap-3">
+            <span className="inline-flex items-center justify-center gap-2 rounded-lg bg-white/[0.025] px-3 py-2">
+              <Check className="size-4 text-emerald-300" /> Reserve a hostname
+            </span>
+            <span className="inline-flex items-center justify-center gap-2 rounded-lg bg-white/[0.025] px-3 py-2">
+              <Link2 className="size-4 text-cyan-300" /> Point a CNAME at the
+              relay
+            </span>
+            <span className="inline-flex items-center justify-center gap-2 rounded-lg bg-white/[0.025] px-3 py-2">
+              <Check className="size-4 text-emerald-300" /> Keep application
+              routing unchanged
+            </span>
           </div>
         </div>
       </MarketingContainer>
