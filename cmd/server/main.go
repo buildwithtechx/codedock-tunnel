@@ -40,7 +40,10 @@ func main() {
 			log.Fatal(err)
 		}
 		deps.Auth.SetSecretProtector(secretBox)
+		deps.DeviceLogin.SetSecretProtector(secretBox)
 		deps.Billing.SetSecretProtector(secretBox)
+		deps.Billing.SetBillingSecretProtector(secretBox)
+		deps.Billing.SetGracePeriod(cfg.Billing.GracePeriod)
 	}
 	redisClient, err := redis.Open(ctx, redis.Config{Host: cfg.Redis.Host, Port: cfg.Redis.Port, Password: cfg.Redis.Password, DB: cfg.Redis.DB})
 	if err != nil {

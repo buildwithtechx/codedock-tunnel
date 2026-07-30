@@ -12,6 +12,11 @@ type AccountService struct {
 	users         repositories.UserRepository
 	organizations repositories.OrganizationRepository
 	now           func() time.Time
+	mailer        AccountMailer
+}
+
+type AccountMailer interface {
+	SendAccountUpdate(context.Context, string, string) error
 }
 
 func NewAccountService(users repositories.UserRepository, organizations repositories.OrganizationRepository) (*AccountService, error) {
@@ -21,7 +26,13 @@ func NewAccountService(users repositories.UserRepository, organizations reposito
 	return &AccountService{users: users, organizations: organizations, now: time.Now}, nil
 }
 
+func (s *AccountService) SetMailer(mailer AccountMailer) { s.mailer = mailer }
+
 func (s *AccountService) Delete(ctx context.Context, userID string) error {
+	user, err := s.users.FindByID(ctx, userID)
+	if err != nil {
+		return fmt.Errorf("find account: %w", err)
+	}
 	owned, err := s.organizations.ListOwned(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("check owned organizations: %w", err)
@@ -31,6 +42,11 @@ func (s *AccountService) Delete(ctx context.Context, userID string) error {
 	}
 	if err := s.users.Delete(ctx, userID, s.now()); err != nil {
 		return fmt.Errorf("delete account: %w", err)
+	}
+	if s.mailer != nil {
+		if err := s.mailer.SendAccountUpdate(ctx, user.Email, "deleted"); err != nil {
+			return fmt.Errorf("send account update: %w", err)
+		}
 	}
 	return nil
 }

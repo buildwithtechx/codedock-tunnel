@@ -24,6 +24,11 @@ type AgentAuthenticator interface {
 	Authenticate(context.Context, string) (AgentIdentity, error)
 }
 
+type RelayAffinity interface {
+	Claim(context.Context, string, string, time.Duration) (bool, error)
+	Release(context.Context, string, string) error
+}
+
 type connectionState struct {
 	negotiated    bool
 	authenticated bool
@@ -46,6 +51,9 @@ type Handler struct {
 	metrics       *Metrics
 	bandwidth     *engine.BandwidthLimiter
 	usage         engine.UsageRecorder
+	affinity      RelayAffinity
+	relayID       string
+	affinityTTL   time.Duration
 	mu            sync.Mutex
 	connections   int
 	writeMu       sync.Mutex
@@ -62,6 +70,9 @@ type HandlerOptions struct {
 	Logger         *slog.Logger
 	Metrics        *Metrics
 	UsageRecorder  engine.UsageRecorder
+	Affinity       RelayAffinity
+	RelayID        string
+	AffinityTTL    time.Duration
 }
 
 func NewHandler(authenticator AgentAuthenticator, sessions *engine.SessionRegistry, router *engine.RequestRouter, tcp *TCPManager, udp *UDPManager, maxSessions int) (*Handler, error) {
@@ -84,9 +95,12 @@ func NewHandlerWithOptions(authenticator AgentAuthenticator, sessions *engine.Se
 	if options.DrainTimeout < 0 {
 		return nil, fmt.Errorf("drain timeout cannot be negative")
 	}
+	if options.Affinity != nil && (options.RelayID == "" || options.AffinityTTL <= 0) {
+		return nil, fmt.Errorf("relay affinity requires relay id and positive ttl")
+	}
 	tcp.SetMaxConnections(options.MaxConnections)
 	udp.SetMaxPackets(options.MaxConnections)
-	handler := &Handler{authenticator: authenticator, sessions: sessions, router: router, tcp: tcp, udp: udp, maxSessions: options.MaxConnections, maxTunnels: options.MaxTunnels, maxBandwidth: options.MaxBandwidth, heartbeat: options.Heartbeat, readTimeout: options.ReadTimeout, maxFrameBytes: options.MaxFrameBytes, drainTimeout: options.DrainTimeout, logger: options.Logger, metrics: options.Metrics, usage: options.UsageRecorder, bandwidth: engine.NewBandwidthLimiter()}
+	handler := &Handler{authenticator: authenticator, sessions: sessions, router: router, tcp: tcp, udp: udp, maxSessions: options.MaxConnections, maxTunnels: options.MaxTunnels, maxBandwidth: options.MaxBandwidth, heartbeat: options.Heartbeat, readTimeout: options.ReadTimeout, maxFrameBytes: options.MaxFrameBytes, drainTimeout: options.DrainTimeout, logger: options.Logger, metrics: options.Metrics, usage: options.UsageRecorder, affinity: options.Affinity, relayID: options.RelayID, affinityTTL: options.AffinityTTL, bandwidth: engine.NewBandwidthLimiter()}
 	tcp.SetUsageHook(func(tunnelID, eventType string, connections int) {
 		organizationID, ok := router.OrganizationID(tunnelID)
 		if ok {
@@ -130,6 +144,9 @@ func (h *Handler) Connect(connection *websocket.Conn) {
 	defer func() {
 		for tunnelID, sessionID := range owned {
 			if h.sessions.Remove(tunnelID, sessionID) {
+				if h.affinity != nil {
+					_ = h.affinity.Release(ctx, tunnelID, h.relayID)
+				}
 				h.recordUsage(ctx, identity.OrganizationID, tunnelID, "tunnel_close", 0, 0)
 				h.metrics.AddTunnel(-1)
 				h.router.RemoveTunnel(tunnelID)
@@ -261,6 +278,15 @@ func (h *Handler) handleMessage(ctx context.Context, connection *websocket.Conn,
 		}
 		if !exists && len(h.sessions.Snapshot()) >= h.maxTunnels {
 			return fmt.Errorf("tunnel capacity reached")
+		}
+		if h.affinity != nil {
+			claimed, err := h.affinity.Claim(ctx, tunnelID, h.relayID, h.affinityTTL)
+			if err != nil {
+				return fmt.Errorf("claim relay affinity: %w", err)
+			}
+			if !claimed {
+				return fmt.Errorf("tunnel is connected through another relay")
+			}
 		}
 		session := engine.Session{ID: uuid.NewString(), OrganizationID: identity.OrganizationID, TunnelID: tunnelID, Send: func(sendCtx context.Context, outgoing protocol.Envelope) error {
 			if err := sendCtx.Err(); err != nil {

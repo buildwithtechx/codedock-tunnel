@@ -78,7 +78,15 @@ func (s *DomainVerificationService) VerifyOwnership(ctx context.Context, domain 
 	}
 
 	domain.Status = models.DomainStatusVerified
-	domain.CertificateStatus = "ready"
+	if s.domains.issuer != nil {
+		expires, err := s.domains.issuer.Issue(ctx, domain.Hostname)
+		if err != nil {
+			return false, fmt.Errorf("issue domain certificate: %w", err)
+		}
+		domain.Status = models.DomainStatusActive
+		domain.CertificateStatus = "ready"
+		domain.CertificateExpiresAt = &expires
+	}
 	now := time.Now()
 	domain.VerifiedAt = &now
 	if err := s.domains.domains.Update(ctx, domain); err != nil {

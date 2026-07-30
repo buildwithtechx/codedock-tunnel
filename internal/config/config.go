@@ -18,6 +18,7 @@ type RelayConfig struct {
 	Redis   RedisConfig   `envPrefix:"CODEDOCK_"`
 	Tunnel  TunnelConfig  `envPrefix:"CODEDOCK_"`
 	Service ServiceConfig `envPrefix:"CODEDOCK_"`
+	RelayID string        `env:"RELAY_ID"`
 }
 
 type CronConfig struct {
@@ -46,14 +47,17 @@ type ServiceConfig struct {
 }
 
 type AppConfig struct {
-	Port            string        `env:"PORT" envDefault:"8080"`
-	Name            string        `env:"APP_NAME" envDefault:"codedock-tunnel"`
-	Environment     string        `env:"ENV" envDefault:"development"`
-	LogLevel        string        `env:"LOG_LEVEL" envDefault:"info"`
-	ShutdownTimeout time.Duration `env:"SHUTDOWN_TIMEOUT" envDefault:"10s"`
-	AllowedOrigins  string        `env:"ALLOWED_ORIGINS" envDefault:"http://localhost:3000,http://localhost:3001"`
-	CORSOrigin      string        `env:"CORS_ORIGIN" envDefault:"http://localhost:3000"`
-	PublicAPIURL    string        `env:"PUBLIC_API_URL" envDefault:"http://localhost:8080"`
+	Port             string        `env:"PORT" envDefault:"8080"`
+	Name             string        `env:"APP_NAME" envDefault:"codedock-tunnel"`
+	Environment      string        `env:"ENV" envDefault:"development"`
+	LogLevel         string        `env:"LOG_LEVEL" envDefault:"info"`
+	ShutdownTimeout  time.Duration `env:"SHUTDOWN_TIMEOUT" envDefault:"10s"`
+	AllowedOrigins   string        `env:"ALLOWED_ORIGINS" envDefault:"http://localhost:3000,http://localhost:3001"`
+	CORSOrigin       string        `env:"CORS_ORIGIN" envDefault:"http://localhost:3000"`
+	PublicAPIURL     string        `env:"PUBLIC_API_URL" envDefault:"http://localhost:8080"`
+	ACMEEmail        string        `env:"ACME_EMAIL"`
+	ACMEDirectory    string        `env:"ACME_DIRECTORY"`
+	CertificateCache string        `env:"CERTIFICATE_CACHE_DIR" envDefault:".data/acme"`
 }
 
 type AuthConfig struct {
@@ -105,17 +109,18 @@ type TunnelConfig struct {
 }
 
 type BillingConfig struct {
-	PolarServer             string `env:"POLAR_SERVER" envDefault:"sandbox"`
-	PolarBaseURL            string `env:"POLAR_BASE_URL" envDefault:"https://sandbox-api.polar.sh"`
-	PolarAccessToken        string `env:"POLAR_ACCESS_TOKEN"`
-	PolarWebhookSecret      string `env:"POLAR_WEBHOOK_SECRET"`
-	PolarProductRay         string `env:"POLAR_PRODUCT_RAY"`
-	PolarProductBeam        string `env:"POLAR_PRODUCT_BEAM"`
-	PolarProductPulse       string `env:"POLAR_PRODUCT_PULSE"`
-	PolarProductRayYearly   string `env:"POLAR_PRODUCT_RAY_YEARLY"`
-	PolarProductBeamYearly  string `env:"POLAR_PRODUCT_BEAM_YEARLY"`
-	PolarProductPulseYearly string `env:"POLAR_PRODUCT_PULSE_YEARLY"`
-	PaystackBaseURL         string `env:"PAYSTACK_BASE_URL" envDefault:"https://api.paystack.co"`
-	PaystackSecret          string `env:"PAYSTACK_SECRET_KEY"`
-	WebhookSecret           string `env:"BILLING_WEBHOOK_SECRET"`
+	GracePeriod             time.Duration `env:"BILLING_GRACE_PERIOD" envDefault:"72h"`
+	PolarServer             string        `env:"POLAR_SERVER" envDefault:"sandbox"`
+	PolarBaseURL            string        `env:"POLAR_BASE_URL" envDefault:"https://sandbox-api.polar.sh"`
+	PolarAccessToken        string        `env:"POLAR_ACCESS_TOKEN"`
+	PolarWebhookSecret      string        `env:"POLAR_WEBHOOK_SECRET"`
+	PolarProductRay         string        `env:"POLAR_PRODUCT_RAY"`
+	PolarProductBeam        string        `env:"POLAR_PRODUCT_BEAM"`
+	PolarProductPulse       string        `env:"POLAR_PRODUCT_PULSE"`
+	PolarProductRayYearly   string        `env:"POLAR_PRODUCT_RAY_YEARLY"`
+	PolarProductBeamYearly  string        `env:"POLAR_PRODUCT_BEAM_YEARLY"`
+	PolarProductPulseYearly string        `env:"POLAR_PRODUCT_PULSE_YEARLY"`
+	PaystackBaseURL         string        `env:"PAYSTACK_BASE_URL" envDefault:"https://api.paystack.co"`
+	PaystackSecret          string        `env:"PAYSTACK_SECRET_KEY"`
+	WebhookSecret           string        `env:"BILLING_WEBHOOK_SECRET"`
 }

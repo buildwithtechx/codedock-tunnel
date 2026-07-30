@@ -39,6 +39,7 @@ type DeviceLogin struct {
 	UserID        *string    `json:"userId,omitempty" gorm:"type:uuid;index"`
 	CodeHash      string     `json:"-" gorm:"uniqueIndex;not null"`
 	UserTokenHash string     `json:"-" gorm:"index"`
+	UserToken     string     `json:"-"`
 	Status        string     `json:"status" gorm:"type:varchar(20);not null;default:'pending';index"`
 	ExpiresAt     time.Time  `json:"expiresAt" gorm:"not null;index"`
 	CompletedAt   *time.Time `json:"completedAt,omitempty"`

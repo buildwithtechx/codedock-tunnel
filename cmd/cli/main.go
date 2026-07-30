@@ -87,8 +87,9 @@ func openTunnel(cfg config.CLIConfig, cmdName string, args []string) {
 		target = "127.0.0.1:" + fmt.Sprint(*port)
 	}
 	delay := 2 * time.Second
+	tunnelID := ""
 	for ctx.Err() == nil {
-		connection, err := client.OpenRelay(ctx, client.RelayConfig{URL: cfg.RelayURL, Token: cfg.AgentToken}, protocol.OpenTunnel{LocalPort: *port, Protocol: *protocolName, Subdomain: *subdomain})
+		connection, err := client.OpenRelay(ctx, client.RelayConfig{URL: cfg.RelayURL, Token: cfg.AgentToken}, protocol.OpenTunnel{TunnelID: tunnelID, LocalPort: *port, Protocol: *protocolName, Subdomain: *subdomain})
 		if err != nil {
 			if ctx.Err() != nil {
 				return
@@ -104,6 +105,7 @@ func openTunnel(cfg config.CLIConfig, cmdName string, args []string) {
 			}
 			continue
 		}
+		tunnelID = connection.TunnelID
 		delay = 2 * time.Second
 		if connection.PublicPort > 0 {
 			fmt.Printf("tunnel %s %s:%d\n", connection.TunnelID, connection.PublicURL, connection.PublicPort)

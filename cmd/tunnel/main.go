@@ -15,6 +15,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/google/uuid"
 )
 
 var version = "dev"
@@ -24,6 +25,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	if cfg.RelayID == "" {
+		cfg.RelayID = "relay-" + uuid.NewString()
+	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	redisClient, err := redis.Open(ctx, redis.Config{Host: cfg.Redis.Host, Port: cfg.Redis.Port, Password: cfg.Redis.Password, DB: cfg.Redis.DB})
@@ -31,6 +35,10 @@ func main() {
 		log.Fatal(err)
 	}
 	defer redisClient.Close()
+	affinity, err := redis.NewRelayAffinity(redisClient)
+	if err != nil {
+		log.Fatal(err)
+	}
 	sessions := engine.NewSessionRegistry()
 	requestRouter, err := engine.NewRequestRouter(sessions, cfg.Tunnel.AgentInactivity)
 	if err != nil {
@@ -49,7 +57,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	relayHandler, err := relay.NewHandlerWithOptions(authenticator, sessions, requestRouter, tcpManager, udpManager, relay.HandlerOptions{MaxConnections: cfg.Tunnel.MaxConnections, MaxTunnels: cfg.Tunnel.MaxTunnels, MaxBandwidth: cfg.Tunnel.MaxBandwidth, Heartbeat: cfg.Tunnel.Heartbeat, ReadTimeout: cfg.Tunnel.ReadTimeout, DrainTimeout: cfg.Tunnel.DrainTimeout, MaxFrameBytes: cfg.Tunnel.MaxFrameBytes, Logger: slog.Default(), Metrics: metrics, UsageRecorder: usage})
+	relayHandler, err := relay.NewHandlerWithOptions(authenticator, sessions, requestRouter, tcpManager, udpManager, relay.HandlerOptions{MaxConnections: cfg.Tunnel.MaxConnections, MaxTunnels: cfg.Tunnel.MaxTunnels, MaxBandwidth: cfg.Tunnel.MaxBandwidth, Heartbeat: cfg.Tunnel.Heartbeat, ReadTimeout: cfg.Tunnel.ReadTimeout, DrainTimeout: cfg.Tunnel.DrainTimeout, MaxFrameBytes: cfg.Tunnel.MaxFrameBytes, Logger: slog.Default(), Metrics: metrics, UsageRecorder: usage, Affinity: affinity, RelayID: cfg.RelayID, AffinityTTL: cfg.Tunnel.AgentInactivity})
 	if err != nil {
 		log.Fatal(err)
 	}

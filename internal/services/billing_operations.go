@@ -39,7 +39,14 @@ func (s *BillingService) Portal(ctx context.Context, organizationID string) (str
 	if err != nil {
 		return "", fmt.Errorf("find subscription for portal: %w", err)
 	}
-	url, err := s.gateway.Portal(ctx, subscription.Provider, subscription.ProviderCustomerID)
+	customerID := subscription.ProviderCustomerID
+	if s.billingSecrets != nil && customerID != "" {
+		customerID, err = s.billingSecrets.Open(customerID)
+		if err != nil {
+			return "", fmt.Errorf("decrypt billing customer: %w", err)
+		}
+	}
+	url, err := s.gateway.Portal(ctx, subscription.Provider, customerID)
 	if err != nil {
 		return "", fmt.Errorf("create billing portal: %w", err)
 	}

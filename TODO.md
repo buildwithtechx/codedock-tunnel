@@ -16,7 +16,7 @@ This section is the authoritative list of backend implementation work still outs
 
 ### CLI
 
-- [ ] Implement CLI login using device authorization and secure local credential storage.
+- [x] Implement CLI login using device authorization and secure local credential storage.
 - [x] Implement CLI create, list, inspect, start, stop, revoke, HTTP, and TCP commands.
 - [x] Add JSON output and shell completion.
 - [ ] Add local TCP forwarding and explicit authorization checks.
@@ -24,17 +24,17 @@ This section is the authoritative list of backend implementation work still outs
 ### Billing and entitlements
 
 - [ ] Implement concrete Polar and Paystack checkout, portal, cancellation, and resume gateways.
-- [ ] Parse provider-specific webhook payloads and apply subscription state transitions transactionally.
+- [x] Parse provider-specific webhook payloads and apply subscription state transitions transactionally.
 - [x] Verify Paystack and Polar signatures using their provider-specific algorithms on their routes.
 - [ ] Encrypt billing credentials, authorization codes, and provider customer secrets at rest.
-- [ ] Add grace periods, failed-payment handling, and downgrade behavior for hosted subscriptions.
+- [x] Add grace periods, failed-payment handling, and downgrade behavior for hosted subscriptions.
 - [ ] Enforce bandwidth, connection, domain, and member limits at both API and relay boundaries.
 - [ ] Add billing history, invoice, receipt, and portal persistence/response models.
 
 ### Domains and operations
 
-- [ ] Implement DNS and HTTP custom-domain ownership challenges.
-- [ ] Add certificate issuance/readiness checks and activate custom domains only after verification.
+- [x] Implement DNS and HTTP custom-domain ownership challenges.
+- [x] Add certificate issuance/readiness checks and activate custom domains only after verification.
 - [ ] Prevent domain verification from probing private networks or internal metadata endpoints.
 - [ ] Add retry/backoff, dead-letter handling, and operator-visible status for cron jobs.
 - [ ] Add subscription reconciliation and provider polling to `cmd/cron`.
@@ -44,16 +44,16 @@ This section is the authoritative list of backend implementation work still outs
 
 - [ ] Enforce TLS and secure WebSocket configuration in production mode.
 - [ ] Add strict origin, host, SSRF, open-proxy, port-scanning, and abuse controls.
-- [ ] Add security tests for token replay, cross-tunnel access, credential revocation, and stale sessions.
+- [x] Add security tests for token replay, cross-tunnel access, credential revocation, and stale sessions.
 - [ ] Add protocol fuzzing and malformed-frame tests.
 - [ ] Remove sensitive OAuth/provider secrets from logs and add secret rotation procedures.
 
 ### Backend verification and release
 
-- [ ] Add integration tests with real local HTTP, TCP, and UDP targets.
+- [x] Add integration tests with real local HTTP, TCP, and UDP targets.
 - [ ] Add reconnect, timeout, backpressure, migration, webhook, and graceful-shutdown tests.
 - [ ] Add container vulnerability scanning and signed/reproducible Go releases.
-- [ ] Add backup/restore verification and migration integrity checks in CI.
+- [x] Add backup/restore verification and migration integrity checks in CI.
 
 ## Standalone product principles
 
@@ -270,7 +270,7 @@ codedock-tunnel/
 - [ ] Add grace periods, downgrade behavior, and failed-payment handling for hosted subscriptions.
 - [ ] Add billing history, invoices, receipts, and customer self-service portal links.
 - [x] Make billing mandatory for the hosted product; open-source clients and relay components do not bypass entitlements.
-- [ ] Use Zepto Mail as the only transactional email provider in authentication, billing, and account workflows.
+- [x] Use Zepto Mail as the only transactional email provider in authentication, billing, and account workflows.
 
 ## Usage, analytics, and operations data
 
@@ -334,15 +334,15 @@ codedock-tunnel/
 - [x] Define jobs that can run in `cmd/cron` for independent horizontal scaling.
 - [x] Expire inactive tunnels, sessions, credentials, reservations, and public hostnames.
 - [x] Roll up traffic and connection analytics without storing request secrets or bodies by default.
-- [ ] Verify custom-domain ownership using DNS and HTTP challenges.
-- [ ] Verify certificate readiness and edge routing before activating custom domains.
+- [x] Verify custom-domain ownership using DNS and HTTP challenges.
+- [x] Verify certificate readiness and edge routing before activating custom domains.
 - [ ] Prevent verification jobs from being used to probe arbitrary private networks.
 - [ ] Make all jobs idempotent and safe to retry.
 
 ## CLI
 
 - [x] Create the `codedock-tunnel` CLI.
-- [ ] Implement `login` and credential storage.
+- [x] Implement `login` and credential storage.
 - [x] Implement `create`, `list`, `inspect`, `start`, `stop`, and `revoke` commands.
 - [x] Implement `codedock-tunnel http 3000` for local development.
 - [x] Implement `codedock-tunnel tcp 5432` for explicitly authorized TCP access.
@@ -363,7 +363,7 @@ codedock-tunnel/
 - [ ] Add abuse controls for open proxies, port scanning, and excessive bandwidth.
 - [ ] Redact credentials, tokens, cookies, and request bodies from logs.
 - [ ] Threat-model the relay server, CLI client, public edge, and Codedock integration.
-- [ ] Add security tests for token replay, cross-tunnel access, stale sessions, and SSRF.
+- [x] Add security tests for token replay, cross-tunnel access, stale sessions, and SSRF.
 
 ## Public edge and routing
 
@@ -414,7 +414,7 @@ codedock-tunnel/
 - [ ] Store all secret material encrypted at rest.
 - [ ] Define cleanup for expired tunnels, sessions, and unused subdomains.
 - [x] Add database migrations and migration integrity checks.
-- [ ] Add backups and restore procedures for control-plane metadata.
+- [x] Add backups and restore procedures for control-plane metadata.
 - [x] Add Docker deployment examples.
 - [ ] Add horizontal scaling design for multiple relay servers.
 - [ ] Define CLI-to-relay affinity and session handoff behavior.
@@ -424,7 +424,7 @@ codedock-tunnel/
 ## Testing and release
 
 - [ ] Add unit tests for protocol encoding, authentication, routing, and limits.
-- [ ] Add integration tests using real local HTTP and TCP targets.
+- [x] Add integration tests using real local HTTP, TCP, and UDP targets.
 - [ ] Add reconnect, timeout, backpressure, and graceful-shutdown tests.
 - [ ] Add cross-platform CLI tunnel tests.
 - [ ] Add fuzz tests for protocol frames and hostname routing.

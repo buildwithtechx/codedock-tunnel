@@ -67,7 +67,8 @@ func (m *UDPManager) read(tunnelID string, listener *net.UDPConn) {
 		m.mu.Unlock()
 		payload, encodeErr := protocol.EncodePayload(protocol.MessageTypeUDPData, "", protocol.UDPData{TunnelID: tunnelID, PacketID: packetID, SourceAddress: address.IP.String(), SourcePort: address.Port, Data: base64.StdEncoding.EncodeToString(buffer[:count])})
 		send := m.sender(tunnelID)
-		if encodeErr != nil || send == nil || send(context.Background(), protocol.Envelope{Version: protocol.Version, Type: protocol.MessageTypeUDPData, Payload: payload}) != nil {
+		outgoing, decodeErr := protocol.Decode(payload)
+		if encodeErr != nil || decodeErr != nil || send == nil || send(context.Background(), outgoing) != nil {
 			m.mu.Lock()
 			delete(m.packets, packetID)
 			m.mu.Unlock()

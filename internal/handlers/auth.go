@@ -61,6 +61,21 @@ func (h *AuthHandler) CompleteDeviceLogin(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"token": token})
 }
 
+func (h *AuthHandler) PollDeviceLogin(c *fiber.Ctx) error {
+	code := c.Query("code")
+	if code == "" {
+		return writeError(c, fiber.StatusBadRequest, fmt.Errorf("device code is required"))
+	}
+	token, complete, err := h.deviceLogin.Poll(c.UserContext(), code)
+	if err != nil {
+		return writeError(c, fiber.StatusUnauthorized, err)
+	}
+	if !complete {
+		return c.Status(fiber.StatusAccepted).JSON(fiber.Map{"status": "pending"})
+	}
+	return c.JSON(fiber.Map{"status": "complete", "token": token})
+}
+
 func (h *AuthHandler) Session(c *fiber.Ctx) error {
 	raw := c.Cookies(h.cookieName)
 	session, err := h.auth.AuthenticateSession(c.UserContext(), raw)

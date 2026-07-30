@@ -3,9 +3,12 @@ package http
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"codedock.run/codedock-tunnel/internal/config"
 	"codedock.run/codedock-tunnel/internal/infra/billing"
+	"codedock.run/codedock-tunnel/internal/infra/certificates"
+	"codedock.run/codedock-tunnel/internal/infra/mail"
 	"codedock.run/codedock-tunnel/internal/repositories"
 	"codedock.run/codedock-tunnel/internal/services"
 	"gorm.io/gorm"
@@ -63,6 +66,10 @@ func NewDatabaseDependencies(db *gorm.DB, cfg config.APIConfig) (Dependencies, e
 	if err != nil {
 		return Dependencies{}, err
 	}
+	accountService, err := services.NewAccountService(users, organizations)
+	if err != nil {
+		return Dependencies{}, err
+	}
 	tunnelService, err := services.NewTunnelService(tunnels)
 	if err != nil {
 		return Dependencies{}, err
@@ -71,6 +78,7 @@ func NewDatabaseDependencies(db *gorm.DB, cfg config.APIConfig) (Dependencies, e
 	if err != nil {
 		return Dependencies{}, err
 	}
+	billingService.SetGracePeriod(cfg.Billing.GracePeriod)
 	var polarClient *billing.PolarClient
 	if cfg.Billing.PolarAccessToken != "" {
 		polarClient, err = billing.NewPolar(billing.PolarConfig{BaseURL: cfg.Billing.PolarBaseURL, AccessToken: cfg.Billing.PolarAccessToken})
@@ -102,9 +110,44 @@ func NewDatabaseDependencies(db *gorm.DB, cfg config.APIConfig) (Dependencies, e
 		}
 		billingService.SetGateway(gateway)
 	}
+	if cfg.Mail.ZeptoAPIKey != "" {
+		zepto, mailErr := mail.NewZeptoClient(mail.Config{URL: cfg.Mail.ZeptoURL, APIKey: cfg.Mail.ZeptoAPIKey, FromAddress: cfg.Mail.FromAddress}, nil)
+		if mailErr != nil {
+			return Dependencies{}, mailErr
+		}
+		billingMailer, mailErr := mail.NewBillingMailer(zepto, func(ctx context.Context, organizationID string) (string, error) {
+			organization, findErr := organizations.FindByID(ctx, organizationID)
+			if findErr != nil {
+				return "", findErr
+			}
+			user, findErr := users.FindByID(ctx, organization.OwnerID)
+			if findErr != nil {
+				return "", findErr
+			}
+			return user.Email, nil
+		})
+		if mailErr != nil {
+			return Dependencies{}, mailErr
+		}
+		billingService.SetMailer(billingMailer)
+		accountMailer, mailErr := mail.NewAccountMailer(zepto)
+		if mailErr != nil {
+			return Dependencies{}, mailErr
+		}
+		accountService.SetMailer(accountMailer)
+	}
 	domainService, err := services.NewDomainService(domains)
 	if err != nil {
 		return Dependencies{}, err
+	}
+	if cfg.App.ACMEEmail != "" {
+		issuer, issuerErr := certificates.NewACMEIssuer(certificates.ACMEConfig{Email: cfg.App.ACMEEmail, Directory: cfg.App.ACMEDirectory, CacheDir: cfg.App.CertificateCache, AllowedHost: func(host string) bool {
+			return strings.Contains(host, ".") && !strings.Contains(host, "..")
+		}})
+		if issuerErr != nil {
+			return Dependencies{}, issuerErr
+		}
+		domainService.SetCertificateIssuer(issuer)
 	}
 	tunnelService.SetBilling(billingService)
 	organizationService.SetBilling(billingService)
@@ -131,10 +174,6 @@ func NewDatabaseDependencies(db *gorm.DB, cfg config.APIConfig) (Dependencies, e
 		return Dependencies{}, err
 	}
 	auditService, err := services.NewAuditService(auditRepository)
-	if err != nil {
-		return Dependencies{}, err
-	}
-	accountService, err := services.NewAccountService(users, organizations)
 	if err != nil {
 		return Dependencies{}, err
 	}

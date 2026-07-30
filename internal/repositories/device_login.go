@@ -47,6 +47,18 @@ func (r *GormDeviceLoginRepository) Complete(ctx context.Context, id string, use
 	return nil
 }
 
+func (r *GormDeviceLoginRepository) StoreToken(ctx context.Context, id, token string) error {
+	return wrap(r.db.WithContext(ctx).Model(&models.DeviceLogin{}).Where("id = ?", id).Update("user_token", token).Error, "store device token")
+}
+
+func (r *GormDeviceLoginRepository) FindAuthenticated(ctx context.Context, codeHash string, now time.Time) (models.DeviceLogin, error) {
+	var login models.DeviceLogin
+	if err := r.db.WithContext(ctx).Where("code_hash = ? AND status = ? AND expires_at > ?", codeHash, "authenticated", now).First(&login).Error; err != nil {
+		return models.DeviceLogin{}, mapError(err)
+	}
+	return login, nil
+}
+
 func (r *GormDeviceLoginRepository) ConsumeToken(ctx context.Context, tokenHash string, now time.Time) (models.DeviceLogin, error) {
 	var login models.DeviceLogin
 	err := r.db.WithContext(ctx).Where("user_token_hash = ? AND status = ? AND expires_at > ?", tokenHash, "authenticated", now).First(&login).Error

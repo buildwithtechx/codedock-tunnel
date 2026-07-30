@@ -10,10 +10,22 @@ import (
 )
 
 type BillingService struct {
-	billing repositories.BillingRepository
-	gateway BillingGateway
-	now     func() time.Time
-	secrets SecretProtector
+	billing        repositories.BillingRepository
+	gateway        BillingGateway
+	now            func() time.Time
+	secrets        SecretProtector
+	billingSecrets billingSecretProtector
+	gracePeriod    time.Duration
+	mailer         BillingMailer
+}
+
+type BillingMailer interface {
+	SendBillingUpdate(context.Context, string, string) error
+}
+
+type billingSecretProtector interface {
+	Seal(string) (string, error)
+	Open(string) (string, error)
 }
 
 type BillingTransition struct {
@@ -27,14 +39,52 @@ type BillingTransition struct {
 	ProviderAuthorization string
 }
 
+func (s *BillingService) ProcessWebhook(ctx context.Context, event *models.BillingEvent, transition *BillingTransition) (bool, error) {
+	if event == nil || event.Provider == "" || event.ProviderEventID == "" {
+		return false, fmt.Errorf("complete billing event is required")
+	}
+	if _, err := s.billing.FindBillingEvent(ctx, event.Provider, event.ProviderEventID); err == nil {
+		return false, nil
+	} else if err != repositories.ErrNotFound {
+		return false, fmt.Errorf("check billing event: %w", err)
+	}
+	var subscription *models.Subscription
+	if transition != nil && transition.ProviderSubscription != "" && transition.Status != "" {
+		current, err := s.billing.FindSubscriptionByProvider(ctx, transition.Provider, transition.ProviderSubscription)
+		if err != nil {
+			return false, fmt.Errorf("find subscription transition: %w", err)
+		}
+		if err := s.applyTransition(&current, *transition); err != nil {
+			return false, err
+		}
+		subscription = &current
+	}
+	if err := s.billing.ApplyBillingEvent(ctx, event, subscription); err != nil {
+		return false, fmt.Errorf("apply billing webhook transaction: %w", err)
+	}
+	if subscription != nil && s.mailer != nil {
+		_ = s.mailer.SendBillingUpdate(ctx, subscription.OrganizationID, string(subscription.Status))
+	}
+	return true, nil
+}
+
 func NewBillingService(billing repositories.BillingRepository) (*BillingService, error) {
 	if billing == nil {
 		return nil, fmt.Errorf("billing repository is required")
 	}
-	return &BillingService{billing: billing, now: time.Now}, nil
+	return &BillingService{billing: billing, now: time.Now, gracePeriod: 72 * time.Hour}, nil
 }
 
 func (s *BillingService) SetSecretProtector(protector SecretProtector) { s.secrets = protector }
+func (s *BillingService) SetBillingSecretProtector(protector billingSecretProtector) {
+	s.billingSecrets = protector
+}
+func (s *BillingService) SetGracePeriod(grace time.Duration) {
+	if grace >= 0 {
+		s.gracePeriod = grace
+	}
+}
+func (s *BillingService) SetMailer(mailer BillingMailer) { s.mailer = mailer }
 
 func (s *BillingService) ApplyTransition(ctx context.Context, transition BillingTransition) error {
 	if transition.Provider == "" || transition.ProviderSubscription == "" || transition.Status == "" {
@@ -44,8 +94,30 @@ func (s *BillingService) ApplyTransition(ctx context.Context, transition Billing
 	if err != nil {
 		return fmt.Errorf("find subscription transition: %w", err)
 	}
+	if err := s.applyTransition(&subscription, transition); err != nil {
+		return err
+	}
+	if err := s.billing.SaveSubscription(ctx, &subscription); err != nil {
+		return fmt.Errorf("save billing transition: %w", err)
+	}
+	if s.mailer != nil {
+		_ = s.mailer.SendBillingUpdate(ctx, subscription.OrganizationID, string(transition.Status))
+	}
+	return nil
+}
+
+func (s *BillingService) applyTransition(subscription *models.Subscription, transition BillingTransition) error {
 	subscription.Status = transition.Status
-	subscription.ProviderCustomerID = transition.ProviderCustomer
+	if transition.ProviderCustomer != "" {
+		if s.billingSecrets == nil {
+			return fmt.Errorf("billing secret protector is not configured")
+		}
+		encrypted, err := s.billingSecrets.Seal(transition.ProviderCustomer)
+		if err != nil {
+			return fmt.Errorf("encrypt provider customer: %w", err)
+		}
+		subscription.ProviderCustomerID = encrypted
+	}
 	subscription.ProviderProductID = transition.ProviderProduct
 	subscription.CurrentPeriodEnd = transition.CurrentPeriodEnd
 	subscription.CancelAtPeriodEnd = transition.CancelAtPeriodEnd
@@ -63,9 +135,6 @@ func (s *BillingService) ApplyTransition(ctx context.Context, transition Billing
 		}
 		subscription.ProviderAuthCode = encrypted
 	}
-	if err := s.billing.SaveSubscription(ctx, &subscription); err != nil {
-		return fmt.Errorf("save billing transition: %w", err)
-	}
 	return nil
 }
 
@@ -74,7 +143,11 @@ func (s *BillingService) Entitlements(ctx context.Context, organizationID string
 	if err != nil {
 		return models.Plan{}, models.Subscription{}, fmt.Errorf("find subscription: %w", err)
 	}
-	if subscription.Status != models.SubscriptionStatusActive && subscription.Status != models.SubscriptionStatusTrialing {
+	entitled := subscription.Status == models.SubscriptionStatusActive || subscription.Status == models.SubscriptionStatusTrialing
+	if !entitled && subscription.CurrentPeriodEnd != nil {
+		entitled = (subscription.Status == models.SubscriptionStatusPastDue || subscription.Status == models.SubscriptionStatusCanceled) && s.now().Before(subscription.CurrentPeriodEnd.Add(s.gracePeriod))
+	}
+	if !entitled {
 		return models.Plan{}, models.Subscription{}, fmt.Errorf("subscription is not entitled")
 	}
 	plan, err := s.billing.FindPlan(ctx, subscription.PlanID)

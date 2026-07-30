@@ -16,9 +16,15 @@ type DomainService struct {
 	domains repositories.DomainRepository
 	billing *BillingService
 	now     func() time.Time
+	issuer  CertificateIssuer
 }
 
-func (s *DomainService) SetBilling(billing *BillingService) { s.billing = billing }
+type CertificateIssuer interface {
+	Issue(context.Context, string) (time.Time, error)
+}
+
+func (s *DomainService) SetBilling(billing *BillingService)            { s.billing = billing }
+func (s *DomainService) SetCertificateIssuer(issuer CertificateIssuer) { s.issuer = issuer }
 
 func NewDomainService(domains repositories.DomainRepository) (*DomainService, error) {
 	if domains == nil {
@@ -71,6 +77,15 @@ func (s *DomainService) Verify(ctx context.Context, id, token string) error {
 	now := s.now()
 	domain.Status = models.DomainStatusVerified
 	domain.VerifiedAt = &now
+	if s.issuer != nil {
+		expires, err := s.issuer.Issue(ctx, domain.Hostname)
+		if err != nil {
+			return fmt.Errorf("issue domain certificate: %w", err)
+		}
+		domain.Status = models.DomainStatusActive
+		domain.CertificateStatus = "ready"
+		domain.CertificateExpiresAt = &expires
+	}
 	if err := s.domains.Update(ctx, &domain); err != nil {
 		return fmt.Errorf("verify domain: %w", err)
 	}

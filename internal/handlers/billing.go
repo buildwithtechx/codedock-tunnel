@@ -107,26 +107,18 @@ func (h *BillingHandler) Webhook(c *fiber.Ctx) error {
 		eventType = c.Get("X-Event-Type")
 	}
 	event := &models.BillingEvent{Provider: models.BillingProvider(provider), ProviderEventID: eventID, EventType: eventType, PayloadHash: hex.EncodeToString(digest[:])}
-	created, err := h.billing.RecordEvent(c.UserContext(), event)
+	var transitionPointer *services.BillingTransition
+	if transition.ProviderSubscription != "" && transition.Status != "" {
+		transitionPointer = &transition
+	}
+	created, err := h.billing.ProcessWebhook(c.UserContext(), event, transitionPointer)
 	if err != nil {
 		if h.alerts != nil {
 			_ = h.alerts.AlertFailedWebhook(c.UserContext(), provider, eventID, err.Error())
 		}
 		return writeError(c, fiber.StatusBadRequest, err)
 	}
-	if created {
-		if transition.ProviderSubscription != "" && transition.Status != "" {
-			if err := h.billing.ApplyTransition(c.UserContext(), transition); err != nil {
-				return writeError(c, fiber.StatusBadRequest, err)
-			}
-		}
-		if err := h.billing.MarkProcessed(c.UserContext(), event.ID); err != nil {
-			if h.alerts != nil {
-				_ = h.alerts.AlertFailedWebhook(c.UserContext(), provider, eventID, err.Error())
-			}
-			return writeError(c, fiber.StatusInternalServerError, err)
-		}
-	}
+	_ = created
 	return c.SendStatus(fiber.StatusAccepted)
 }
 

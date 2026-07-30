@@ -43,6 +43,8 @@ type DeviceLoginRepository interface {
 	Create(context.Context, *models.DeviceLogin) error
 	FindPending(context.Context, string, time.Time) (models.DeviceLogin, error)
 	Complete(context.Context, string, string, string, time.Time) error
+	StoreToken(context.Context, string, string) error
+	FindAuthenticated(context.Context, string, time.Time) (models.DeviceLogin, error)
 	ConsumeToken(context.Context, string, time.Time) (models.DeviceLogin, error)
 	DeleteExpired(context.Context, time.Time) (int64, error)
 }

@@ -92,7 +92,8 @@ func (m *TCPManager) read(tunnelID, connectionID string, connection net.Conn) {
 				return
 			}
 			payload, encodeErr := protocol.EncodePayload(protocol.MessageTypeTCPData, "", protocol.TCPData{TunnelID: tunnelID, ConnectionID: connectionID, Data: base64.StdEncoding.EncodeToString(buffer[:count])})
-			if encodeErr != nil || send(context.Background(), protocol.Envelope{Version: protocol.Version, Type: protocol.MessageTypeTCPData, Payload: payload}) != nil {
+			outgoing, decodeErr := protocol.Decode(payload)
+			if encodeErr != nil || decodeErr != nil || send(context.Background(), outgoing) != nil {
 				return
 			}
 		}
@@ -103,7 +104,9 @@ func (m *TCPManager) read(tunnelID, connectionID string, connection net.Conn) {
 					return
 				}
 				payload, _ := protocol.EncodePayload(protocol.MessageTypeTCPClose, "", protocol.TCPClose{TunnelID: tunnelID, ConnectionID: connectionID})
-				_ = send(context.Background(), protocol.Envelope{Version: protocol.Version, Type: protocol.MessageTypeTCPClose, Payload: payload})
+				if outgoing, decodeErr := protocol.Decode(payload); decodeErr == nil {
+					_ = send(context.Background(), outgoing)
+				}
 			}
 			return
 		}

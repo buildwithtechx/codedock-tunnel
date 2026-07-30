@@ -20,6 +20,7 @@ type BillingRepository interface {
 	FindBillingEvent(context.Context, models.BillingProvider, string) (models.BillingEvent, error)
 	CreateBillingEvent(context.Context, *models.BillingEvent) error
 	MarkBillingEventProcessed(context.Context, string, time.Time) error
+	ApplyBillingEvent(context.Context, *models.BillingEvent, *models.Subscription) error
 }
 
 type GormBillingRepository struct{ db *gorm.DB }
@@ -109,4 +110,25 @@ func (r *GormBillingRepository) MarkBillingEventProcessed(ctx context.Context, i
 		return ErrNotFound
 	}
 	return nil
+}
+
+func (r *GormBillingRepository) ApplyBillingEvent(ctx context.Context, event *models.BillingEvent, subscription *models.Subscription) error {
+	if event == nil {
+		return fmt.Errorf("billing event is required")
+	}
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(event).Error; err != nil {
+			return fmt.Errorf("create billing event: %w", err)
+		}
+		if subscription != nil {
+			if err := tx.Save(subscription).Error; err != nil {
+				return fmt.Errorf("save subscription transition: %w", err)
+			}
+		}
+		at := time.Now().UTC()
+		if err := tx.Model(&models.BillingEvent{}).Where("id = ?", event.ID).Update("processed_at", at).Error; err != nil {
+			return fmt.Errorf("mark billing event processed: %w", err)
+		}
+		return nil
+	})
 }
