@@ -1,12 +1,12 @@
 import type {
   VersionNegotiate,
   VersionNegotiateAck,
-} from '../interfaces/messages.js';
+} from '../interfaces/messages';
 import {
   maxSupportedVersion,
   minSupportedVersion,
   protocolVersion,
-} from './constants.js';
+} from './constants';
 
 export const negotiateVersion = (
   request: VersionNegotiate,

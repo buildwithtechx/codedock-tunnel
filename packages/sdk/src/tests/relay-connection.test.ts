@@ -4,8 +4,8 @@ import {
   type ProtocolEnvelope,
 } from '@codedock/protocol-ts';
 import { describe, expect, it } from 'vitest';
-import type { WebSocketEvent, WebSocketLike } from '../interfaces/relay.js';
-import { RelayConnection } from '../services/relay-connection.js';
+import type { WebSocketEvent, WebSocketLike } from '../interfaces/relay';
+import { RelayConnection } from '../services/relay-connection';
 
 class FakeSocket implements WebSocketLike {
   readonly readyState = 1;

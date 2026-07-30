@@ -1,4 +1,4 @@
-import { RelayConnection } from '@codedock/sdk-ts';
+import { RelayConnection } from '@codedock/sdk';
 import type { Plugin, ViteDevServer } from 'vite';
 import type { CodedockTunnelPluginOptions } from '../interfaces/options';
 

@@ -1,4 +1,4 @@
-# @codedock/sdk-ts
+# @codedock/sdk
 
 Framework-neutral TypeScript and Node.js client for the standalone Codedock Tunnel API.
 

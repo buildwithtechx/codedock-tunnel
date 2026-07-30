@@ -1,4 +1,4 @@
-import type { RelayConnectionOptions } from '@codedock/sdk-ts';
+import type { RelayConnectionOptions } from '@codedock/sdk';
 
 export const CODEDOCK_TUNNEL_OPTIONS = Symbol('CODEDOCK_TUNNEL_OPTIONS');
 

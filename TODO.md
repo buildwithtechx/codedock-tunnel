@@ -10,132 +10,64 @@ The Go backend, CLI, protocol package, and current TypeScript framework adapters
 ## Product surfaces
 
 - [ ] Build a standalone tunnel dashboard with its own authentication and organization model.
-- [ ] Publish one reusable `sdk-ts` package for Node.js, TypeScript, browser, and framework integrations.
 - [ ] Keep the Tauri desktop application usable with standalone tunnel servers.
 
-## Repository structure
-
-```text
-codedock-tunnel/
-├── apps/
-│   ├── web/
-│   │   ├── src/
-│   │   │   ├── routes/
-│   │   │   ├── components/
-│   │   │   ├── features/
-│   │   │   ├── hooks/
-│   │   │   └── lib/
-│   │   └── package.json
-│   └── desktop/
-│       ├── src/
-│       ├── src-tauri/
-│       └── package.json
-├── cmd/
-│   ├── server/
-│   ├── tunnel/
-│   ├── cli/
-│   ├── cron/
-│   └── check/
-├── internal/
-│   ├── models/
-│   ├── repositories/
-│   ├── services/
-│   ├── handlers/
-│   ├── http/
-│   ├── engine/
-│   ├── auth/
-│   ├── config/
-│   ├── infra/
-│   │   ├── postgres/
-│   │   ├── redis/
-│   │   ├── billing/
-│   │   ├── telemetry/
-│   │   ├── storage/
-│   │   └── locks/
-│   └── workers/
-├── pkg/
-│   ├── client/
-│   ├── protocol/
-│   └── version/
-├── protocol/
-│   ├── schema/
-│   └── generated/
-│       ├── go/
-│       └── typescript/
-├── packages/
-│   ├── protocol-ts/
-│   │   ├── src/
-│   │   └── package.json
-│   ├── sdk-ts/
-│   │   ├── src/
-│   │   └── package.json
-│   ├── react/
-│   │   ├── src/
-│   │   └── package.json
-│   ├── vite-plugin/
-│   │   ├── src/
-│   │   └── package.json
-│   ├── next/
-│   │   ├── src/
-│   │   └── package.json
-│   ├── nest/
-│   │   ├── src/
-│   │   └── package.json
-│   ├── express/
-│   │   ├── src/
-│   │   └── package.json
-│   └── tauri-bridge/
-│       ├── src/
-│       └── package.json
-├── integrations/
-│   └── codedock/
-├── migrations/
-├── tests/
-│   ├── integration/
-│   ├── protocol/
-│   ├── security/
-│   └── e2e/
-├── docker/
-│   ├── Dockerfile.api
-│   ├── Dockerfile.tunnel
-│   ├── Dockerfile.cron
-│   └── Dockerfile.check
-├── docs/
-├── scripts/
-├── go.mod
-├── package.json
-├── tsconfig.base.json
-├── biome.json
-├── Makefile
-├── README.md
-└── TODO.md
-```
-
-- [x] Create `apps/web/` for the standalone React dashboard.
-- [x] Create `apps/desktop/` for the Tauri desktop application and `src-tauri/` Rust shell.
-- [x] Create `packages/protocol-ts/` as the TypeScript protocol contract and codec package.
-- [x] Create `packages/sdk-ts/` as the framework-neutral Node.js and browser client.
-- [x] Create `packages/react/` as a thin React hooks and provider layer over `sdk-ts`.
-- [x] Create `packages/vite-plugin/` for local development tunnel integration with Vite.
-- [x] Create `packages/next/` for Next.js server, route, and development integration.
-- [x] Create `packages/nest/` for NestJS modules, providers, and tunnel lifecycle integration.
-- [x] Create `packages/express/` for Express middleware and tunnel lifecycle integration.
-- [x] Create `packages/tauri-bridge/` for desktop commands and Go CLI tunnel-client communication.
-- [x] Keep framework integrations as thin adapters over the same protocol and SDK lifecycle.
-- [x] Use peer dependencies for optional frameworks so the base SDK stays lightweight.
-- [x] Add package export maps, type declarations, and tree-shakable entrypoints.
-- [x] Keep framework adapters independently versioned while preserving compatibility with the core SDK.
 - [ ] Keep `integrations/codedock/` as an optional external adapter.
 
-## Platform features
+## Future SDKs
 
-- [x] Protect HTTP and HTTPS tunnels with Argon2id-backed Basic Authentication.
-- [x] Support password-protected tunnel options in the Go protocol, CLI, SDK, and framework adapters.
-- [x] Support non-interactive CI/CD tunnel sessions with agent tokens and managed tunnel IDs.
-- [x] Record sanitized HTTP method, path, status, duration, response bytes, and client address usage fields.
-- [x] Aggregate request and error counts without storing payloads, credentials, or authorization headers.
-- [x] Apply plan-based usage retention through the cron worker.
-- [x] Expose relay metrics and organization usage API endpoints.
+- [ ] Create an official Laravel/PHP SDK over the public HTTP and relay APIs.
+- [ ] Create an official Rust SDK for native services and desktop tooling.
+- [ ] Create an official Go SDK for Go services and tunnel-aware workers.
+- [ ] Create an official Angular adapter over the shared client contract.
+- [ ] Keep every SDK aligned with the versioned protocol and authentication model.
+- [ ] Publish language-specific SDKs only after compatibility, security, and conformance tests pass.
+
+```text
+packages/
+├── php/
+│   ├── src/
+│   │   ├── Client/
+│   │   ├── Contracts/
+│   │   ├── Exceptions/
+│   │   ├── Resources/
+│   │   └── Laravel/
+│   │       ├── Console/
+│   │       ├── Facades/
+│   │       ├── Http/
+│   │       ├── Services/
+│   │       └── CodedockServiceProvider.php
+│   ├── config/
+│   ├── tests/
+│   ├── composer.json
+│   └── README.md
+├── rust/
+│   ├── src/
+│   │   ├── client.rs
+│   │   ├── error.rs
+│   │   ├── models.rs
+│   │   └── protocol.rs
+│   ├── tests/
+│   ├── Cargo.toml
+│   └── README.md
+├── go/
+│   ├── client/
+│   ├── protocol/
+│   ├── internal/
+│   ├── tests/
+│   ├── go.mod
+│   └── README.md
+└── angular/
+    ├── src/
+    │   ├── guards/
+    │   ├── interceptors/
+    │   ├── models/
+    │   ├── services/
+    │   └── tokens/
+    ├── tests/
+    ├── package.json
+    └── README.md
+```
 
 ## Dashboard
 
@@ -150,7 +82,6 @@ codedock-tunnel/
 
 ## Tauri desktop app
 
-- [ ] Create the Tauri 2 application shell.
 - [ ] Define how the desktop app starts and supervises the Go CLI tunnel client.
 - [ ] Keep tunnel data-plane logic in Go rather than duplicating it in Rust or TypeScript.
 - [ ] Store credentials using the native operating-system secret store.

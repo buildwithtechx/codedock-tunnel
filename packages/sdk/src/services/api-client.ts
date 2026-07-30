@@ -1,5 +1,5 @@
-import type { Tunnel, TunnelAPIClientOptions } from '../interfaces/api.js';
-import { TunnelAPIError } from '../utils/errors.js';
+import type { Tunnel, TunnelAPIClientOptions } from '../interfaces/api';
+import { TunnelAPIError } from '../utils/errors';
 
 export class TunnelAPIClient {
   private readonly apiUrl: string;

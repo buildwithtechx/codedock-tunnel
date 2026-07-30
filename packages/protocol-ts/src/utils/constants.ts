@@ -1,4 +1,4 @@
-import type { MessageType } from '../interfaces/messages.js';
+import type { MessageType } from '../interfaces/messages';
 
 export const protocolVersion = 1 as const;
 export const minSupportedVersion = 1 as const;

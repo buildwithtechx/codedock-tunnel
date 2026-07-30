@@ -1,11 +1,11 @@
-import type { MessageType, ProtocolEnvelope } from '../interfaces/messages.js';
+import type { MessageType, ProtocolEnvelope } from '../interfaces/messages';
 import {
   absoluteMaxFrameSize,
   maxSupportedVersion,
   messageTypes,
   minSupportedVersion,
   protocolVersion,
-} from './constants.js';
+} from './constants';
 
 export const encodeMessage = <TPayload>(
   message: ProtocolEnvelope<TPayload>,

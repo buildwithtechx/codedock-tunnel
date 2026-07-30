@@ -1,4 +1,4 @@
-import type { RelayConnectionOptions } from '@codedock/sdk-ts';
+import type { RelayConnectionOptions } from '@codedock/sdk';
 
 export type ExpressTunnelOptions = RelayConnectionOptions & {
   localPort: number;
