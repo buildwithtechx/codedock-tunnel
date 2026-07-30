@@ -4,13 +4,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && npm run build:types",
+    "build:types": "tsc --emitDeclarationOnly --noEmit false",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests"
   },
   "description": "Express integration for Codedock Tunnel",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "dependencies": {
     "@codedock-tunnel/sdk-ts": "0.1.0"
   },
@@ -22,5 +25,8 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6"
   }
 }

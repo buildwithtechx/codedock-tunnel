@@ -1,6 +1,6 @@
 # Codedock Tunnel TODO
 
-The Go backend and CLI implementation is complete. Remaining work is product surfaces, SDKs, desktop packaging, optional integrations, and release operations.
+The Go backend, CLI, protocol package, and current TypeScript framework adapters are implemented. Remaining work is dashboard functionality, desktop integration, optional integrations, and release operations.
 
 ## Standalone product principles
 
@@ -111,19 +111,20 @@ codedock-tunnel/
 └── TODO.md
 ```
 
-- [ ] Create `apps/web/` for the standalone React dashboard.
-- [ ] Create `apps/desktop/` for the Tauri desktop application and `src-tauri/` Rust shell.
-- [ ] Create `packages/sdk-ts/` as the framework-neutral Node.js and browser client.
-- [ ] Create `packages/react/` as a thin React hooks and provider layer over `sdk-ts`.
-- [ ] Create `packages/vite-plugin/` for local development tunnel integration with Vite.
-- [ ] Create `packages/next/` for Next.js server, route, and development integration.
-- [ ] Create `packages/nest/` for NestJS modules, providers, and tunnel lifecycle integration.
-- [ ] Create `packages/express/` for Express middleware and tunnel lifecycle integration.
+- [x] Create `apps/web/` for the standalone React dashboard.
+- [x] Create `apps/desktop/` for the Tauri desktop application and `src-tauri/` Rust shell.
+- [x] Create `packages/protocol-ts/` as the TypeScript protocol contract and codec package.
+- [x] Create `packages/sdk-ts/` as the framework-neutral Node.js and browser client.
+- [x] Create `packages/react/` as a thin React hooks and provider layer over `sdk-ts`.
+- [x] Create `packages/vite-plugin/` for local development tunnel integration with Vite.
+- [x] Create `packages/next/` for Next.js server, route, and development integration.
+- [x] Create `packages/nest/` for NestJS modules, providers, and tunnel lifecycle integration.
+- [x] Create `packages/express/` for Express middleware and tunnel lifecycle integration.
 - [ ] Create `packages/tauri-bridge/` for desktop commands and Go CLI tunnel-client communication.
-- [ ] Keep framework integrations as thin adapters over the same protocol and SDK lifecycle.
-- [ ] Use peer dependencies for optional frameworks so the base SDK stays lightweight.
-- [ ] Add package export maps, type declarations, and tree-shakable entrypoints.
-- [ ] Keep framework adapters independently versioned while preserving compatibility with the core SDK.
+- [x] Keep framework integrations as thin adapters over the same protocol and SDK lifecycle.
+- [x] Use peer dependencies for optional frameworks so the base SDK stays lightweight.
+- [x] Add package export maps, type declarations, and tree-shakable entrypoints.
+- [x] Keep framework adapters independently versioned while preserving compatibility with the core SDK.
 - [ ] Keep `integrations/codedock/` as an optional external adapter.
 
 ## Dashboard
