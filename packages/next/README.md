@@ -1,4 +1,4 @@
-# @codedock-tunnel/next
+# @codedock/next
 
 Next.js integration for the Codedock Tunnel TypeScript SDK.
 

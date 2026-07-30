@@ -31,9 +31,21 @@ type RelayAffinity interface {
 	Release(context.Context, string, string) error
 }
 
+type ManagedTunnelResolver interface {
+	Resolve(context.Context, string) (ManagedTunnelPolicy, error)
+}
+
+type ManagedTunnelPolicy struct {
+	OrganizationID string
+	PublicHostname string
+	PasswordHash   string
+	Status         string
+}
+
 type connectionState struct {
 	negotiated    bool
 	authenticated bool
+	identity      AgentIdentity
 }
 
 type Handler struct {
@@ -56,6 +68,7 @@ type Handler struct {
 	allowedOrigins []string
 	publicDomain   string
 	affinity       RelayAffinity
+	managedTunnels ManagedTunnelResolver
 	relayID        string
 	affinityTTL    time.Duration
 	mu             sync.Mutex
@@ -81,6 +94,7 @@ type HandlerOptions struct {
 	Affinity       RelayAffinity
 	RelayID        string
 	AffinityTTL    time.Duration
+	ManagedTunnels ManagedTunnelResolver
 }
 
 func NewHandler(authenticator AgentAuthenticator, sessions *engine.SessionRegistry, router *engine.RequestRouter, tcp *TCPManager, udp *UDPManager, maxSessions int) (*Handler, error) {
@@ -111,7 +125,7 @@ func NewHandlerWithOptions(authenticator AgentAuthenticator, sessions *engine.Se
 	}
 	tcp.SetMaxConnections(options.MaxConnections)
 	udp.SetMaxPackets(options.MaxConnections)
-	handler := &Handler{authenticator: authenticator, sessions: sessions, router: router, tcp: tcp, udp: udp, maxSessions: options.MaxConnections, maxTunnels: options.MaxTunnels, maxBandwidth: options.MaxBandwidth, heartbeat: options.Heartbeat, readTimeout: options.ReadTimeout, maxFrameBytes: options.MaxFrameBytes, drainTimeout: options.DrainTimeout, logger: options.Logger, metrics: options.Metrics, usage: options.UsageRecorder, affinity: options.Affinity, relayID: options.RelayID, affinityTTL: options.AffinityTTL, allowedOrigins: splitOrigins(options.AllowedOrigins), publicDomain: strings.TrimSuffix(strings.TrimSpace(options.PublicDomain), "."), bandwidth: engine.NewBandwidthLimiter(), orgLimits: make(map[string]int), orgConnections: make(map[string]int)}
+	handler := &Handler{authenticator: authenticator, sessions: sessions, router: router, tcp: tcp, udp: udp, maxSessions: options.MaxConnections, maxTunnels: options.MaxTunnels, maxBandwidth: options.MaxBandwidth, heartbeat: options.Heartbeat, readTimeout: options.ReadTimeout, maxFrameBytes: options.MaxFrameBytes, drainTimeout: options.DrainTimeout, logger: options.Logger, metrics: options.Metrics, usage: options.UsageRecorder, affinity: options.Affinity, managedTunnels: options.ManagedTunnels, relayID: options.RelayID, affinityTTL: options.AffinityTTL, allowedOrigins: splitOrigins(options.AllowedOrigins), publicDomain: strings.TrimSuffix(strings.TrimSpace(options.PublicDomain), "."), bandwidth: engine.NewBandwidthLimiter(), orgLimits: make(map[string]int), orgConnections: make(map[string]int)}
 	tcp.SetAdmissionHook(handler.allowConnection)
 	tcp.SetUsageHook(func(tunnelID, eventType string, connections int) {
 		organizationID, ok := router.OrganizationID(tunnelID)
@@ -146,20 +160,28 @@ func (h *Handler) Connect(connection *websocket.Conn) {
 	_ = connection.SetReadDeadline(time.Now().Add(h.readTimeout))
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	identity, err := h.authenticator.Authenticate(ctx, bearerToken(connection.Headers("Authorization")))
-	if err != nil {
-		h.writeJSON(connection, protocol.Envelope{Version: protocol.Version, Type: protocol.MessageTypeError, Payload: []byte(`{"code":"unauthorized","message":"invalid agent token"}`)})
-		_ = connection.Close()
-		return
+	identity := AgentIdentity{}
+	if token := bearerToken(connection.Headers("Authorization")); token != "" {
+		authenticatedIdentity, err := h.authenticator.Authenticate(ctx, token)
+		if err != nil {
+			h.writeJSON(connection, protocol.Envelope{Version: protocol.Version, Type: protocol.MessageTypeError, Payload: []byte(`{"code":"unauthorized","message":"invalid agent token"}`)})
+			_ = connection.Close()
+			return
+		}
+		identity = authenticatedIdentity
+		h.logger.Info("relay connection authenticated", slog.String("agent_id", identity.AgentID), slog.String("organization_id", identity.OrganizationID))
+		h.setOrganizationLimit(identity.OrganizationID, identity.MaxConnections)
 	}
-	h.logger.Info("relay connection authenticated", slog.String("agent_id", identity.AgentID), slog.String("organization_id", identity.OrganizationID))
-	h.setOrganizationLimit(identity.OrganizationID, identity.MaxConnections)
 	owned := make(map[string]string)
-	state := connectionState{}
+	state := &connectionState{authenticated: identity.OrganizationID != "", identity: identity}
 	connectionCtx, cancelConnection := context.WithCancel(ctx)
 	defer cancelConnection()
-	go h.sendHeartbeats(connectionCtx, connection, identity.OrganizationID)
-	defer h.closeOwnedSessions(ctx, identity, owned)
+	heartbeatStarted := false
+	if state.authenticated {
+		go h.sendHeartbeats(connectionCtx, connection, identity.OrganizationID)
+		heartbeatStarted = true
+	}
+	defer func() { h.closeOwnedSessions(ctx, state.identity, owned) }()
 	for {
 		messageType, data, err := connection.ReadMessage()
 		if err != nil {
@@ -176,9 +198,14 @@ func (h *Handler) Connect(connection *websocket.Conn) {
 			h.writeError(connection, "protocol", err.Error())
 			continue
 		}
-		if err := h.handleMessage(ctx, connection, identity, message, owned, &state); err != nil {
+		if err := h.handleMessage(ctx, connection, state.identity, message, owned, state); err != nil {
 			h.metrics.AddError()
 			h.writeError(connection, "message", err.Error())
+		}
+		if state.authenticated && !heartbeatStarted {
+			h.setOrganizationLimit(state.identity.OrganizationID, state.identity.MaxConnections)
+			go h.sendHeartbeats(connectionCtx, connection, state.identity.OrganizationID)
+			heartbeatStarted = true
 		}
 		h.recordMessageUsage(ctx, identity.OrganizationID, message)
 	}

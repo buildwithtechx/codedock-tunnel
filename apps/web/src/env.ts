@@ -10,6 +10,7 @@ export const env = createEnv({
 
   client: {
     VITE_CODEDOCK_APP_TITLE: z.string().min(1).optional(),
+    VITE_CODEDOCK_SITE_URL: z.url().optional(),
     VITE_CODEDOCK_TUNNEL_SERVER_URL: z.url().optional(),
     VITE_CODEDOCK_API_BASE_URL: z.url().optional(),
     VITE_CODEDOCK_POSTHOG_KEY: z.string().optional(),

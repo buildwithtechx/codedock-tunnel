@@ -1,10 +1,11 @@
 {
-  "name": "@codedock-tunnel/tauri-bridge",
+  "name": "@codedock/tauri-bridge",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && npm run build:types",
+    "build:types": "tsc --emitDeclarationOnly --noEmit false",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests"
@@ -12,7 +13,7 @@
   "description": "Tauri bridge for the Codedock Tunnel desktop client",
   "files": ["dist"],
   "dependencies": {
-    "@codedock-tunnel/sdk-ts": "0.1.0"
+    "@codedock/sdk": "0.1.0"
   },
   "peerDependencies": {
     "@tauri-apps/api": ">=2"

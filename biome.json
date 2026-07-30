@@ -6,15 +6,13 @@
       "apps/**/*.tsx",
       "packages/**/*.ts",
       "packages/**/*.tsx",
-      "!**/.tanstack",
       "!**/.source",
-      "!**/.source/**",
-      "!**/.source/*",
+      "!**/.tanstack",
       "!**/*.gen.ts",
       "!**/routeTree.gen.ts",
-      "!**/dist",
-      "!**/out",
-      "!**/src-tauri/target",
+      "!!**/dist",
+      "!!**/out",
+      "!!**/src-tauri/target",
       "!**/router.tsx",
       "!**/router.ts",
       "!**/*.svg"
@@ -29,10 +27,25 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "preset": "recommended"
     }
   },
+  "overrides": [
+    {
+      "includes": ["packages/nest/src/services/tunnel.module.ts"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noStaticOnlyClass": "off"
+          }
+        }
+      }
+    }
+  ],
   "javascript": {
+    "parser": {
+      "unsafeParameterDecoratorsEnabled": true
+    },
     "formatter": {
       "quoteStyle": "single",
       "jsxQuoteStyle": "double",

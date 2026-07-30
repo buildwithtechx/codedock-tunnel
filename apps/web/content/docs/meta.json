@@ -1,0 +1,16 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "---Getting Started---",
+    "...(getting-started)",
+    "---Core Concepts---",
+    "...(concepts)",
+    "---Platform Features---",
+    "...(platform-features)",
+    "---Integrations---",
+    "...(integrations)",
+    "---Reference---",
+    "...(reference)"
+  ]
+}

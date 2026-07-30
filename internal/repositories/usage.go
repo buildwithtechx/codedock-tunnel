@@ -67,7 +67,7 @@ func (r *GormUsageRepository) AggregatePeriod(ctx context.Context, organizationI
 		RequestCount      int64
 		ErrorCount        int64
 	}
-	err := r.db.WithContext(ctx).Model(&models.UsageEvent{}).Select("COUNT(DISTINCT tunnel_id) AS tunnel_count, COALESCE(SUM(connections), 0) AS active_connections, COALESCE(SUM(bytes), 0) AS bandwidth_bytes, COALESCE(SUM(CASE WHEN event_type = 'request' THEN 1 ELSE 0 END), 0) AS request_count, COALESCE(SUM(CASE WHEN event_type = 'error' THEN 1 ELSE 0 END), 0) AS error_count").Where("organization_id = ? AND occurred_at >= ? AND occurred_at < ?", organizationID, from, to).Scan(&aggregate).Error
+	err := r.db.WithContext(ctx).Model(&models.UsageEvent{}).Select("COUNT(DISTINCT tunnel_id) AS tunnel_count, COALESCE(SUM(connections), 0) AS active_connections, COALESCE(SUM(bytes), 0) AS bandwidth_bytes, COALESCE(SUM(CASE WHEN event_type = 'request' THEN 1 ELSE 0 END), 0) AS request_count, COALESCE(SUM(CASE WHEN event_type = 'error' OR status_code >= 400 THEN 1 ELSE 0 END), 0) AS error_count").Where("organization_id = ? AND occurred_at >= ? AND occurred_at < ?", organizationID, from, to).Scan(&aggregate).Error
 	if err != nil {
 		return models.UsageSnapshot{}, fmt.Errorf("aggregate usage period: %w", err)
 	}

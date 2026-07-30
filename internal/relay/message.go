@@ -16,6 +16,9 @@ func (h *Handler) handleMessage(ctx context.Context, connection *websocket.Conn,
 	if len(states) > 0 && states[0] != nil {
 		state = states[0]
 	}
+	if state.identity.OrganizationID != "" {
+		identity = state.identity
+	}
 	bandwidthLimit := identity.BandwidthBytes
 	if bandwidthLimit == 0 {
 		bandwidthLimit = h.maxBandwidth
@@ -95,6 +98,7 @@ func (h *Handler) handleAuthentication(ctx context.Context, connection *websocke
 		return err
 	}
 	state.authenticated = true
+	state.identity = identity
 	payload, err := protocol.EncodePayload(protocol.MessageTypeAuthResponse, message.RequestID, protocol.AuthResponse{Authenticated: true, AgentID: identity.AgentID, OrganizationID: identity.OrganizationID, GrantedCapabilities: []string{"http", "https", "tcp", "udp"}})
 	if err != nil {
 		return err

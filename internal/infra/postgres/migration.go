@@ -68,9 +68,23 @@ func migrations() []migration {
 			&models.UsageSnapshot{},
 			&models.UsageEvent{},
 			&models.AuditEvent{},
+			&models.PlatformAdmin{},
+			&models.OrganizationInvitation{},
 		)
 	}}, {version: 2, name: "plan_connection_limits", up: func(db *gorm.DB) error {
 		return db.AutoMigrate(&models.Plan{})
+	}}, {version: 3, name: "tunnel_passwords_and_request_usage", up: func(db *gorm.DB) error {
+		return db.AutoMigrate(&models.Tunnel{}, &models.UsageEvent{})
+	}}, {version: 4, name: "platform_admin_users", up: func(db *gorm.DB) error {
+		return db.AutoMigrate(&models.PlatformAdmin{})
+	}}, {version: 5, name: "platform_admin_roles", up: func(db *gorm.DB) error {
+		return db.AutoMigrate(&models.PlatformAdmin{})
+	}}, {version: 6, name: "platform_admin_names", up: func(db *gorm.DB) error {
+		return db.AutoMigrate(&models.PlatformAdmin{})
+	}}, {version: 7, name: "organization_invitations", up: func(db *gorm.DB) error {
+		return db.AutoMigrate(&models.OrganizationInvitation{})
+	}}, {version: 8, name: "usage_event_request_metadata", up: func(db *gorm.DB) error {
+		return db.AutoMigrate(&models.UsageEvent{})
 	}}}
 }
 

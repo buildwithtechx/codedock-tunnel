@@ -15,6 +15,7 @@ type AuthService struct {
 	users      repositories.UserRepository
 	identities repositories.OAuthIdentityRepository
 	sessions   repositories.SessionRepository
+	admins     platformAdminAuthorizer
 	now        func() time.Time
 	sessionTTL time.Duration
 	protector  SecretProtector
@@ -22,16 +23,24 @@ type AuthService struct {
 
 type SecretProtector interface{ Seal(string) (string, error) }
 
+type platformAdminAuthorizer interface {
+	IsPlatformAdmin(context.Context, string) (bool, error)
+}
+
 func (s *AuthService) SetSecretProtector(protector SecretProtector) { s.protector = protector }
 
-func NewAuthService(users repositories.UserRepository, identities repositories.OAuthIdentityRepository, sessions repositories.SessionRepository, sessionTTL time.Duration) (*AuthService, error) {
-	if users == nil || identities == nil || sessions == nil {
+func (s *AuthService) IsPlatformAdmin(ctx context.Context, userID string) (bool, error) {
+	return s.admins.IsPlatformAdmin(ctx, userID)
+}
+
+func NewAuthService(users repositories.UserRepository, identities repositories.OAuthIdentityRepository, sessions repositories.SessionRepository, admins platformAdminAuthorizer, sessionTTL time.Duration) (*AuthService, error) {
+	if users == nil || identities == nil || sessions == nil || admins == nil {
 		return nil, fmt.Errorf("auth repositories are required")
 	}
 	if sessionTTL <= 0 {
 		return nil, fmt.Errorf("session ttl must be positive")
 	}
-	return &AuthService{users: users, identities: identities, sessions: sessions, now: time.Now, sessionTTL: sessionTTL}, nil
+	return &AuthService{users: users, identities: identities, sessions: sessions, admins: admins, now: time.Now, sessionTTL: sessionTTL}, nil
 }
 
 func (s *AuthService) CreateSession(ctx context.Context, userID, userAgent, ipAddress string) (string, models.Session, error) {
@@ -59,8 +68,12 @@ func (s *AuthService) AuthenticateSession(ctx context.Context, raw string) (mode
 	if err != nil {
 		return models.Session{}, fmt.Errorf("find auth session: %w", err)
 	}
-	if _, err := s.users.FindByID(ctx, session.UserID); err != nil {
+	user, err := s.users.FindByID(ctx, session.UserID)
+	if err != nil {
 		return models.Session{}, fmt.Errorf("find session user: %w", err)
+	}
+	if user.Status == models.UserStatusDisabled {
+		return models.Session{}, fmt.Errorf("user account is disabled")
 	}
 	if err := s.sessions.Touch(ctx, session.ID, now); err != nil {
 		return models.Session{}, fmt.Errorf("touch auth session: %w", err)
@@ -79,22 +92,23 @@ func (s *AuthService) RevokeSession(ctx context.Context, sessionID string) error
 	return nil
 }
 
-func (s *AuthService) FindOrCreateOAuthUser(ctx context.Context, profile auth.OAuthProfile) (models.User, error) {
+func (s *AuthService) FindOrCreateOAuthUser(ctx context.Context, profile auth.OAuthProfile) (models.User, bool, error) {
 	if err := auth.ValidateOAuthProfile(profile); err != nil {
-		return models.User{}, err
+		return models.User{}, false, err
 	}
 	identity, err := s.identities.Find(ctx, profile.Provider, profile.Subject)
 	if err == nil {
 		user, findErr := s.users.FindByID(ctx, identity.UserID)
 		if findErr != nil {
-			return models.User{}, fmt.Errorf("find oauth user: %w", findErr)
+			return models.User{}, false, fmt.Errorf("find oauth user: %w", findErr)
 		}
-		return user, nil
+		return user, false, nil
 	}
 	if err != repositories.ErrNotFound {
-		return models.User{}, fmt.Errorf("find oauth identity: %w", err)
+		return models.User{}, false, fmt.Errorf("find oauth identity: %w", err)
 	}
 	user, err := s.users.FindByEmail(ctx, strings.ToLower(strings.TrimSpace(profile.Email)))
+	created := false
 	if err == repositories.ErrNotFound {
 		name := strings.TrimSpace(profile.Name)
 		if name == "" {
@@ -106,32 +120,33 @@ func (s *AuthService) FindOrCreateOAuthUser(ctx context.Context, profile auth.OA
 			user.EmailVerifiedAt = &now
 		}
 		if err := s.users.Create(ctx, &user); err != nil {
-			return models.User{}, fmt.Errorf("create oauth user: %w", err)
+			return models.User{}, false, fmt.Errorf("create oauth user: %w", err)
 		}
+		created = true
 	} else if err != nil {
-		return models.User{}, fmt.Errorf("find oauth email: %w", err)
+		return models.User{}, false, fmt.Errorf("find oauth email: %w", err)
 	}
 	accessToken, refreshToken := profile.AccessToken, profile.RefreshToken
 	if s.protector != nil {
 		if accessToken != "" {
 			accessToken, err = s.protector.Seal(accessToken)
 			if err != nil {
-				return models.User{}, fmt.Errorf("encrypt oauth access token: %w", err)
+				return models.User{}, false, fmt.Errorf("encrypt oauth access token: %w", err)
 			}
 		}
 		if refreshToken != "" {
 			refreshToken, err = s.protector.Seal(refreshToken)
 			if err != nil {
-				return models.User{}, fmt.Errorf("encrypt oauth refresh token: %w", err)
+				return models.User{}, false, fmt.Errorf("encrypt oauth refresh token: %w", err)
 			}
 		}
 	}
 	identity = models.OAuthIdentity{UserID: user.ID, Provider: profile.Provider, Subject: profile.Subject, Email: profile.Email, AccessToken: accessToken, RefreshToken: refreshToken, TokenExpiresAt: profile.TokenExpiresAt}
 	if err := s.identities.Save(ctx, &identity); err != nil {
-		return models.User{}, fmt.Errorf("save oauth identity: %w", err)
+		return models.User{}, false, fmt.Errorf("save oauth identity: %w", err)
 	}
 	if err := s.users.UpdateLastLogin(ctx, user.ID, s.now()); err != nil {
-		return models.User{}, fmt.Errorf("update oauth login: %w", err)
+		return models.User{}, false, fmt.Errorf("update oauth login: %w", err)
 	}
-	return user, nil
+	return user, created, nil
 }

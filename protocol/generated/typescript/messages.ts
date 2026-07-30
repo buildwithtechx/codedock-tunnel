@@ -31,6 +31,7 @@ export type OpenTunnel = {
   subdomain?: string;
   protocol: string;
   custom_domain?: string;
+  password?: string;
 };
 
 export type OpenTunnelAck = {

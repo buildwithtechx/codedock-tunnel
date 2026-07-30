@@ -21,5 +21,11 @@ type UsageEvent struct {
 	EventType      string    `json:"eventType" gorm:"not null;index"`
 	Bytes          int64     `json:"bytes" gorm:"not null;default:0"`
 	Connections    int       `json:"connections" gorm:"not null;default:0"`
+	Method         string    `json:"method,omitempty" gorm:"type:varchar(16)"`
+	Path           string    `json:"path,omitempty" gorm:"type:text"`
+	StatusCode     int       `json:"statusCode,omitempty" gorm:"default:0"`
+	DurationMillis int64     `json:"durationMillis,omitempty" gorm:"default:0"`
+	ResponseBytes  int64     `json:"responseBytes,omitempty" gorm:"default:0"`
+	ClientIP       string    `json:"clientIp,omitempty" gorm:"type:inet"`
 	OccurredAt     time.Time `json:"occurredAt" gorm:"not null;index"`
 }

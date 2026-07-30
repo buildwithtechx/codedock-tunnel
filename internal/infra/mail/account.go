@@ -5,15 +5,44 @@ import (
 	"fmt"
 )
 
-type AccountMailer struct{ client *ZeptoClient }
+type AccountMailer struct {
+	client    *ZeptoClient
+	renderer  *templateRenderer
+	dashboard string
+}
 
-func NewAccountMailer(client *ZeptoClient) (*AccountMailer, error) {
+func NewAccountMailer(client *ZeptoClient, dashboardURL string) (*AccountMailer, error) {
 	if client == nil {
 		return nil, fmt.Errorf("zepto client is required")
 	}
-	return &AccountMailer{client: client}, nil
+	renderer, err := newTemplateRenderer()
+	if err != nil {
+		return nil, err
+	}
+	return &AccountMailer{client: client, renderer: renderer, dashboard: dashboardURL}, nil
 }
 
 func (m *AccountMailer) SendAccountUpdate(ctx context.Context, email, event string) error {
-	return m.client.Send(ctx, Message{To: email, Subject: "Tunnel account update", Text: "Your tunnel account was " + event + "."})
+	html, err := m.renderer.render("account-update", AccountUpdateData{Event: event, DashboardURL: m.dashboard})
+	if err != nil {
+		return err
+	}
+	return m.client.Send(ctx, Message{To: email, Subject: "Codedock Tunnel account update", HTML: html})
+}
+
+func (m *AccountMailer) SendWelcome(ctx context.Context, email, name string) error {
+	html, err := m.renderer.render("welcome", WelcomeData{Name: name, DashboardURL: m.dashboard})
+	if err != nil {
+		return err
+	}
+	return m.client.Send(ctx, Message{To: email, Subject: "Welcome to Codedock Tunnel", HTML: html})
+}
+
+func (m *AccountMailer) SendOrganizationInvite(ctx context.Context, email, inviterName, organizationName, role, invitationLink string) error {
+	html, err := m.renderer.render("organization-invite", OrganizationInviteData{InviterName: inviterName, OrganizationName: organizationName, Role: role, InvitationLink: invitationLink})
+	if err != nil {
+		return err
+	}
+	subject := "You’re invited to join " + organizationName + " on Codedock Tunnel"
+	return m.client.Send(ctx, Message{To: email, Subject: subject, HTML: html})
 }

@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"codedock.run/codedock-tunnel/internal/auth"
@@ -15,6 +16,11 @@ type OAuthService struct {
 	auth       *AuthService
 	providers  map[string]auth.OAuthProvider
 	stateStore auth.OAuthStateStore
+	welcome    WelcomeMailer
+}
+
+type WelcomeMailer interface {
+	SendWelcome(context.Context, string, string) error
 }
 
 func NewOAuthService(authService *AuthService, providers map[string]auth.OAuthProvider, stateStore auth.OAuthStateStore) (*OAuthService, error) {
@@ -23,6 +29,8 @@ func NewOAuthService(authService *AuthService, providers map[string]auth.OAuthPr
 	}
 	return &OAuthService{auth: authService, providers: providers, stateStore: stateStore}, nil
 }
+
+func (s *OAuthService) SetWelcomeMailer(welcome WelcomeMailer) { s.welcome = welcome }
 
 func (s *OAuthService) Start(ctx context.Context, providerName, redirectURI string) (string, error) {
 	provider, ok := s.providers[strings.ToLower(strings.TrimSpace(providerName))]
@@ -58,9 +66,14 @@ func (s *OAuthService) Callback(ctx context.Context, state, code, userAgent, ipA
 	if err != nil {
 		return "", models.Session{}, err
 	}
-	user, err := s.auth.FindOrCreateOAuthUser(ctx, profile)
+	user, created, err := s.auth.FindOrCreateOAuthUser(ctx, profile)
 	if err != nil {
 		return "", models.Session{}, err
+	}
+	if created && s.welcome != nil {
+		if err := s.welcome.SendWelcome(ctx, user.Email, user.Name); err != nil {
+			slog.Default().Warn("welcome email delivery failed", "email", user.Email, "error", err)
+		}
 	}
 	raw, session, err := s.auth.CreateSession(ctx, user.ID, userAgent, ipAddress)
 	if err != nil {

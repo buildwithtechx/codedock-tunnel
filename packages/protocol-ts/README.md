@@ -1,4 +1,4 @@
-# @codedock-tunnel/protocol-ts
+# @codedock/protocol-ts
 
 TypeScript protocol types, schemas, and codecs for Codedock Tunnel clients and integrations.
 

@@ -1,0 +1,38 @@
+---
+title: CLI reference
+description: Commands available in the codedock-tunnel client.
+icon: Terminal
+---
+
+| Command | Purpose |
+| --- | --- |
+| `login` | Authenticate the local CLI |
+| `open` | Open a tunnel using explicit protocol options |
+| `http` | Open an HTTP tunnel |
+| `tcp` | Open a TCP tunnel |
+| `create` | Create a managed tunnel |
+| `list` | List managed tunnels |
+| `inspect` | Inspect a tunnel |
+| `start` | Start a managed tunnel |
+| `stop` | Stop a managed tunnel |
+| `revoke` | Revoke a tunnel |
+| `health` | Check API readiness |
+| `completion` | Generate shell completion output |
+| `version` | Print the client version |
+
+Run `codedock-tunnel help` for the command list. Run a command with `--help`
+for its available flags.
+
+## Common workflows
+
+```sh
+codedock-tunnel login
+codedock-tunnel http --port 3000
+codedock-tunnel tcp --port 5432
+codedock-tunnel http --port 3000 --password "$TUNNEL_PASSWORD"
+codedock-tunnel open --tunnel-id "$TUNNEL_ID" --port 3000
+```
+
+For CI, provide `CODEDOCK_TUNNEL_AGENT_TOKEN` or pass `--agent-token`. Use
+`CODEDOCK_TUNNEL_API_KEY` for management requests such as listing and
+revoking tunnels. Keep both values in the CI secret store.

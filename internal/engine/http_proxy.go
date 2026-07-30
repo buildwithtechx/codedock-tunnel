@@ -8,7 +8,9 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"time"
 
+	"codedock.run/codedock-tunnel/internal/security"
 	"codedock.run/codedock-tunnel/pkg/protocol"
 )
 
@@ -25,6 +27,12 @@ type UsageMeasurement struct {
 	EventType      string
 	Bytes          int64
 	Connections    int
+	Method         string
+	Path           string
+	StatusCode     int
+	DurationMillis int64
+	ResponseBytes  int64
+	ClientIP       string
 }
 
 type UsageRecorder interface {
@@ -42,18 +50,29 @@ func NewHTTPProxy(baseDomain string, router *RequestRouter, maxBodyBytes int64) 
 }
 
 func (p *HTTPProxy) ServeHTTP(response http.ResponseWriter, request *http.Request) {
+	started := time.Now()
 	route, ok := resolveRouteKey(request.Host, p.baseDomain)
 	if !ok {
 		http.Error(response, "tunnel not found", http.StatusNotFound)
+		return
+	}
+	passwordHash, protected := p.router.PasswordHash(route)
+	protected = protected && passwordHash != ""
+	if protected && !authorizedRequest(request, passwordHash) {
+		response.Header().Set("WWW-Authenticate", `Basic realm="Codedock Tunnel"`)
+		response.WriteHeader(http.StatusUnauthorized)
+		p.recordRequest(request, route, http.StatusUnauthorized, 0, started)
 		return
 	}
 	body, err := readBody(request.Body, p.maxBodyBytes)
 	if err != nil {
 		if err == errBodyTooLarge {
 			http.Error(response, "request body too large", http.StatusRequestEntityTooLarge)
+			p.recordRequest(request, route, http.StatusRequestEntityTooLarge, 0, started)
 			return
 		}
 		http.Error(response, "unable to read request body", http.StatusBadRequest)
+		p.recordRequest(request, route, http.StatusBadRequest, 0, started)
 		return
 	}
 	forwarded, err := p.router.ForwardHTTP(request.Context(), route, protocol.HTTPRequest{
@@ -62,17 +81,14 @@ func (p *HTTPProxy) ServeHTTP(response http.ResponseWriter, request *http.Reques
 		Headers: requestHeaders(request.Header),
 		Body:    body,
 	})
-	if decodedRequest, decodeErr := base64.StdEncoding.DecodeString(body); decodeErr == nil {
-		p.record(request, route, "http_request", int64(len(decodedRequest)))
-	}
 	if err != nil {
-		p.record(request, route, "http_error", 0)
 		http.Error(response, "tunnel unavailable", http.StatusBadGateway)
+		p.recordRequest(request, route, http.StatusBadGateway, 0, started)
 		return
 	}
 	if forwarded.Error != "" {
-		p.record(request, route, "http_error", 0)
 		http.Error(response, forwarded.Error, http.StatusBadGateway)
+		p.recordRequest(request, route, http.StatusBadGateway, 0, started)
 		return
 	}
 	writeResponseHeaders(response.Header(), forwarded.Headers)
@@ -82,22 +98,23 @@ func (p *HTTPProxy) ServeHTTP(response http.ResponseWriter, request *http.Reques
 	}
 	response.WriteHeader(status)
 	if forwarded.Body == "" {
+		p.recordRequest(request, route, status, 0, started)
 		return
 	}
 	decoded, err := base64.StdEncoding.DecodeString(forwarded.Body)
 	if err != nil {
-		p.record(request, route, "http_error", 0)
+		p.recordRequest(request, route, http.StatusBadGateway, 0, started)
 		return
 	}
-	p.record(request, route, "http_response", int64(len(decoded)))
 	_, _ = response.Write(decoded)
+	p.recordRequest(request, route, status, int64(len(decoded)), started)
 }
 
 func (p *HTTPProxy) SetUsageRecorder(recorder UsageRecorder) {
 	p.recorder = recorder
 }
 
-func (p *HTTPProxy) record(request *http.Request, tunnelID, eventType string, bytes int64) {
+func (p *HTTPProxy) recordRequest(request *http.Request, tunnelID string, statusCode int, responseBytes int64, started time.Time) {
 	if p.recorder == nil {
 		return
 	}
@@ -105,7 +122,20 @@ func (p *HTTPProxy) record(request *http.Request, tunnelID, eventType string, by
 	if !ok {
 		return
 	}
-	_ = p.recorder.Record(request.Context(), UsageMeasurement{OrganizationID: organizationID, TunnelID: tunnelID, EventType: eventType, Bytes: bytes})
+	_ = p.recorder.Record(request.Context(), UsageMeasurement{OrganizationID: organizationID, TunnelID: tunnelID, EventType: "request", Bytes: responseBytes, Method: request.Method, Path: request.URL.Path, StatusCode: statusCode, DurationMillis: time.Since(started).Milliseconds(), ResponseBytes: responseBytes, ClientIP: clientIP(request)})
+}
+
+func authorizedRequest(request *http.Request, passwordHash string) bool {
+	_, password, ok := request.BasicAuth()
+	return ok && security.VerifyPassword(password, passwordHash)
+}
+
+func clientIP(request *http.Request) string {
+	host, _, err := net.SplitHostPort(request.RemoteAddr)
+	if err == nil {
+		return host
+	}
+	return strings.TrimSpace(request.RemoteAddr)
 }
 
 var errBodyTooLarge = fmt.Errorf("request body too large")

@@ -1,0 +1,35 @@
+---
+title: Express integration
+description: Add a tunnel lifecycle helper to an Express process.
+icon: SiExpress
+---
+
+Install the adapter:
+
+```sh
+npm install @codedock/express
+```
+
+Create the tunnel after the Express server has a listening port:
+
+```ts
+import { createExpressTunnel } from '@codedock/express';
+
+const tunnel = createExpressTunnel({
+  relayUrl: process.env.CODEDOCK_TUNNEL_RELAY_URL!,
+  agentToken: process.env.CODEDOCK_TUNNEL_AGENT_TOKEN!,
+  localPort: 3000,
+  password: process.env.TUNNEL_PASSWORD,
+});
+
+const state = await tunnel.start();
+console.log(state.publicUrl);
+
+process.on('SIGTERM', async () => {
+  await tunnel.stop('process shutdown');
+  process.exit(0);
+});
+```
+
+Set `autoStart: false` when tunnel creation must be triggered by an explicit
+route, test setup, or deployment step.

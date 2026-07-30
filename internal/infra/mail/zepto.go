@@ -18,7 +18,6 @@ type Config struct {
 type Message struct {
 	To      string
 	Subject string
-	Text    string
 	HTML    string
 }
 
@@ -46,7 +45,6 @@ func (c *ZeptoClient) Send(ctx context.Context, message Message) error {
 		"to":       []map[string]any{{"email_address": map[string]string{"address": message.To}}},
 		"subject":  message.Subject,
 		"htmlbody": message.HTML,
-		"textbody": message.Text,
 	}
 	encoded, err := json.Marshal(body)
 	if err != nil {

@@ -1,4 +1,4 @@
-# @codedock-tunnel/tauri-bridge
+# @codedock/tauri-bridge
 
 Tauri integration for the Codedock Tunnel desktop application.
 

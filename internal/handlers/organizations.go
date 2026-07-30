@@ -62,8 +62,11 @@ func (h *OrganizationHandler) AddMember(c *fiber.Ctx) error {
 
 func sessionUserID(c *fiber.Ctx) (string, error) {
 	session, ok := c.Locals("session").(models.Session)
-	if !ok || session.UserID == "" {
-		return "", fmt.Errorf("authenticated session is required")
+	if ok && session.UserID != "" {
+		return session.UserID, nil
 	}
-	return session.UserID, nil
+	if userID, ok := c.Locals("apiKeyUserID").(string); ok && userID != "" {
+		return userID, nil
+	}
+	return "", fmt.Errorf("authenticated session or API key is required")
 }

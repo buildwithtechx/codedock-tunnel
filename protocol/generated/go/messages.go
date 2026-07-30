@@ -81,6 +81,7 @@ type OpenTunnel struct {
 	Subdomain    string `json:"subdomain,omitempty"`
 	Protocol     string `json:"protocol"`
 	CustomDomain string `json:"custom_domain,omitempty"`
+	Password     string `json:"password,omitempty"`
 }
 
 type OpenTunnelAck struct {

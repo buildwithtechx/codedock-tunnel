@@ -1,6 +1,6 @@
 # Codedock Tunnel TODO
 
-The Go backend and CLI implementation is complete. Remaining work is product surfaces, SDKs, desktop packaging, optional integrations, and release operations.
+The Go backend, CLI, protocol package, and current TypeScript framework adapters are implemented. Remaining work is dashboard functionality, desktop integration, optional integrations, and release operations.
 
 ## Standalone product principles
 
@@ -10,121 +10,247 @@ The Go backend and CLI implementation is complete. Remaining work is product sur
 ## Product surfaces
 
 - [ ] Build a standalone tunnel dashboard with its own authentication and organization model.
-- [ ] Publish one reusable `sdk-ts` package for Node.js, TypeScript, browser, and framework integrations.
 - [ ] Keep the Tauri desktop application usable with standalone tunnel servers.
 
-## Repository structure
+## Route structure
+
+Dashboard routes should remain browser-only and organization-scoped:
 
 ```text
-codedock-tunnel/
-├── apps/
-│   ├── web/
-│   │   ├── src/
-│   │   │   ├── routes/
-│   │   │   ├── components/
-│   │   │   ├── features/
-│   │   │   ├── hooks/
-│   │   │   └── lib/
-│   │   └── package.json
-│   └── desktop/
-│       ├── src/
-│       ├── src-tauri/
-│       └── package.json
-├── cmd/
-│   ├── server/
-│   ├── tunnel/
-│   ├── cli/
-│   ├── cron/
-│   └── check/
-├── internal/
-│   ├── models/
-│   ├── repositories/
-│   ├── services/
-│   ├── handlers/
-│   ├── http/
-│   ├── engine/
-│   ├── auth/
-│   ├── config/
-│   ├── infra/
-│   │   ├── postgres/
-│   │   ├── redis/
-│   │   ├── billing/
-│   │   ├── telemetry/
-│   │   ├── storage/
-│   │   └── locks/
-│   └── workers/
-├── pkg/
-│   ├── client/
-│   ├── protocol/
-│   └── version/
-├── protocol/
-│   ├── schema/
-│   └── generated/
-│       ├── go/
-│       └── typescript/
-├── packages/
-│   ├── protocol-ts/
-│   │   ├── src/
-│   │   └── package.json
-│   ├── sdk-ts/
-│   │   ├── src/
-│   │   └── package.json
-│   ├── react/
-│   │   ├── src/
-│   │   └── package.json
-│   ├── vite-plugin/
-│   │   ├── src/
-│   │   └── package.json
-│   ├── next/
-│   │   ├── src/
-│   │   └── package.json
-│   ├── nest/
-│   │   ├── src/
-│   │   └── package.json
-│   ├── express/
-│   │   ├── src/
-│   │   └── package.json
-│   └── tauri-bridge/
-│       ├── src/
-│       └── package.json
-├── integrations/
-│   └── codedock/
-├── migrations/
-├── tests/
-│   ├── integration/
-│   ├── protocol/
-│   ├── security/
-│   └── e2e/
-├── docker/
-│   ├── Dockerfile.api
-│   ├── Dockerfile.tunnel
-│   ├── Dockerfile.cron
-│   └── Dockerfile.check
-├── docs/
-├── scripts/
-├── go.mod
-├── package.json
-├── tsconfig.base.json
-├── biome.json
-├── Makefile
-├── README.md
-└── TODO.md
+/
+├── pricing
+├── docs/*
+├── login
+├── signup
+├── cli/login
+├── admin/
+│   ├── index
+│   ├── users
+│   ├── users/$userId
+│   ├── organizations
+│   ├── organizations/$organizationID
+│   ├── tunnels
+│   ├── subscriptions
+│   ├── usage
+│   ├── charts
+│   ├── audit-logs
+│   └── actions
+└── $orgSlug/
+    ├── index
+    ├── tunnels/
+    │   ├── index
+    │   └── $tunnelId
+    ├── agents
+    ├── domains
+    ├── requests
+    ├── usage
+    ├── billing
+    ├── members
+    ├── api-keys
+    └── settings/
+        ├── index
+        ├── profile
+        └── organization
 ```
 
-- [ ] Create `apps/web/` for the standalone React dashboard.
-- [ ] Create `apps/desktop/` for the Tauri desktop application and `src-tauri/` Rust shell.
-- [ ] Create `packages/sdk-ts/` as the framework-neutral Node.js and browser client.
-- [ ] Create `packages/react/` as a thin React hooks and provider layer over `sdk-ts`.
-- [ ] Create `packages/vite-plugin/` for local development tunnel integration with Vite.
-- [ ] Create `packages/next/` for Next.js server, route, and development integration.
-- [ ] Create `packages/nest/` for NestJS modules, providers, and tunnel lifecycle integration.
-- [ ] Create `packages/express/` for Express middleware and tunnel lifecycle integration.
-- [ ] Create `packages/tauri-bridge/` for desktop commands and Go CLI tunnel-client communication.
-- [ ] Keep framework integrations as thin adapters over the same protocol and SDK lifecycle.
-- [ ] Use peer dependencies for optional frameworks so the base SDK stays lightweight.
-- [ ] Add package export maps, type declarations, and tree-shakable entrypoints.
-- [ ] Keep framework adapters independently versioned while preserving compatibility with the core SDK.
+The dashboard application should keep page routing separate from reusable
+application code:
+
+```text
+apps/web/src/
+├── routes/
+│   ├── __root.tsx
+│   ├── index.tsx
+│   ├── login.tsx
+│   ├── signup.tsx
+│   └── $orgSlug/
+├── components/
+│   ├── ui/
+│   ├── layout/
+│   ├── navigation/
+│   ├── feedback/
+│   └── data-display/
+├── features/
+│   ├── auth/
+│   ├── admin/
+│   │   ├── users/
+│   │   ├── organizations/
+│   │   ├── tunnels/
+│   │   ├── subscriptions/
+│   │   ├── usage/
+│   │   ├── charts/
+│   │   └── actions/
+│   ├── organizations/
+│   ├── tunnels/
+│   ├── agents/
+│   ├── domains/
+│   ├── usage/
+│   ├── billing/
+│   ├── audit-logs/
+│   └── api-keys/
+├── interfaces/
+│   ├── api.ts
+│   ├── auth.ts
+│   ├── organization.ts
+│   ├── tunnel.ts
+│   └── billing.ts
+├── hooks/
+├── stores/
+│   ├── auth-store.ts
+│   ├── organization-store.ts
+│   ├── tunnel-store.ts
+│   └── ui-store.ts
+├── lib/
+│   ├── api-client.ts
+│   ├── auth.ts
+│   ├── query-client.ts
+│   ├── route-guards.ts
+│   └── utils.ts
+├── integrations/
+│   └── telemetry/
+└── env.ts
+```
+
+- [ ] Keep route files focused on loaders, route metadata, and page composition.
+- [ ] Protect `/admin/*` with a separate platform-admin authorization guard.
+- [ ] Keep admin features and components isolated from organization-member features.
+- [x] Add `codedockd bootstrap-admin --email ...` to provision the first platform administrator explicitly.
+- [x] Add platform-admin roles without promoting users automatically during signup.
+- [ ] Keep domain behavior inside `features/`, not inside route files.
+- [ ] Keep shared visual primitives inside `components/ui/`.
+- [ ] Keep API contracts and frontend DTOs inside `interfaces/`.
+- [ ] Keep cross-feature clients, guards, query setup, and utilities inside `lib/`.
+- [ ] Keep global client state in focused Zustand stores under `stores/`.
+- [ ] Keep feature-specific hooks beside their feature unless shared by multiple domains.
+
+The control-plane API should remain versioned under `/api/v1`:
+
+```text
+/api/v1/
+├── auth/
+│   ├── oauth/:provider
+│   ├── oauth/:provider/callback
+│   ├── device/start
+│   ├── device/poll
+│   ├── device/complete
+│   ├── session
+│   └── logout
+├── account
+├── organizations
+│   ├── :organizationID
+│   ├── :organizationID/members
+│   ├── :organizationID/members/:memberID
+│   └── :organizationID/transfer
+├── organizations/:organizationID/
+│   ├── tunnels
+│   ├── agents
+│   ├── domains
+│   ├── usage/events
+│   ├── usage/snapshot
+│   ├── usage/requests
+│   ├── billing/{status,checkout,portal,cancel,resume,invoices}
+│   ├── api-keys
+│   ├── audit-logs
+│   └── settings
+├── tunnels/:tunnelID/
+│   ├── status
+│   ├── revoke
+│   ├── connections
+│   └── requests
+├── domains/:domainID/verify
+├── agents/:agentID/
+│   ├── heartbeat
+│   └── revoke
+├── admin/
+│   ├── users
+│   ├── users/:userID
+│   ├── organizations
+│   ├── organizations/:organizationID
+│   ├── tunnels
+│   ├── subscriptions
+│   ├── usage
+│   ├── charts
+│   └── actions
+└── webhooks/billing/:provider
+```
+
+- [x] Keep liveness, readiness, and metrics outside the versioned API at `/healthz`, `/readyz`, and `/metrics`.
+- [x] Keep relay WebSocket transport separate at `wss://tunnel.codedock-tunnel.dev/v1/connect`.
+- [ ] Add organization detail, member listing/removal, profile, API-key, audit-log, request-log, and invoice routes.
+- [x] Add platform-admin authorization and admin users, organizations, tunnels, subscriptions, usage, audit, and action routes.
+- [ ] Move agent heartbeats away from browser-session authentication to agent or relay authentication.
+- [ ] Keep internal health, usage ingestion, relay handoff, and agent authentication routes private.
+- [ ] Route wildcard public tunnel traffic through `*.tunnel.codedock-tunnel.dev`, not through control-plane handlers.
+
 - [ ] Keep `integrations/codedock/` as an optional external adapter.
+
+## Transactional email
+
+- [x] Use Zepto Mail as the only transactional email provider.
+- [x] Keep HTML email templates in the root `templates/` directory.
+- [x] Add welcome, account-update, billing-update, organization-invite, payment-failed, and subscription-reset templates.
+- [x] Escape user-controlled template values through Go's HTML template renderer.
+- [x] Send the welcome email after the first successful OAuth account creation.
+- [x] Send account-update email after account deletion.
+- [x] Send billing-update email after subscription state changes.
+- [x] Add organization invitation persistence, expiration, acceptance, and delivery workflow.
+- [x] Connect payment-failed events to retry-count and billing-page email data.
+- [x] Connect subscription downgrade/reset events to the subscription-reset email.
+
+## Future SDKs
+
+- [ ] Create an official Laravel/PHP SDK over the public HTTP and relay APIs.
+- [ ] Create an official Rust SDK for native services and desktop tooling.
+- [ ] Create an official Go SDK for Go services and tunnel-aware workers.
+- [ ] Create an official Angular adapter over the shared client contract.
+- [ ] Keep every SDK aligned with the versioned protocol and authentication model.
+- [ ] Publish language-specific SDKs only after compatibility, security, and conformance tests pass.
+
+```text
+packages/
+├── php/
+│   ├── src/
+│   │   ├── Client/
+│   │   ├── Contracts/
+│   │   ├── Exceptions/
+│   │   ├── Resources/
+│   │   └── Laravel/
+│   │       ├── Console/
+│   │       ├── Facades/
+│   │       ├── Http/
+│   │       ├── Services/
+│   │       └── CodedockServiceProvider.php
+│   ├── config/
+│   ├── tests/
+│   ├── composer.json
+│   └── README.md
+├── rust/
+│   ├── src/
+│   │   ├── client.rs
+│   │   ├── error.rs
+│   │   ├── models.rs
+│   │   └── protocol.rs
+│   ├── tests/
+│   ├── Cargo.toml
+│   └── README.md
+├── go/
+│   ├── client/
+│   ├── protocol/
+│   ├── internal/
+│   ├── tests/
+│   ├── go.mod
+│   └── README.md
+└── angular/
+    ├── src/
+    │   ├── guards/
+    │   ├── interceptors/
+    │   ├── models/
+    │   ├── services/
+    │   └── tokens/
+    ├── tests/
+    ├── package.json
+    └── README.md
+```
 
 ## Dashboard
 
@@ -139,7 +265,6 @@ codedock-tunnel/
 
 ## Tauri desktop app
 
-- [ ] Create the Tauri 2 application shell.
 - [ ] Define how the desktop app starts and supervises the Go CLI tunnel client.
 - [ ] Keep tunnel data-plane logic in Go rather than duplicating it in Rust or TypeScript.
 - [ ] Store credentials using the native operating-system secret store.

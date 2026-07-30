@@ -1,0 +1,4 @@
+{
+  "title": "Platform Features",
+  "pages": ["password-protection", "ci-cd", "observability"]
+}

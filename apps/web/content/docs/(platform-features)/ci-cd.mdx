@@ -1,0 +1,34 @@
+---
+title: CI/CD integration
+description: Open secure preview tunnels from automated pipelines.
+icon: Workflow
+---
+
+The CLI is designed to run on a workstation, CI runner, or preview job. It
+does not require interactive browser login when an agent token is supplied.
+
+Store the token as a CI secret and pass it through the environment:
+
+```yaml
+steps:
+  - name: Start preview tunnel
+    env:
+      CODEDOCK_TUNNEL_AGENT_TOKEN: ${{ secrets.CODEDOCK_TUNNEL_AGENT_TOKEN }}
+      CODEDOCK_TUNNEL_PASSWORD: ${{ secrets.TUNNEL_PASSWORD }}
+    run: |
+      codedock-tunnel http --port 3000 &
+```
+
+For a private installation, set `CODEDOCK_TUNNEL_API_URL` and
+`CODEDOCK_TUNNEL_RELAY_URL`. The `--agent-token` flag can override the
+environment value for a single command.
+
+Use `--tunnel-id` to reconnect a managed tunnel while preserving its public
+identity:
+
+```sh
+CODEDOCK_TUNNEL_PASSWORD="$TUNNEL_PASSWORD" codedock-tunnel open --tunnel-id "$TUNNEL_ID" --port 3000
+```
+
+Management commands such as `list`, `inspect`, and `revoke` use
+`CODEDOCK_TUNNEL_API_KEY`.
